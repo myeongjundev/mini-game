@@ -1,0 +1,58 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  color: var(--text);
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#root {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: var(--gap-lg);
+}
+
+.app-shell {
+  width: min(100%, var(--card-w));
+  padding: var(--gap-lg);
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.app-title {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+time,
+[data-numeric] {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-uppercase-label] {
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}

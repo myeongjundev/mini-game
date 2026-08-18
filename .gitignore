@@ -9,6 +9,10 @@ dist/
 build/
 .cache/
 
+# Public deploy output is built by CI, not committed.
+# vite의 emptyOutDir가 매 빌드마다 이 폴더를 비우므로 자리표시 파일도 두지 않는다.
+site/
+
 # Logs and browser test artifacts
 *.log
 playwright-report/

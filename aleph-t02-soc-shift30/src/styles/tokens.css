@@ -1,0 +1,28 @@
+:root {
+  /* 표면 */
+  --bg: #0A0C10;
+  --panel: #12161D;
+  --line: #232B36;
+  --line-dim: #1B2029;
+
+  /* 글자 */
+  --text: #E8EAED;
+  --text-dim: #7C8798;
+
+  /* 신호 */
+  --cyan: #3FC8E0;
+  --amber: #F0A93B;
+  --red: #E2564D;
+  --green: #6FCF6B;
+
+  /* 타이포 */
+  --font-mono: 'JetBrains Mono', 'D2Coding', ui-monospace, monospace;
+
+  /* 레이아웃 */
+  --card-w: 720px;
+  --gap-xs: 6px;
+  --gap-sm: 12px;
+  --gap-md: 16px;
+  --gap-lg: 24px;
+  --radius: 4px;
+}
