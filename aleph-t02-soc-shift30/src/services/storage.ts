@@ -10,7 +10,7 @@ export type Saved = {
 export const DEFAULTS: Readonly<Saved> = {
   v: 1,
   bestScore: 0,
-  mute: false,
+  mute: true,
   reduceMotion: false,
 }
 
@@ -19,8 +19,8 @@ export type StorageLike = {
   setItem: (key: string, value: string) => void
 }
 
-function defaultSaved(): Saved {
-  return { ...DEFAULTS }
+function defaultSaved(defaults: Readonly<Saved> = DEFAULTS): Saved {
+  return { ...defaults }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -37,34 +37,59 @@ function isValidBestScore(value: unknown): value is number {
   )
 }
 
-export function loadSaved(storage?: StorageLike): Saved {
+export function loadSaved(
+  storage?: StorageLike,
+  defaults: Readonly<Saved> = DEFAULTS,
+): Saved {
   try {
     const serialized = (storage ?? globalThis.localStorage).getItem(STORAGE_KEY)
 
     if (serialized === null || serialized === '') {
-      return defaultSaved()
+      return defaultSaved(defaults)
     }
 
     const parsed: unknown = JSON.parse(serialized)
 
     if (!isRecord(parsed) || parsed.v !== 1) {
-      return defaultSaved()
+      return defaultSaved(defaults)
     }
 
     return {
       v: 1,
       bestScore: isValidBestScore(parsed.bestScore)
         ? parsed.bestScore
-        : DEFAULTS.bestScore,
-      mute: typeof parsed.mute === 'boolean' ? parsed.mute : DEFAULTS.mute,
+        : defaults.bestScore,
+      mute: typeof parsed.mute === 'boolean' ? parsed.mute : defaults.mute,
       reduceMotion:
         typeof parsed.reduceMotion === 'boolean'
           ? parsed.reduceMotion
-          : DEFAULTS.reduceMotion,
+          : defaults.reduceMotion,
     }
   } catch {
-    return defaultSaved()
+    return defaultSaved(defaults)
   }
+}
+
+export type MediaQueryMatcher = (query: string) => { matches: boolean }
+
+export function loadInitialSaved(
+  storage?: StorageLike,
+  matcher?: MediaQueryMatcher,
+): Saved {
+  let prefersReducedMotion = false
+
+  try {
+    const matchMedia = matcher ?? globalThis.matchMedia?.bind(globalThis)
+    prefersReducedMotion =
+      matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  } catch {
+    // Media-query access failure falls back to the documented default.
+  }
+
+  return loadSaved(storage, {
+    ...DEFAULTS,
+    reduceMotion: prefersReducedMotion,
+  })
 }
 
 export function saveSaved(saved: Saved, storage?: StorageLike): void {

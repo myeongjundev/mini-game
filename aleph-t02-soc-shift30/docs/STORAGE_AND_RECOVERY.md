@@ -36,10 +36,15 @@ type Saved = {
 const DEFAULTS: Saved = {
   v: 1,
   bestScore: 0,
-  mute: false,
+  mute: true,        // 첫 로드는 음소거 상태로 시작한다
   reduceMotion: false,
 };
 ```
+
+`mute`의 기본값은 **`true`**다. 브라우저 자동재생 정책에 안전하고, 공개 주소를 처음 여는 사람이 갑자기 소리를 듣지 않는다.
+`BUILD_ORDER.md` 8절, `notes/02-game-design.md`의 "첫 로드는 음소거 ON"과 같은 규칙이다.
+
+`reduceMotion`의 기본값은 `false`지만, OS의 `prefers-reduced-motion: reduce`가 켜져 있으면 그 값을 초기값으로 읽는다. 저장된 사용자 설정이 있으면 그것이 우선한다.
 
 - 키에 버전을 넣었다. 스키마가 바뀌면 `socshift30:v2`로 올리고 이전 키는 무시한다.
 - `v`가 `1`이 아니면 **전체 기본값**으로 시작한다.
@@ -61,7 +66,7 @@ const DEFAULTS: Saved = {
 5. `v !== 1`이면 기본값 반환.
 6. 필드별로 검증한다.
    - `bestScore`: `typeof === 'number'` **그리고** `Number.isFinite` **그리고** `0 <= n <= 999999`. 아니면 `0`.
-   - `mute`, `reduceMotion`: `typeof === 'boolean'`. 아니면 `false`.
+   - `mute`, `reduceMotion`: `typeof === 'boolean'`. 아니면 각 필드의 기본값.
 
 `Number.isFinite`를 반드시 쓴다. `typeof NaN === 'number'`이고 `typeof Infinity === 'number'`라서 타입 검사만으로는 걸러지지 않는다.
 

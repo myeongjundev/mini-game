@@ -114,6 +114,38 @@ describe('useKeyboard', () => {
 
     expect(handlers.onAllow).not.toHaveBeenCalled()
   })
+
+  it('updates handlers without re-registering the keydown listener', () => {
+    const addListener = vi.spyOn(window, 'addEventListener')
+    const removeListener = vi.spyOn(window, 'removeEventListener')
+    const firstHandlers = {
+      onAllow: vi.fn(),
+      onBlock: vi.fn(),
+      onPauseToggle: vi.fn(),
+    }
+    const nextHandlers = {
+      onAllow: vi.fn(),
+      onBlock: vi.fn(),
+      onPauseToggle: vi.fn(),
+    }
+
+    act(() => {
+      root.render(<KeyboardHarness enabled handlers={firstHandlers} />)
+    })
+    act(() => {
+      root.render(<KeyboardHarness enabled handlers={nextHandlers} />)
+    })
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }))
+
+    expect(
+      addListener.mock.calls.filter(([type]) => type === 'keydown'),
+    ).toHaveLength(1)
+    expect(
+      removeListener.mock.calls.filter(([type]) => type === 'keydown'),
+    ).toHaveLength(0)
+    expect(firstHandlers.onAllow).not.toHaveBeenCalled()
+    expect(nextHandlers.onAllow).toHaveBeenCalledOnce()
+  })
 })
 
 describe('useVisibilityPause', () => {
@@ -147,16 +179,19 @@ describe('useGameLoop', () => {
     const cancel = vi.fn((id: number) => callbacks.delete(id))
     const now = vi.spyOn(performance, 'now')
 
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+    const request = vi.fn((callback: FrameRequestCallback) => {
       const id = nextId
       nextId += 1
       callbacks.set(id, callback)
       return id
     })
+    vi.stubGlobal('requestAnimationFrame', request)
     vi.stubGlobal('cancelAnimationFrame', cancel)
 
     return {
       cancel,
+      pendingCount: () => callbacks.size,
+      request,
       frame(time: number) {
         now.mockReturnValue(time)
         const pending = [...callbacks.values()]
@@ -181,8 +216,13 @@ describe('useGameLoop', () => {
         />,
       )
     })
+    expect(animation.pendingCount()).toBe(1)
     act(() => {
       animation.frame(0)
+    })
+    expect(animation.pendingCount()).toBe(1)
+    expect(onTick).not.toHaveBeenCalled()
+    act(() => {
       animation.frame(500)
     })
     expect(onTick).toHaveBeenLastCalledWith(100)
@@ -207,8 +247,13 @@ describe('useGameLoop', () => {
     act(() => {
       root.render(<GameLoopHarness isRunning {...options} />)
     })
+    expect(animation.pendingCount()).toBe(1)
     act(() => {
       animation.frame(0)
+    })
+    expect(animation.pendingCount()).toBe(1)
+    expect(onTick).not.toHaveBeenCalled()
+    act(() => {
       animation.frame(50)
     })
     expect(onTick).toHaveBeenLastCalledWith(50)
@@ -219,12 +264,58 @@ describe('useGameLoop', () => {
     act(() => {
       root.render(<GameLoopHarness isRunning {...options} />)
     })
+    expect(animation.pendingCount()).toBe(1)
     act(() => {
       animation.frame(1_000)
+    })
+    expect(animation.pendingCount()).toBe(1)
+    act(() => {
       animation.frame(1_020)
     })
 
     expect(onTick).toHaveBeenLastCalledWith(20)
     expect(animation.cancel).toHaveBeenCalled()
+  })
+
+  it('keeps frame deltas continuous when the current alert changes', () => {
+    const animation = installAnimationFrameStub()
+    const onTick = vi.fn()
+    const options = {
+      isRunning: true,
+      onTick,
+      onTimeout: vi.fn(),
+    }
+
+    act(() => {
+      root.render(
+        <GameLoopHarness currentAlertId="alert-1" {...options} />,
+      )
+    })
+    expect(animation.pendingCount()).toBe(1)
+    act(() => {
+      animation.frame(100)
+    })
+    expect(animation.pendingCount()).toBe(1)
+    expect(onTick).not.toHaveBeenCalled()
+    act(() => {
+      animation.frame(150)
+    })
+    expect(onTick).toHaveBeenLastCalledWith(50)
+
+    const requestCount = animation.request.mock.calls.length
+    const cancelCount = animation.cancel.mock.calls.length
+    act(() => {
+      root.render(
+        <GameLoopHarness currentAlertId="alert-2" {...options} />,
+      )
+    })
+
+    expect(animation.request).toHaveBeenCalledTimes(requestCount)
+    expect(animation.cancel).toHaveBeenCalledTimes(cancelCount)
+    expect(animation.pendingCount()).toBe(1)
+    act(() => {
+      animation.frame(200)
+    })
+    expect(onTick).toHaveBeenLastCalledWith(50)
   })
 })

@@ -362,7 +362,7 @@ type Saved = {
   reduceMotion: boolean;
 };
 
-const DEFAULTS: Saved = { v: 1, bestScore: 0, mute: false, reduceMotion: false };
+const DEFAULTS: Saved = { v: 1, bestScore: 0, mute: true, reduceMotion: false };
 ```
 
 ### 규칙
@@ -482,10 +482,10 @@ CI는 Node 24를 쓴다. `vite` 8과 `@vitejs/plugin-react` 6이 `^20.19.0 || >=
 | 5 | 경보 데이터 | `alerts.ts` 15개 + `docs/ALERT_DATASET.md` | 완료 |
 | 7 | 디자인 토큰 | `tokens.css`, `global.css`, `docs/DESIGN_TOKENS.md` | 완료 |
 | 9 | 저장·복구 | `storage.ts` + 손상 입력 8종 + 경계 5종 통과 | 완료 |
-| 6 | 도트 아이콘 | ASCII 그리드 승인 → `pixelArt.ts`, `PixelIcon.tsx`, `favicon.svg` | 그리드 승인 완료 |
-| 8a | 루프 연결 | 리듀서 + 훅 3개. 중복 입력 차단과 타이머 정리까지 | 대기 |
-| 8b | 화면 | Ready → Playing → Paused → Result 컴포넌트 | 대기 |
-| 10 | 접근성·안정성 | Mute, Reduce Motion, 포커스 일시정지 | 대기 |
+| 6 | 도트 아이콘 | ASCII 그리드 승인 → `pixelArt.ts`, `PixelIcon.tsx`, `favicon.svg` | 완료 |
+| 8a | 루프 연결 | 리듀서 + 훅 3개. 중복 입력 차단과 타이머 정리까지 | 완료 |
+| 8b | 화면 | Ready → Playing → Paused → Result 컴포넌트 | 완료 |
+| 10 | 접근성·안정성 | Mute, Reduce Motion, 포커스 일시정지 | 완료 |
 | 11 | QA | `docs/QA_CHECKLIST.md` 전 항목 실행 | 대기 |
 | 12 | 배포 | 공개 주소 확인 | 대기 |
 

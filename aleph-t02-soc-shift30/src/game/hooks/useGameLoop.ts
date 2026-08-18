@@ -20,10 +20,22 @@ export function useGameLoop({
   const frameIdRef = useRef<number | null>(null)
   const previousTimeRef = useRef<number | null>(null)
   const alertElapsedRef = useRef(0)
+  const currentAlertIdRef = useRef(currentAlertId)
+  const onTickRef = useRef(onTick)
+  const onTimeoutRef = useRef(onTimeout)
 
   useEffect(() => {
+    currentAlertIdRef.current = currentAlertId
     alertElapsedRef.current = 0
   }, [currentAlertId])
+
+  useEffect(() => {
+    onTickRef.current = onTick
+  }, [onTick])
+
+  useEffect(() => {
+    onTimeoutRef.current = onTimeout
+  }, [onTimeout])
 
   useEffect(() => {
     if (!isRunning) {
@@ -43,14 +55,14 @@ export function useGameLoop({
         )
 
         if (deltaMs > 0) {
-          onTick(deltaMs)
+          onTickRef.current(deltaMs)
 
-          if (currentAlertId !== null) {
+          if (currentAlertIdRef.current !== null) {
             alertElapsedRef.current += deltaMs
 
             if (alertElapsedRef.current >= DIFFICULTY.eventIntervalMs) {
               alertElapsedRef.current = 0
-              onTimeout()
+              onTimeoutRef.current()
             }
           }
         }
@@ -68,5 +80,5 @@ export function useGameLoop({
       }
       previousTimeRef.current = null
     }
-  }, [currentAlertId, isRunning, onTick, onTimeout])
+  }, [isRunning])
 }

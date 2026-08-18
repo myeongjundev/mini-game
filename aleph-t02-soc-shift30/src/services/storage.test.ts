@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   DEFAULTS,
+  loadInitialSaved,
   loadSaved,
   saveSaved,
   STORAGE_KEY,
@@ -18,6 +19,7 @@ function storageWith(value: string | null): StorageLike {
 describe('loadSaved corruption recovery table', () => {
   it('1. returns defaults when the key is missing', () => {
     expect(loadSaved(storageWith(null))).toEqual(DEFAULTS)
+    expect(loadSaved(storageWith(null)).mute).toBe(true)
   })
 
   it('2. returns defaults for an empty string', () => {
@@ -54,6 +56,28 @@ describe('loadSaved corruption recovery table', () => {
         ),
       ),
     ).toEqual({ v: 1, bestScore: 2140, mute: true, reduceMotion: false })
+  })
+})
+
+describe('initial accessibility settings', () => {
+  it('starts muted and adopts the OS reduced-motion preference without saved data', () => {
+    expect(loadInitialSaved(storageWith(null), () => ({ matches: true }))).toEqual({
+      v: 1,
+      bestScore: 0,
+      mute: true,
+      reduceMotion: true,
+    })
+  })
+
+  it('lets a valid saved reduce-motion choice override the OS preference', () => {
+    expect(
+      loadInitialSaved(
+        storageWith(
+          '{"v":1,"bestScore":10,"mute":false,"reduceMotion":false}',
+        ),
+        () => ({ matches: true }),
+      ),
+    ).toEqual({ v: 1, bestScore: 10, mute: false, reduceMotion: false })
   })
 })
 

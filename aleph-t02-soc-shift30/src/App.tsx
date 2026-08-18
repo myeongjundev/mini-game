@@ -1,5 +1,20 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react'
 
+import ActionButtons from './components/ActionButtons'
+import AlertCard from './components/AlertCard'
+import Hud from './components/Hud'
+import SettingsBar from './components/SettingsBar'
+import VerdictFlash from './components/VerdictFlash'
+import PausedScreen from './components/screens/PausedScreen'
+import ReadyScreen from './components/screens/ReadyScreen'
+import ResultScreen from './components/screens/ResultScreen'
 import { DIFFICULTY } from './game/config'
 import { ALERTS } from './game/data/alerts'
 import {
@@ -21,7 +36,9 @@ import {
 import { useGameLoop } from './game/hooks/useGameLoop'
 import { useKeyboard } from './game/hooks/useKeyboard'
 import { useVisibilityPause } from './game/hooks/useVisibilityPause'
-import type { Action, GameState } from './game/types'
+import type { Action, GameState, Verdict } from './game/types'
+import { audioEngine } from './services/audio'
+import { loadInitialSaved, saveSaved, type Saved } from './services/storage'
 
 export type GameReducerState = {
   game: GameState
@@ -94,8 +111,36 @@ export default function App() {
     undefined,
     createGameReducerState,
   )
+  const [saved, setSaved] = useState(loadInitialSaved)
+  const [feedback, setFeedback] = useState<{
+    verdict: Verdict
+    explanation: string
+  } | null>(null)
   const resolvedRef = useRef<string | null>(null)
+  const lastExplanationRef = useRef('')
+  const muteRef = useRef(saved.mute)
+  const alertProgressRef = useRef<{
+    id: string | null
+    startTimeLeftMs: number
+  }>({
+    id: null as string | null,
+    startTimeLeftMs: DIFFICULTY.totalTimeMs,
+  })
   const currentAlertId = state.game.currentAlert?.id ?? null
+  muteRef.current = saved.mute
+
+  if (alertProgressRef.current.id !== currentAlertId) {
+    alertProgressRef.current = {
+      id: currentAlertId,
+      startTimeLeftMs: state.game.timeLeftMs,
+    }
+  }
+
+  const alertTimeRemainingRatio = currentAlertId === null
+    ? 0
+    : 1 -
+      (alertProgressRef.current.startTimeLeftMs - state.game.timeLeftMs) /
+        DIFFICULTY.eventIntervalMs
 
   useEffect(() => {
     resolvedRef.current = null
@@ -107,6 +152,39 @@ export default function App() {
     }
   }, [state.game.currentAlert, state.game.phase])
 
+  useEffect(() => {
+    const verdict = state.game.lastVerdict
+
+    if (verdict === null) {
+      return
+    }
+
+    setFeedback({ verdict, explanation: lastExplanationRef.current })
+    audioEngine.play(verdict === 'CORRECT' ? 'CORRECT' : 'INCORRECT', muteRef.current)
+    const timeoutId = window.setTimeout(() => setFeedback(null), 300)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [state.game.reviewed, state.game.timeouts])
+
+  useEffect(() => {
+    if (state.game.currentAlert?.severity === 'CRITICAL') {
+      audioEngine.play('CRITICAL', muteRef.current)
+    }
+  }, [currentAlertId, state.game.currentAlert?.severity])
+
+  useEffect(() => () => audioEngine.disable(), [])
+
+  useEffect(() => {
+    if (
+      (state.game.phase === 'SUCCESS' || state.game.phase === 'FAILURE') &&
+      state.game.score > saved.bestScore
+    ) {
+      const next = { ...saved, bestScore: state.game.score }
+      setSaved(next)
+      saveSaved(next)
+    }
+  }, [saved, state.game.phase, state.game.score])
+
   const handleDecide = useCallback(
     (action: Action) => {
       if (
@@ -117,6 +195,7 @@ export default function App() {
         return
       }
 
+      lastExplanationRef.current = state.game.currentAlert?.explanation ?? ''
       resolvedRef.current = currentAlertId
       dispatch({ type: 'DECIDE', action })
     },
@@ -132,9 +211,10 @@ export default function App() {
       return
     }
 
+    lastExplanationRef.current = state.game.currentAlert?.explanation ?? ''
     resolvedRef.current = currentAlertId
     dispatch({ type: 'TIMEOUT' })
-  }, [currentAlertId, state.game.phase])
+  }, [currentAlertId, state.game.currentAlert, state.game.phase])
 
   const handleAllow = useCallback(() => {
     handleDecide('ALLOW')
@@ -160,6 +240,53 @@ export default function App() {
     dispatch({ type: 'PAUSE' })
   }, [])
 
+  const handleStart = useCallback(() => {
+    if (!muteRef.current) {
+      audioEngine.enable()
+    }
+    setFeedback(null)
+    dispatch({ type: 'START' })
+  }, [])
+
+  const handleResume = useCallback(() => {
+    dispatch({ type: 'RESUME' })
+  }, [])
+
+  const handleRestart = useCallback(() => {
+    setFeedback(null)
+    dispatch({ type: 'RESTART' })
+  }, [])
+
+  const updateSaved = useCallback((update: Partial<Pick<Saved, 'mute' | 'reduceMotion'>>) => {
+    setSaved((previous) => {
+      const next = { ...previous, ...update }
+      saveSaved(next)
+      return next
+    })
+  }, [])
+
+  const handleToggleMute = useCallback(() => {
+    if (saved.mute) {
+      audioEngine.enable()
+    } else {
+      audioEngine.disable()
+    }
+    updateSaved({ mute: !saved.mute })
+  }, [saved.mute, updateSaved])
+
+  const handleToggleReduceMotion = useCallback(() => {
+    updateSaved({ reduceMotion: !saved.reduceMotion })
+  }, [saved.reduceMotion, updateSaved])
+
+  const keyboardHandlers = useMemo(
+    () => ({
+      onAllow: handleAllow,
+      onBlock: handleBlock,
+      onPauseToggle: handlePauseToggle,
+    }),
+    [handleAllow, handleBlock, handlePauseToggle],
+  )
+
   useGameLoop({
     isRunning: state.game.phase === 'PLAYING',
     currentAlertId,
@@ -168,37 +295,81 @@ export default function App() {
   })
   useKeyboard(
     state.game.phase === 'PLAYING' || state.game.phase === 'PAUSED',
-    {
-      onAllow: handleAllow,
-      onBlock: handleBlock,
-      onPauseToggle: handlePauseToggle,
-    },
+    keyboardHandlers,
   )
   useVisibilityPause(
     state.game.phase === 'PLAYING',
     handleVisibilityPause,
   )
 
-  const visibleState = {
-    phase: state.game.phase,
-    timeLeftMs: state.game.timeLeftMs,
-    lives: state.game.lives,
-    score: state.game.score,
-    combo: state.game.combo,
-    reviewed: state.game.reviewed,
-    timeouts: state.game.timeouts,
-    currentAlert: state.game.currentAlert
-      ? {
-          id: state.game.currentAlert.id,
-          title: state.game.currentAlert.title,
-        }
-      : null,
-  }
-
   return (
-    <main className="app-shell">
-      <h1 className="app-title">SOC SHIFT:30</h1>
-      <pre>{JSON.stringify(visibleState, null, 2)}</pre>
+    <main
+      className="app-shell"
+      data-reduce-motion={saved.reduceMotion ? 'true' : 'false'}
+      data-feedback={
+        feedback?.verdict.toLowerCase().replaceAll('_', '-') ?? undefined
+      }
+    >
+      <header className="app-header">
+        <h1 className="app-title">SOC SHIFT:30</h1>
+        <span className="app-status">{state.game.phase}</span>
+      </header>
+
+      {state.game.phase === 'READY' ? (
+        <ReadyScreen bestScore={saved.bestScore} onStart={handleStart} />
+      ) : null}
+
+      {state.game.phase === 'PLAYING' ? (
+        <>
+          <Hud state={state.game} />
+          {state.game.currentAlert ? (
+            <AlertCard
+              alert={state.game.currentAlert}
+              timeRemainingRatio={alertTimeRemainingRatio}
+            />
+          ) : (
+            <div className="alert-placeholder" aria-live="polite">SCANNING…</div>
+          )}
+          <ActionButtons
+            disabled={state.game.currentAlert === null}
+            onDecide={handleDecide}
+          />
+        </>
+      ) : null}
+
+      {state.game.phase === 'PAUSED' ? (
+        <>
+          <Hud state={state.game} />
+          <PausedScreen onResume={handleResume} onRestart={handleRestart} />
+        </>
+      ) : null}
+
+      {state.game.phase === 'SUCCESS' || state.game.phase === 'FAILURE' ? (
+        <ResultScreen
+          state={state.game}
+          bestScore={Math.max(saved.bestScore, state.game.score)}
+          onRestart={handleRestart}
+        />
+      ) : null}
+
+      {feedback ? (
+        <VerdictFlash
+          verdict={feedback.verdict}
+          explanation={feedback.explanation}
+        />
+      ) : null}
+
+      <SettingsBar
+        mute={saved.mute}
+        reduceMotion={saved.reduceMotion}
+        pauseDisabled={
+          state.game.phase !== 'PLAYING' && state.game.phase !== 'PAUSED'
+        }
+        isPaused={state.game.phase === 'PAUSED'}
+        onToggleMute={handleToggleMute}
+        onToggleReduceMotion={handleToggleReduceMotion}
+        onPauseToggle={handlePauseToggle}
+      />
     </main>
   )
 }

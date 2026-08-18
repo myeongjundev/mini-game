@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 export type KeyboardHandlers = {
   onAllow: () => void
@@ -8,8 +8,14 @@ export type KeyboardHandlers = {
 
 export function useKeyboard(
   enabled: boolean,
-  { onAllow, onBlock, onPauseToggle }: KeyboardHandlers,
+  handlers: KeyboardHandlers,
 ): void {
+  const handlersRef = useRef(handlers)
+
+  useEffect(() => {
+    handlersRef.current = handlers
+  }, [handlers])
+
   useEffect(() => {
     if (!enabled) {
       return
@@ -27,13 +33,13 @@ export function useKeyboard(
 
       if (isAllow) {
         event.preventDefault()
-        onAllow()
+        handlersRef.current.onAllow()
       } else if (isBlock) {
         event.preventDefault()
-        onBlock()
+        handlersRef.current.onBlock()
       } else if (isPause) {
         event.preventDefault()
-        onPauseToggle()
+        handlersRef.current.onPauseToggle()
       }
     }
 
@@ -42,5 +48,5 @@ export function useKeyboard(
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [enabled, onAllow, onBlock, onPauseToggle])
+  }, [enabled])
 }
