@@ -15,7 +15,7 @@ import VerdictFlash from './components/VerdictFlash'
 import PausedScreen from './components/screens/PausedScreen'
 import ReadyScreen from './components/screens/ReadyScreen'
 import ResultScreen from './components/screens/ResultScreen'
-import { DIFFICULTY } from './game/config'
+import { DIFFICULTY, VERDICT_FLASH_MS } from './game/config'
 import { ALERTS } from './game/data/alerts'
 import {
   createAlertQueue,
@@ -167,7 +167,10 @@ export default function App() {
       explanation: lastExplanationRef.current,
     })
     audioEngine.play(verdict === 'CORRECT' ? 'CORRECT' : 'INCORRECT', muteRef.current)
-    const timeoutId = window.setTimeout(() => setFeedback(null), 300)
+    const timeoutId = window.setTimeout(
+      () => setFeedback(null),
+      VERDICT_FLASH_MS,
+    )
 
     return () => window.clearTimeout(timeoutId)
   }, [state.game.reviewed, state.game.timeouts])

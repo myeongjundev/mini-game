@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DIFFICULTY } from '../config'
+import { DIFFICULTY, VERDICT_FLASH_MS } from '../config'
 import type { Alert, GameState } from '../types'
 import {
   applyVerdict,
@@ -27,6 +27,15 @@ const threatAlert = {
 function playingState(overrides: Partial<GameState> = {}): GameState {
   return { ...createInitialGameState(), phase: 'PLAYING', ...overrides }
 }
+
+describe('feedback timing', () => {
+  it('keeps the verdict flash shorter than the alert interval', () => {
+    // 같거나 길면 판정 표시가 끊기지 않아 다음 경보와 계속 겹친다.
+    // 난이도 실험에서 eventIntervalMs를 1100으로 낮출 때도 성립해야 한다.
+    expect(VERDICT_FLASH_MS).toBeLessThan(DIFFICULTY.eventIntervalMs)
+    expect(VERDICT_FLASH_MS).toBeLessThan(1_100)
+  })
+})
 
 describe('game state machine', () => {
   it('creates and moves through ready, playing, and paused phases', () => {

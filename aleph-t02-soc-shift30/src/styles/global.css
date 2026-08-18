@@ -353,19 +353,23 @@ button:disabled {
   letter-spacing: 1.5px;
 }
 
+/* 카드 정중앙이 아니라 아래쪽에 둔다.
+   중앙에 두면 표시 시간을 늘릴수록 다음 경보의 사실 네 줄이 가려진다.
+   pointer-events를 끄는 이유는 겹친 동안에도 버튼 클릭이 통과해야 하기 때문이다. */
 .verdict-flash {
   position: absolute;
   z-index: 2;
-  inset: 50% auto auto 50%;
+  inset: auto auto 0 50%;
   display: flex;
-  width: min(80%, 520px);
+  width: min(90%, 560px);
   align-items: center;
   gap: var(--gap-md);
-  padding: var(--gap-md);
+  padding: var(--gap-sm) var(--gap-md);
   color: var(--text);
   background: var(--panel);
   border: 2px solid currentColor;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .verdict-flash strong {
