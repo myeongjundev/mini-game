@@ -7,6 +7,7 @@ import type { DecisionRecord } from '../game/types'
 import AlertCard from './AlertCard'
 import ShiftLog from './ShiftLog'
 import PausedScreen from './screens/PausedScreen'
+import ReadyScreen from './screens/ReadyScreen'
 import ResultScreen from './screens/ResultScreen'
 
 describe('screen components', () => {
@@ -22,6 +23,31 @@ describe('screen components', () => {
     expect(markup).not.toContain(alert.correctAction)
     expect(markup).not.toContain('class="suspicious-marker"')
     expect(markup).not.toContain('수상한 항목: ')
+  })
+
+  it('never shows severity on the card because it predicts the answer', () => {
+    for (const alert of ALERTS) {
+      const markup = renderToStaticMarkup(
+        <AlertCard alert={alert} timeRemainingRatio={1} />,
+      )
+
+      expect(markup).not.toContain(alert.severity)
+      expect(markup).not.toContain('severity-')
+      expect(markup).toContain(`TIER ${alert.tier}`)
+    }
+  })
+
+  it('teaches the marker rule with two worked examples on the ready screen', () => {
+    const markup = renderToStaticMarkup(
+      <ReadyScreen bestScore={0} onStart={() => undefined} />,
+    )
+
+    expect(markup).toContain('이렇게 판단하세요')
+    expect(markup).toContain('OUTBOUND HTTPS')
+    expect(markup).toContain('SSH LOGIN FAILURE')
+    expect(markup).toContain('표시가 하나도 없습니다')
+    expect(markup).toContain('표시가 세 개입니다')
+    expect(markup.match(/class="suspicious-marker"/g)).toHaveLength(3)
   })
 
   it('marks only suspicious facts with a shape and screen-reader text', () => {
@@ -95,6 +121,7 @@ describe('shift log', () => {
       severity: 'LOW',
       action: 'ALLOW',
       verdict: 'CORRECT',
+      decisiveFact: 'DESTINATION',
       explanation: '정상 암호화 트래픽이다.',
     },
     {
@@ -104,6 +131,7 @@ describe('shift log', () => {
       severity: 'HIGH',
       action: 'BLOCK',
       verdict: 'FALSE_POSITIVE',
+      decisiveFact: 'DESTINATION',
       explanation: '등록된 백업 서버로 가는 정기 작업이다.',
     },
     {
@@ -113,6 +141,7 @@ describe('shift log', () => {
       severity: 'CRITICAL',
       action: null,
       verdict: 'TIMEOUT',
+      decisiveFact: 'DESTINATION',
       explanation: '심야 대량 전송은 데이터 반출이다.',
     },
   ]
@@ -138,6 +167,14 @@ describe('shift log', () => {
     expect(markup).toContain('내 판단 ')
     expect(markup).toContain('—')
     expect(markup).toContain('3장 중 2장을 놓쳤습니다')
+  })
+
+  it('reveals severity and the decisive fact only after the shift ends', () => {
+    const markup = renderToStaticMarkup(<ShiftLog log={log} />)
+
+    expect(markup).toContain('심각도 ')
+    expect(markup).toContain('CRITICAL')
+    expect(markup.match(/결정적 항목 · DESTINATION/g)).toHaveLength(3)
   })
 
   it('shows a single line instead of an empty list', () => {

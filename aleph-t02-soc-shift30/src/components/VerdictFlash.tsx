@@ -5,6 +5,7 @@ import PixelIcon from './PixelIcon'
 
 export type VerdictFlashProps = {
   verdict: Verdict
+  decisiveFact: string
   explanation: string
 }
 
@@ -27,7 +28,11 @@ export const VERDICT_VIEW: Record<Verdict, { label: string; grid: PixelGrid; cla
   },
 }
 
-export default function VerdictFlash({ verdict, explanation }: VerdictFlashProps) {
+export default function VerdictFlash({
+  verdict,
+  decisiveFact,
+  explanation,
+}: VerdictFlashProps) {
   const view = VERDICT_VIEW[verdict]
 
   return (
@@ -35,6 +40,9 @@ export default function VerdictFlash({ verdict, explanation }: VerdictFlashProps
       <PixelIcon grid={view.grid} title={view.label} className="verdict-icon" />
       <div>
         <strong>{view.label}</strong>
+        {decisiveFact ? (
+          <p className="verdict-decisive">결정적 항목 · {decisiveFact}</p>
+        ) : null}
         <p>{explanation}</p>
       </div>
     </aside>

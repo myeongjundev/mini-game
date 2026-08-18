@@ -82,6 +82,46 @@ facts: { label: string; value: string; signal: Signal }[]
 
 ---
 
+## 심각도는 판정 전에 노출하지 않는다
+
+위 표를 세로로 읽으면 문제가 보인다.
+
+| 심각도 | ALLOW | BLOCK |
+|---|---:|---:|
+| LOW | 3 | 0 |
+| MEDIUM | 3 | 0 |
+| HIGH | 1 | 4 |
+| CRITICAL | 0 | 4 |
+
+**LOW·MEDIUM이면 ALLOW, HIGH·CRITICAL이면 BLOCK — 15장 중 14장, 93%가 맞는다.**
+`backup-job` 하나만 예외다. 심각도를 카드에 보여주면 사실 네 줄을 읽을 이유가 사라진다.
+
+그래서 경보 카드에는 `TIER`만 표시하고 심각도는 숨긴다.
+심각도는 판정이 끝난 뒤 **SHIFT LOG에서만** 드러난다. 정보를 버리지 않으면서 누출만 막는다.
+
+같은 이유로 크리티컬 경고음도 `severity`가 아니라 `tier === 3`에 건다.
+tier는 카드에 이미 표시되므로 소리로 새로 노출되는 정보가 없다.
+
+심각도는 여전히 점수에 쓰인다. CRITICAL 정답은 +300이고, 그 근거는 결과 화면에서 확인된다.
+
+---
+
+## 결정적 항목
+
+각 경보에 `decisiveFact`를 둔다. 판단을 가른 사실 하나의 `label`이다.
+
+```ts
+decisiveFact: string   // facts 중 하나의 label과 반드시 일치한다
+```
+
+판정 직후 플래시와 SHIFT LOG에 `결정적 항목 · DESTINATION` 형태로 표시한다.
+`explanation`이 이유를 문장으로 말한다면, `decisiveFact`는 **네 줄 중 어디를 봤어야 했는지**를 가리킨다.
+
+`backup-job`과 `exfil`은 둘 다 `DESTINATION`이 결정적이다.
+같은 항목을 보고 다른 답을 내야 한다는 것이 이 게임의 핵심이므로 의도된 중복이다.
+
+---
+
 ## Tier 1 — 명확한 이벤트 (0–10초)
 
 플레이어가 규칙을 배우는 구간이다. 판단이 갈리면 안 된다.
@@ -93,6 +133,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `REQUESTS` → `8 / sec`
   - `DEVICE` → `Registered`
   - `DESTINATION` → `Known SaaS`
+- decisiveFact: `DEVICE`
 - explanation: 등록된 기기가 알려진 서비스로 보내는 정상 암호화 트래픽이다.
 
 ### `dns-normal`
@@ -102,6 +143,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `QUERY RATE` → `Normal`
   - `RESOLVER` → `Internal`
   - `DOMAIN` → `Corporate`
+- decisiveFact: `RESOLVER`
 - explanation: 내부 리졸버를 통한 정상적인 이름 질의다.
 
 ### `ssh-brute`
@@ -111,6 +153,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `!` `FAILED LOGIN` → `87`
   - `!` `SOURCE` → `Unknown`
   - `!` `WINDOW` → `40 sec`
+- decisiveFact: `FAILED LOGIN`
 - explanation: 40초에 87회 실패는 사람이 아니라 자동화된 무차별 대입이다.
 
 ### `port-scan`
@@ -120,6 +163,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `!` `BURST` → `High`
   - `!` `SOURCE` → `External`
   - `!` `DURATION` → `6 sec`
+- decisiveFact: `TARGET PORTS`
 - explanation: 짧은 시간에 주요 서비스 포트를 훑는 전형적인 정찰 행위다.
 
 ### `file-share`
@@ -129,6 +173,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `TIME` → `14:22`
   - `DEVICE` → `Registered`
   - `USER` → `Sales Team`
+- decisiveFact: `DEVICE`
 - explanation: 근무 시간에 등록 기기로 접근한 정상 업무 트래픽이다.
 
 ---
@@ -145,6 +190,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `!` `DEVICE` → `Unregistered`
   - `MFA` → `Pass`
   - `LOCATION` → `Office`
+- decisiveFact: `MFA`
 - explanation: MFA를 통과했고 사내 위치다. 기기 미등록만으로 차단하면 정상 업무를 막는다.
 
 ### `typo-login`
@@ -154,6 +200,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `RESULT` → `Success`
   - `DEVICE` → `Registered`
   - `TIME` → `09:14`
+- decisiveFact: `RESULT`
 - explanation: 등록 기기에서 출근 시간에 8회 실패 후 성공은 오타에 가깝다. 실패 횟수만 보면 안 된다.
 
 ### `traffic-spike`
@@ -163,6 +210,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `PATTERN` → `Normal`
   - `SOURCE` → `Customer Range`
   - `EVENT` → `Promotion`
+- decisiveFact: `EVENT`
 - explanation: 예정된 행사로 인한 부하다. 베이스라인 초과 자체가 공격은 아니다.
 
 ### `dns-tunnel`
@@ -172,6 +220,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `!` `RESPONSE SIZE` → `Oversized`
   - `RESOLVER` → `Internal`
   - `!` `DOMAIN` → `Newly Registered`
+- decisiveFact: `SUBDOMAINS`
 - explanation: 내부 리졸버를 거쳐도 무작위 서브도메인과 과대 응답은 DNS를 데이터 통로로 쓰는 터널링이다.
 
 > `RESOLVER: Internal`은 `dns-normal`에서는 정상 근거였다. 같은 값이 다른 맥락에서 안심 재료가 되지 않는다는 것을 보여주는 자리다.
@@ -183,6 +232,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `INTERVAL` → `30 min`
   - `!` `SOURCE` → `Single External IP`
   - `!` `COVERAGE` → `47 ports`
+- decisiveFact: `COVERAGE`
 - explanation: 한 번에 하나씩 느리게 접근해도 단일 외부 IP가 47개 포트를 훑었다면 임계값을 피한 스캔이다.
 
 > 2:2 동률이다. 개별 행위는 정상처럼 보이지만 **누적 범위**가 결정적이다.
@@ -200,6 +250,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `!` `DEVICE` → `Unknown`
   - `!` `FAILED LOGIN` → `132`
   - `!` `TIME` → `03:17`
+- decisiveFact: `FAILED LOGIN`
 - explanation: 최고 권한 계정에 대한 심야 대량 로그인 시도다. 즉시 차단 대상이다.
 
 ### `priv-esc`
@@ -209,6 +260,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `!` `ACTION` → `Add to Domain Admins`
   - `!` `APPROVAL` → `None`
   - `!` `TIME` → `03:41`
+- decisiveFact: `ACTION`
 - explanation: 승인 없는 관리자 그룹 추가는 최소권한 원칙을 정면으로 위반한다.
 
 ### `contractor-proddb`
@@ -218,6 +270,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `!` `RESOURCE` → `Production DB`
   - `!` `HISTORY` → `First Access`
   - `MFA` → `Pass`
+- decisiveFact: `RESOURCE`
 - explanation: 인증에 성공해도 역할에 없는 자원 접근은 허용하지 않는다. Zero Trust의 핵심이다.
 
 > 2:2 동률이고 `MFA: Pass`라는 정상 신호까지 있다. **인증 성공이 통행증이 아니라는 것**을 배우는 자리다.
@@ -229,6 +282,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `!` `TIME` → `02:40`
   - `!` `DESTINATION` → `Unknown Host`
   - `!` `SOURCE` → `Workstation`
+- decisiveFact: `DESTINATION`
 - explanation: 개인 워크스테이션에서 미상 호스트로 나가는 심야 대량 전송은 데이터 반출이다.
 
 ### `backup-job` — 함정 카드
@@ -238,6 +292,7 @@ facts: { label: string; value: string; signal: Signal }[]
   - `!` `TIME` → `02:00`
   - `DESTINATION` → `Registered Backup Server`
   - `JOB` → `Nightly Backup`
+- decisiveFact: `DESTINATION`
 - explanation: 심야 대용량이라도 등록된 백업 서버로 가는 정기 작업이다. 이걸 막으면 백업이 죽는다.
 
 **이 카드는 반드시 넣는다.** `exfil`과 수상한 항목 2개가 겹치지만 목적지와 작업 등록 여부가 다르다.

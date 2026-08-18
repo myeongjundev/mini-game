@@ -11,7 +11,7 @@ export default function AlertCard({ alert, timeRemainingRatio }: AlertCardProps)
   const progress = Math.min(1, Math.max(0, timeRemainingRatio))
 
   return (
-    <article className={`alert-card severity-${alert.severity.toLowerCase()}`}>
+    <article className="alert-card">
       <div className="alert-time-track" aria-hidden="true">
         <span
           className="alert-time-value"
@@ -25,7 +25,7 @@ export default function AlertCard({ alert, timeRemainingRatio }: AlertCardProps)
           className="category-icon"
         />
         <div>
-          <span className="alert-meta">TIER {alert.tier} / {alert.severity}</span>
+          <span className="alert-meta">TIER {alert.tier}</span>
           <h2>{alert.title}</h2>
         </div>
       </header>

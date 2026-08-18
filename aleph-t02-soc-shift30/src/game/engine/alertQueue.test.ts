@@ -21,6 +21,7 @@ function alert(id: string, tier: Tier): Alert {
       { label: 'FOUR', value: '4', signal: 'normal' },
     ],
     correctAction: 'ALLOW',
+    decisiveFact: 'ONE',
     severity: 'LOW',
     explanation: id,
   }

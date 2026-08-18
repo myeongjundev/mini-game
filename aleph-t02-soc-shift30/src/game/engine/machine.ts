@@ -34,6 +34,7 @@ function createRecord(alert: Alert, verdict: Verdict): DecisionRecord {
     severity: alert.severity,
     action: actionFromVerdict(alert, verdict),
     verdict,
+    decisiveFact: alert.decisiveFact,
     explanation: alert.explanation,
   }
 }

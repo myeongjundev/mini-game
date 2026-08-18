@@ -14,6 +14,7 @@ export const ALERTS = [
     ],
     correctAction: 'ALLOW',
     severity: 'LOW',
+    decisiveFact: 'DEVICE',
     explanation: '등록된 기기가 알려진 서비스로 보내는 정상 암호화 트래픽이다.',
   },
   {
@@ -29,6 +30,7 @@ export const ALERTS = [
     ],
     correctAction: 'ALLOW',
     severity: 'LOW',
+    decisiveFact: 'RESOLVER',
     explanation: '내부 리졸버를 통한 정상적인 이름 질의다.',
   },
   {
@@ -44,6 +46,7 @@ export const ALERTS = [
     ],
     correctAction: 'BLOCK',
     severity: 'HIGH',
+    decisiveFact: 'FAILED LOGIN',
     explanation: '40초에 87회 실패는 사람이 아니라 자동화된 무차별 대입이다.',
   },
   {
@@ -59,6 +62,7 @@ export const ALERTS = [
     ],
     correctAction: 'BLOCK',
     severity: 'HIGH',
+    decisiveFact: 'TARGET PORTS',
     explanation: '짧은 시간에 주요 서비스 포트를 훑는 전형적인 정찰 행위다.',
   },
   {
@@ -74,6 +78,7 @@ export const ALERTS = [
     ],
     correctAction: 'ALLOW',
     severity: 'LOW',
+    decisiveFact: 'DEVICE',
     explanation: '근무 시간에 등록 기기로 접근한 정상 업무 트래픽이다.',
   },
   {
@@ -89,6 +94,7 @@ export const ALERTS = [
     ],
     correctAction: 'ALLOW',
     severity: 'MEDIUM',
+    decisiveFact: 'MFA',
     explanation:
       'MFA를 통과했고 사내 위치다. 기기 미등록만으로 차단하면 정상 업무를 막는다.',
   },
@@ -105,6 +111,7 @@ export const ALERTS = [
     ],
     correctAction: 'ALLOW',
     severity: 'MEDIUM',
+    decisiveFact: 'RESULT',
     explanation:
       '등록 기기에서 출근 시간에 8회 실패 후 성공은 오타에 가깝다. 실패 횟수만 보면 안 된다.',
   },
@@ -121,6 +128,7 @@ export const ALERTS = [
     ],
     correctAction: 'ALLOW',
     severity: 'MEDIUM',
+    decisiveFact: 'EVENT',
     explanation: '예정된 행사로 인한 부하다. 베이스라인 초과 자체가 공격은 아니다.',
   },
   {
@@ -136,6 +144,7 @@ export const ALERTS = [
     ],
     correctAction: 'BLOCK',
     severity: 'HIGH',
+    decisiveFact: 'SUBDOMAINS',
     explanation:
       '내부 리졸버를 거쳐도 무작위 서브도메인과 과대 응답은 DNS를 데이터 통로로 쓰는 터널링이다.',
   },
@@ -152,6 +161,7 @@ export const ALERTS = [
     ],
     correctAction: 'BLOCK',
     severity: 'HIGH',
+    decisiveFact: 'COVERAGE',
     explanation: '한 번에 하나씩 느리게 접근해도 단일 외부 IP가 47개 포트를 훑었다면 임계값을 피한 스캔이다.',
   },
   {
@@ -167,6 +177,7 @@ export const ALERTS = [
     ],
     correctAction: 'BLOCK',
     severity: 'CRITICAL',
+    decisiveFact: 'FAILED LOGIN',
     explanation: '최고 권한 계정에 대한 심야 대량 로그인 시도다. 즉시 차단 대상이다.',
   },
   {
@@ -182,6 +193,7 @@ export const ALERTS = [
     ],
     correctAction: 'BLOCK',
     severity: 'CRITICAL',
+    decisiveFact: 'ACTION',
     explanation: '승인 없는 관리자 그룹 추가는 최소권한 원칙을 정면으로 위반한다.',
   },
   {
@@ -197,6 +209,7 @@ export const ALERTS = [
     ],
     correctAction: 'BLOCK',
     severity: 'CRITICAL',
+    decisiveFact: 'RESOURCE',
     explanation:
       '인증에 성공해도 역할에 없는 자원 접근은 허용하지 않는다. Zero Trust의 핵심이다.',
   },
@@ -213,6 +226,7 @@ export const ALERTS = [
     ],
     correctAction: 'BLOCK',
     severity: 'CRITICAL',
+    decisiveFact: 'DESTINATION',
     explanation:
       '개인 워크스테이션에서 미상 호스트로 나가는 심야 대량 전송은 데이터 반출이다.',
   },
@@ -229,6 +243,7 @@ export const ALERTS = [
     ],
     correctAction: 'ALLOW',
     severity: 'HIGH',
+    decisiveFact: 'DESTINATION',
     explanation:
       '심야 대용량이라도 등록된 백업 서버로 가는 정기 작업이다. 이걸 막으면 백업이 죽는다.',
   },

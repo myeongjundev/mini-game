@@ -11,6 +11,8 @@ export type Alert = {
   facts: { label: string; value: string; signal: Signal }[]
   correctAction: Action
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+  /** 판단을 가른 사실의 label. facts 중 하나와 반드시 일치한다. */
+  decisiveFact: string
   explanation: string
 }
 
@@ -27,6 +29,7 @@ export type DecisionRecord = {
   severity: Alert['severity']
   action: Action | null
   verdict: Verdict
+  decisiveFact: string
   explanation: string
 }
 

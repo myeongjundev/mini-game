@@ -3,6 +3,14 @@ import { describe, expect, it } from 'vitest'
 import { ALERTS } from './alerts'
 
 describe('alert dataset', () => {
+  it('points every decisive fact at a real label on the same alert', () => {
+    for (const alert of ALERTS) {
+      const labels = alert.facts.map((fact) => fact.label)
+
+      expect(labels).toContain(alert.decisiveFact)
+    }
+  })
+
   it('contains 15 alerts with exactly four facts each', () => {
     expect(ALERTS).toHaveLength(15)
     expect(ALERTS.every((alert) => alert.facts.length === 4)).toBe(true)

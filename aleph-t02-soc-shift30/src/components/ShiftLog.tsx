@@ -43,6 +43,10 @@ export default function ShiftLog({ log }: ShiftLogProps) {
                       className="category-icon"
                     />
                     <span className="shift-log-title">{entry.title}</span>
+                    <span className="shift-log-severity">
+                      <span className="sr-only">심각도 </span>
+                      {entry.severity}
+                    </span>
                     <span className="shift-log-action">
                       <span className="sr-only">내 판단 </span>
                       {entry.action ?? '—'}
@@ -56,7 +60,12 @@ export default function ShiftLog({ log }: ShiftLogProps) {
                       {view.label}
                     </span>
                   </div>
-                  <p className="shift-log-explanation">{entry.explanation}</p>
+                  <p className="shift-log-explanation">
+                    <span className="shift-log-decisive">
+                      결정적 항목 · {entry.decisiveFact}
+                    </span>
+                    {entry.explanation}
+                  </p>
                 </li>
               )
             })}

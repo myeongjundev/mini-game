@@ -114,10 +114,12 @@ export default function App() {
   const [saved, setSaved] = useState(loadInitialSaved)
   const [feedback, setFeedback] = useState<{
     verdict: Verdict
+    decisiveFact: string
     explanation: string
   } | null>(null)
   const resolvedRef = useRef<string | null>(null)
   const lastExplanationRef = useRef('')
+  const lastDecisiveFactRef = useRef('')
   const muteRef = useRef(saved.mute)
   const alertProgressRef = useRef<{
     id: string | null
@@ -159,18 +161,25 @@ export default function App() {
       return
     }
 
-    setFeedback({ verdict, explanation: lastExplanationRef.current })
+    setFeedback({
+      verdict,
+      decisiveFact: lastDecisiveFactRef.current,
+      explanation: lastExplanationRef.current,
+    })
     audioEngine.play(verdict === 'CORRECT' ? 'CORRECT' : 'INCORRECT', muteRef.current)
     const timeoutId = window.setTimeout(() => setFeedback(null), 300)
 
     return () => window.clearTimeout(timeoutId)
   }, [state.game.reviewed, state.game.timeouts])
 
+  // 경고음을 severity가 아니라 tier로 건다.
+  // severity는 정답과 상관이 높아 소리만으로 답이 새기 때문이다.
+  // tier는 카드에 이미 표시되므로 새로 노출되는 정보가 없다.
   useEffect(() => {
-    if (state.game.currentAlert?.severity === 'CRITICAL') {
+    if (state.game.currentAlert?.tier === 3) {
       audioEngine.play('CRITICAL', muteRef.current)
     }
-  }, [currentAlertId, state.game.currentAlert?.severity])
+  }, [currentAlertId, state.game.currentAlert?.tier])
 
   useEffect(() => () => audioEngine.disable(), [])
 
@@ -196,6 +205,7 @@ export default function App() {
       }
 
       lastExplanationRef.current = state.game.currentAlert?.explanation ?? ''
+      lastDecisiveFactRef.current = state.game.currentAlert?.decisiveFact ?? ''
       resolvedRef.current = currentAlertId
       dispatch({ type: 'DECIDE', action })
     },
@@ -355,6 +365,7 @@ export default function App() {
       {feedback ? (
         <VerdictFlash
           verdict={feedback.verdict}
+          decisiveFact={feedback.decisiveFact}
           explanation={feedback.explanation}
         />
       ) : null}

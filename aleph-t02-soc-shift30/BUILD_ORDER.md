@@ -132,6 +132,7 @@ export type Alert = {
   facts: { label: string; value: string; signal: Signal }[];
   correctAction: Action;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  decisiveFact: string;      // facts 중 하나의 label
   explanation: string;
 };
 
@@ -162,11 +163,15 @@ export type DecisionRecord = {
   severity: Alert['severity'];
   action: Action | null;     // null이면 미판정
   verdict: Verdict;
+  decisiveFact: string;
   explanation: string;
 };
 ```
 
 `facts`는 **4개로 고정**한다. 개수가 들쭉날쭉하면 카드 높이가 변해 시선이 흔들리고, 30초 게임에서 그 손해가 크다.
+
+**`severity`는 경보 카드에 표시하지 않는다.** 정답과 상관이 93%라 카드에 띄우면 정답표가 된다.
+판정이 끝난 뒤 SHIFT LOG에서만 드러낸다. 근거는 `docs/ALERT_DATASET.md`에 있다.
 
 `signal`은 그 사실이 살펴볼 만한 항목인지를 나타낸다. 정답이 아니다.
 수상한 항목 수를 세는 것만으로는 맞힐 수 없도록 설계했다 — 2:2 동률인 세 장의 정답이 서로 다르다.
