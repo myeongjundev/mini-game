@@ -21,6 +21,7 @@
 - `package-lock.json`
 - `package.json`
 - `prompts/00_MASTER_BOOTSTRAP.md`
+- `prompts/01_LOBBY_REVIEW_FIXES.md`
 - `public/favicon.svg`
 - `src/App.tsx`
 - `src/App.test.ts`
