@@ -112,6 +112,7 @@ export default function App() {
     createGameReducerState,
   )
   const [saved, setSaved] = useState(loadInitialSaved)
+  const [hasSeenLobbyIntro, setHasSeenLobbyIntro] = useState(false)
   const [feedback, setFeedback] = useState<{
     verdict: Verdict
     decisiveFact: string
@@ -225,6 +226,7 @@ export default function App() {
     }
 
     lastExplanationRef.current = state.game.currentAlert?.explanation ?? ''
+    lastDecisiveFactRef.current = state.game.currentAlert?.decisiveFact ?? ''
     resolvedRef.current = currentAlertId
     dispatch({ type: 'TIMEOUT' })
   }, [currentAlertId, state.game.currentAlert, state.game.phase])
@@ -259,6 +261,10 @@ export default function App() {
     }
     setFeedback(null)
     dispatch({ type: 'START' })
+  }, [])
+
+  const handleLobbyIntroComplete = useCallback(() => {
+    setHasSeenLobbyIntro(true)
   }, [])
 
   const handleResume = useCallback(() => {
@@ -317,19 +323,30 @@ export default function App() {
 
   return (
     <main
-      className="app-shell"
+      className={`app-shell${state.game.phase === 'READY' ? ' app-shell-lobby' : ''}`}
       data-reduce-motion={saved.reduceMotion ? 'true' : 'false'}
       data-feedback={
         feedback?.verdict.toLowerCase().replaceAll('_', '-') ?? undefined
       }
     >
-      <header className="app-header">
-        <h1 className="app-title">SOC SHIFT:30</h1>
-        <span className="app-status">{state.game.phase}</span>
-      </header>
+      {state.game.phase !== 'READY' ? (
+        <header className="app-header">
+          <h1 className="app-title">SOC SHIFT:30</h1>
+          <span className="app-status">{state.game.phase}</span>
+        </header>
+      ) : null}
 
       {state.game.phase === 'READY' ? (
-        <ReadyScreen bestScore={saved.bestScore} onStart={handleStart} />
+        <ReadyScreen
+          bestScore={saved.bestScore}
+          mute={saved.mute}
+          reduceMotion={saved.reduceMotion}
+          playIntro={!hasSeenLobbyIntro}
+          onIntroComplete={handleLobbyIntroComplete}
+          onStart={handleStart}
+          onToggleMute={handleToggleMute}
+          onToggleReduceMotion={handleToggleReduceMotion}
+        />
       ) : null}
 
       {state.game.phase === 'PLAYING' ? (
@@ -373,7 +390,7 @@ export default function App() {
         />
       ) : null}
 
-      <SettingsBar
+      {state.game.phase !== 'READY' ? <SettingsBar
         mute={saved.mute}
         reduceMotion={saved.reduceMotion}
         pauseDisabled={
@@ -383,7 +400,7 @@ export default function App() {
         onToggleMute={handleToggleMute}
         onToggleReduceMotion={handleToggleReduceMotion}
         onPauseToggle={handlePauseToggle}
-      />
+      /> : null}
     </main>
   )
 }

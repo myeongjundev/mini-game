@@ -33,6 +33,9 @@ describe('App hook stability', () => {
     const addListener = vi.spyOn(window, 'addEventListener')
 
     act(() => root.render(<App />))
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+    })
     const start = [...container.querySelectorAll('button')].find(
       (button) => button.textContent === 'START SHIFT',
     )
@@ -52,6 +55,7 @@ describe('App hook stability', () => {
     expect(
       addListener.mock.calls.filter(([type]) => type === 'keydown'),
     ).toHaveLength(registrationsAfterGameStart)
-    expect(registrationsAfterGameStart).toBe(1)
+    // One listener belongs to the one-time intro, and one to the active game.
+    expect(registrationsAfterGameStart).toBe(2)
   })
 })

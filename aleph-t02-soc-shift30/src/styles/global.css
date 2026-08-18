@@ -46,6 +46,278 @@ button {
   border-radius: var(--radius);
 }
 
+.app-shell-lobby {
+  width: min(100%, 1180px);
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg);
+  border-color: var(--line-dim);
+}
+
+.lobby-scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1672 / 941;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.lobby-office {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.crt-display {
+  position: absolute;
+  z-index: 1;
+  top: 13.2%;
+  left: 30.7%;
+  width: 29.9%;
+  height: 42.3%;
+  padding: clamp(8px, 1.25vw, 20px);
+  overflow: hidden;
+  color: var(--cyan);
+  background: var(--bg);
+  border: 2px solid color-mix(in srgb, var(--cyan) 30%, transparent);
+  border-radius: 4% / 7%;
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--cyan) 15%, transparent);
+  font-size: clamp(7px, 0.82vw, 13px);
+  text-shadow: 0 0 6px currentColor;
+}
+
+.crt-display::after {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  content: '';
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    color-mix(in srgb, var(--bg) 24%, transparent) 4px
+  );
+  pointer-events: none;
+}
+
+.crt-cursor,
+.intro-title,
+.intro-ready {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.crt-cursor {
+  animation: crt-cursor-blink 500ms steps(1) infinite;
+}
+
+.boot-log {
+  display: grid;
+  gap: 0.55em;
+  padding-top: 0.5em;
+}
+
+.boot-log strong {
+  margin-bottom: 0.4em;
+  color: var(--text);
+}
+
+.boot-log span {
+  opacity: 0;
+  animation: boot-log-reveal 80ms steps(1) forwards;
+  animation-delay: calc(var(--log-index) * 240ms);
+}
+
+.intro-title,
+.intro-ready {
+  gap: 0.65em;
+  animation: crt-title-in 180ms steps(2);
+}
+
+.intro-title strong {
+  font-size: 2.25em;
+  letter-spacing: 0.08em;
+}
+
+.intro-title span,
+.intro-title small,
+.intro-ready span,
+.intro-ready small {
+  color: var(--text-dim);
+  font-size: 0.8em;
+  letter-spacing: 0.14em;
+}
+
+.intro-ready strong {
+  color: var(--green);
+  font-size: 1.35em;
+  animation: crt-ready-flicker 140ms steps(2) 2;
+}
+
+.intro-skip {
+  position: absolute;
+  right: 1.2em;
+  bottom: 1em;
+  color: var(--text-dim);
+  font-size: 0.72em;
+  letter-spacing: 0.08em;
+}
+
+.lobby-console {
+  display: grid;
+  height: 100%;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.5em;
+}
+
+.lobby-console-header,
+.lobby-console-footer,
+.lobby-status-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-dim);
+  font-size: 0.72em;
+  letter-spacing: 0.08em;
+}
+
+.status-online,
+.lobby-status-grid strong {
+  color: var(--green);
+}
+
+.lobby-title {
+  align-self: end;
+  text-align: center;
+}
+
+.lobby-title span {
+  color: var(--text-dim);
+  font-size: 0.72em;
+  letter-spacing: 0.16em;
+}
+
+.lobby-title h2 {
+  margin: 0.12em 0 0;
+  font-size: 2.15em;
+  letter-spacing: 0.06em;
+}
+
+.lobby-title p {
+  margin: 0.25em 0;
+  color: var(--text-dim);
+  font-size: 0.7em;
+  letter-spacing: 0.16em;
+}
+
+.lobby-actions {
+  display: grid;
+  width: 72%;
+  gap: 0.4em;
+  justify-self: center;
+}
+
+.lobby-actions button,
+.lobby-panel button,
+.lobby-console-footer button {
+  padding: 0.35em 0.55em;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.lobby-actions .lobby-start {
+  padding: 0.55em;
+  color: var(--bg);
+  background: var(--cyan);
+  border-color: var(--cyan);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.lobby-actions .lobby-start:hover,
+.lobby-actions .lobby-start:focus-visible {
+  color: var(--cyan);
+  background: var(--bg);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 50%, transparent);
+}
+
+.lobby-status-grid {
+  width: 92%;
+  justify-self: center;
+  margin-top: 0.45em;
+}
+
+.lobby-status-grid span {
+  display: grid;
+  gap: 0.2em;
+}
+
+.lobby-panel {
+  display: grid;
+  align-content: center;
+  gap: 0.7em;
+  padding: 0 1em;
+}
+
+.lobby-panel h2,
+.lobby-panel p {
+  margin: 0;
+}
+
+.lobby-panel p {
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.lobby-best {
+  font-size: 2.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.lobby-console-footer {
+  gap: 0.5em;
+  padding-top: 0.45em;
+  border-top: 1px solid var(--line-dim);
+}
+
+.lobby-console-footer button {
+  padding: 0;
+  border: 0;
+  font-size: inherit;
+}
+
+@keyframes crt-cursor-blink {
+  50% { opacity: 0; }
+}
+
+@keyframes boot-log-reveal {
+  to { opacity: 1; }
+}
+
+@keyframes crt-title-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+@keyframes crt-ready-flicker {
+  50% { opacity: 0.35; }
+}
+
+.app-shell[data-reduce-motion='true'] .crt-cursor,
+.app-shell[data-reduce-motion='true'] .boot-log span,
+.app-shell[data-reduce-motion='true'] .intro-title,
+.app-shell[data-reduce-motion='true'] .intro-ready,
+.app-shell[data-reduce-motion='true'] .intro-ready strong {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
 .app-header,
 .alert-header,
 .settings-bar,
@@ -744,6 +1016,29 @@ button:disabled {
 
   .error-bar-row {
     grid-template-columns: 120px 1fr 24px;
+  }
+
+  .app-shell-lobby {
+    padding: 0;
+  }
+
+  .lobby-scene {
+    aspect-ratio: 4 / 5;
+  }
+
+  .lobby-office {
+    width: auto;
+    max-width: none;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .crt-display {
+    top: 13.2%;
+    left: 8.5%;
+    width: 64%;
+    height: 42.3%;
+    font-size: clamp(7px, 1.85vw, 12px);
   }
 }
 

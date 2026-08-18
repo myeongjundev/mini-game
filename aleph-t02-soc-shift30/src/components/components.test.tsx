@@ -37,17 +37,25 @@ describe('screen components', () => {
     }
   })
 
-  it('teaches the marker rule with two worked examples on the ready screen', () => {
+  it('renders the lobby menu and current shift record', () => {
     const markup = renderToStaticMarkup(
-      <ReadyScreen bestScore={0} onStart={() => undefined} />,
+      <ReadyScreen
+        bestScore={1200}
+        mute
+        reduceMotion={false}
+        playIntro={false}
+        onIntroComplete={() => undefined}
+        onStart={() => undefined}
+        onToggleMute={() => undefined}
+        onToggleReduceMotion={() => undefined}
+      />,
     )
 
-    expect(markup).toContain('이렇게 판단하세요')
-    expect(markup).toContain('OUTBOUND HTTPS')
-    expect(markup).toContain('SSH LOGIN FAILURE')
-    expect(markup).toContain('표시가 하나도 없습니다')
-    expect(markup).toContain('표시가 세 개입니다')
-    expect(markup.match(/class="suspicious-marker"/g)).toHaveLength(3)
+    expect(markup).toContain('SOC SHIFT:30')
+    expect(markup).toContain('START SHIFT')
+    expect(markup).toContain('HOW TO PLAY')
+    expect(markup).toContain('SHIFT RECORD')
+    expect(markup).toContain('SOUND // OFF')
   })
 
   it('marks only suspicious facts with a shape and screen-reader text', () => {
