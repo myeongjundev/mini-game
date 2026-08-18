@@ -1,0 +1,27 @@
+# Local secrets and environment
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.cache/
+
+# Logs and browser test artifacts
+*.log
+playwright-report/
+test-results/
+coverage/
+
+# Private evidence originals stay local unless explicitly reviewed
+evidence/*
+!evidence/.gitkeep
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
