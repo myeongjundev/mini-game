@@ -152,6 +152,17 @@ export type GameState = {
   timeouts: number;
   currentAlert: Alert | null;
   lastVerdict: Verdict | null;
+  log: DecisionRecord[];
+};
+
+export type DecisionRecord = {
+  alertId: string;
+  title: string;
+  category: Category;
+  severity: Alert['severity'];
+  action: Action | null;     // null이면 미판정
+  verdict: Verdict;
+  explanation: string;
 };
 ```
 

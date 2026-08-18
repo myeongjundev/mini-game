@@ -20,6 +20,16 @@ export type Verdict =
   | 'MISSED_THREAT'
   | 'TIMEOUT'
 
+export type DecisionRecord = {
+  alertId: string
+  title: string
+  category: Category
+  severity: Alert['severity']
+  action: Action | null
+  verdict: Verdict
+  explanation: string
+}
+
 export type GameState = {
   phase: 'READY' | 'PLAYING' | 'PAUSED' | 'SUCCESS' | 'FAILURE'
   timeLeftMs: number
@@ -35,4 +45,5 @@ export type GameState = {
   timeouts: number
   currentAlert: Alert | null
   lastVerdict: Verdict | null
+  log: DecisionRecord[]
 }

@@ -8,7 +8,7 @@ export type VerdictFlashProps = {
   explanation: string
 }
 
-const VERDICT_VIEW: Record<Verdict, { label: string; grid: PixelGrid; className: string }> = {
+export const VERDICT_VIEW: Record<Verdict, { label: string; grid: PixelGrid; className: string }> = {
   CORRECT: { label: 'CORRECT', grid: PIXEL_ART.correct, className: 'verdict-correct' },
   FALSE_POSITIVE: {
     label: 'FALSE POSITIVE',

@@ -171,6 +171,68 @@ describe('game state machine', () => {
     expect(restartGame(failure)).toEqual(createInitialGameState())
   })
 
+  it('records every verdict in play order and restores the action taken', () => {
+    const normal = {
+      id: 'normal-1',
+      title: 'NORMAL ONE',
+      category: 'traffic',
+      correctAction: 'ALLOW',
+      severity: 'LOW',
+      explanation: '정상 근거',
+    } as Alert
+    const threat = {
+      id: 'threat-1',
+      title: 'THREAT ONE',
+      category: 'critical',
+      correctAction: 'BLOCK',
+      severity: 'CRITICAL',
+      explanation: '위협 근거',
+    } as Alert
+
+    let state = playingState({ lives: 9 })
+    state = applyVerdict(state, 'CORRECT', threat)
+    state = applyVerdict(state, 'FALSE_POSITIVE', normal)
+    state = applyVerdict(state, 'MISSED_THREAT', threat)
+    state = applyVerdict(state, 'TIMEOUT', normal)
+
+    expect(state.log).toHaveLength(4)
+    expect(state.log.map((entry) => entry.verdict)).toEqual([
+      'CORRECT',
+      'FALSE_POSITIVE',
+      'MISSED_THREAT',
+      'TIMEOUT',
+    ])
+    expect(state.log.map((entry) => entry.action)).toEqual([
+      'BLOCK',
+      'BLOCK',
+      'ALLOW',
+      null,
+    ])
+    expect(state.log[0]).toMatchObject({
+      alertId: 'threat-1',
+      title: 'THREAT ONE',
+      category: 'critical',
+      severity: 'CRITICAL',
+      explanation: '위협 근거',
+    })
+  })
+
+  it('starts with an empty log and clears it on restart', () => {
+    expect(createInitialGameState().log).toEqual([])
+
+    const played = applyVerdict(playingState(), 'CORRECT', normalAlert)
+    expect(played.log).toHaveLength(1)
+
+    const finished = { ...played, phase: 'FAILURE' } as GameState
+    expect(restartGame(finished).log).toEqual([])
+  })
+
+  it('does not record a verdict that arrives outside playing', () => {
+    const ready = createInitialGameState()
+
+    expect(applyVerdict(ready, 'CORRECT', normalAlert).log).toEqual([])
+  })
+
   it('ticks only while playing and succeeds when time reaches zero', () => {
     const playing = playingState({ timeLeftMs: 100 })
     const paused = { ...playing, phase: 'PAUSED' } as GameState

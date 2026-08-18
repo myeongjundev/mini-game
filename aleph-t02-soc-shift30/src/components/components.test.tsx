@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest'
 
 import { ALERTS } from '../game/data/alerts'
 import { createInitialGameState } from '../game/engine/machine'
+import type { DecisionRecord } from '../game/types'
 import AlertCard from './AlertCard'
+import ShiftLog from './ShiftLog'
 import PausedScreen from './screens/PausedScreen'
 import ResultScreen from './screens/ResultScreen'
 
@@ -81,5 +83,67 @@ describe('screen components', () => {
     }
     expect(markup).toContain('error-false-positive')
     expect(markup).toContain('error-missed-threat')
+  })
+})
+
+describe('shift log', () => {
+  const log: DecisionRecord[] = [
+    {
+      alertId: 'https-normal',
+      title: 'OUTBOUND HTTPS',
+      category: 'traffic',
+      severity: 'LOW',
+      action: 'ALLOW',
+      verdict: 'CORRECT',
+      explanation: '정상 암호화 트래픽이다.',
+    },
+    {
+      alertId: 'backup-job',
+      title: 'SCHEDULED NIGHT TRANSFER',
+      category: 'traffic',
+      severity: 'HIGH',
+      action: 'BLOCK',
+      verdict: 'FALSE_POSITIVE',
+      explanation: '등록된 백업 서버로 가는 정기 작업이다.',
+    },
+    {
+      alertId: 'exfil',
+      title: 'LARGE OUTBOUND TRANSFER',
+      category: 'traffic',
+      severity: 'CRITICAL',
+      action: null,
+      verdict: 'TIMEOUT',
+      explanation: '심야 대량 전송은 데이터 반출이다.',
+    },
+  ]
+
+  it('lists every decision in play order with its explanation', () => {
+    const markup = renderToStaticMarkup(<ShiftLog log={log} />)
+
+    expect(markup.indexOf('OUTBOUND HTTPS')).toBeLessThan(
+      markup.indexOf('SCHEDULED NIGHT TRANSFER'),
+    )
+    expect(markup.indexOf('SCHEDULED NIGHT TRANSFER')).toBeLessThan(
+      markup.indexOf('LARGE OUTBOUND TRANSFER'),
+    )
+    for (const entry of log) {
+      expect(markup).toContain(entry.explanation)
+    }
+  })
+
+  it('marks only failed decisions and shows a dash for no decision', () => {
+    const markup = renderToStaticMarkup(<ShiftLog log={log} />)
+
+    expect(markup.match(/shift-log-item-failed/g)).toHaveLength(2)
+    expect(markup).toContain('내 판단 ')
+    expect(markup).toContain('—')
+    expect(markup).toContain('3장 중 2장을 놓쳤습니다')
+  })
+
+  it('shows a single line instead of an empty list', () => {
+    const markup = renderToStaticMarkup(<ShiftLog log={[]} />)
+
+    expect(markup).toContain('판정한 경보가 없습니다.')
+    expect(markup).not.toContain('shift-log-list')
   })
 })

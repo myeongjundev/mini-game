@@ -1,6 +1,7 @@
 import { DIFFICULTY } from '../../game/config'
 import type { GameState } from '../../game/types'
 import { formatAccuracy, formatScore, formatSeconds } from '../../utils/format'
+import ShiftLog from '../ShiftLog'
 
 export type ResultScreenProps = {
   state: GameState
@@ -52,6 +53,7 @@ export default function ResultScreen({ state, bestScore, onRestart }: ResultScre
           <strong>{state.missedThreats}</strong>
         </div>
       </div>
+      <ShiftLog log={state.log} />
       <button className="primary-button" type="button" onClick={onRestart}>RETURN TO READY</button>
     </section>
   )

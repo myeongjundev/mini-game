@@ -1,7 +1,42 @@
 import { DIFFICULTY } from '../config'
-import type { Action, Alert, GameState, Verdict } from '../types'
+import type {
+  Action,
+  Alert,
+  DecisionRecord,
+  GameState,
+  Verdict,
+} from '../types'
 import { resolveAlert } from './rules'
 import { calculateScoreGain } from './scoring'
+
+/**
+ * 판정 결과만으로 플레이어가 누른 조작을 복원한다.
+ * CORRECT는 정답과 같은 조작, 오탐은 정상을 막은 BLOCK,
+ * 미탐은 위협을 통과시킨 ALLOW, 미판정은 조작이 없어 null이다.
+ */
+function actionFromVerdict(alert: Alert, verdict: Verdict): Action | null {
+  if (verdict === 'TIMEOUT') {
+    return null
+  }
+
+  if (verdict === 'CORRECT') {
+    return alert.correctAction
+  }
+
+  return verdict === 'FALSE_POSITIVE' ? 'BLOCK' : 'ALLOW'
+}
+
+function createRecord(alert: Alert, verdict: Verdict): DecisionRecord {
+  return {
+    alertId: alert.id,
+    title: alert.title,
+    category: alert.category,
+    severity: alert.severity,
+    action: actionFromVerdict(alert, verdict),
+    verdict,
+    explanation: alert.explanation,
+  }
+}
 
 export function createInitialGameState(): GameState {
   return {
@@ -19,6 +54,7 @@ export function createInitialGameState(): GameState {
     timeouts: 0,
     currentAlert: null,
     lastVerdict: null,
+    log: [],
   }
 }
 
@@ -95,6 +131,7 @@ export function applyVerdict(
       timeouts: state.timeouts + 1,
       currentAlert: null,
       lastVerdict: verdict,
+      log: [...state.log, createRecord(alert, verdict)],
     }
   }
 
@@ -122,6 +159,7 @@ export function applyVerdict(
       state.missedThreats + (verdict === 'MISSED_THREAT' ? 1 : 0),
     currentAlert: null,
     lastVerdict: verdict,
+    log: [...state.log, createRecord(alert, verdict)],
   }
 }
 

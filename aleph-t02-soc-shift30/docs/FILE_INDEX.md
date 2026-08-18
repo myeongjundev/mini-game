@@ -30,6 +30,7 @@
 - `src/components/PixelIcon.tsx`
 - `src/components/PixelIcon.test.tsx`
 - `src/components/SettingsBar.tsx`
+- `src/components/ShiftLog.tsx`
 - `src/components/VerdictFlash.tsx`
 - `src/components/screens/PausedScreen.tsx`
 - `src/components/screens/ReadyScreen.tsx`
