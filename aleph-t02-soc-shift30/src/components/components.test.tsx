@@ -18,6 +18,22 @@ describe('screen components', () => {
     expect(markup.match(/<dt>/g)).toHaveLength(4)
     expect(markup).toContain('scaleX(0.5)')
     expect(markup).not.toContain(alert.correctAction)
+    expect(markup).not.toContain('class="suspicious-marker"')
+    expect(markup).not.toContain('수상한 항목: ')
+  })
+
+  it('marks only suspicious facts with a shape and screen-reader text', () => {
+    const alert = ALERTS.find((item) => item.id === 'ssh-brute')
+
+    expect(alert).toBeDefined()
+    const markup = renderToStaticMarkup(
+      <AlertCard alert={alert!} timeRemainingRatio={1} />,
+    )
+
+    expect(markup).toContain('수상한 항목에 표시가 붙습니다')
+    expect(markup.match(/class="suspicious-marker"/g)).toHaveLength(3)
+    expect(markup.match(/수상한 항목: /g)).toHaveLength(3)
+    expect(markup.match(/class="fact-suspicious"/g)).toHaveLength(3)
   })
 
   it('includes both resume and restart controls on the paused screen', () => {

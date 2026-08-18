@@ -277,6 +277,13 @@ button:disabled {
   margin: 0;
 }
 
+.fact-signal-guide {
+  margin: 0 0 var(--gap-sm);
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
 .fact-row,
 .result-row {
   display: grid;
@@ -302,6 +309,20 @@ button:disabled {
   color: var(--text);
   font-weight: 700;
   text-align: right;
+}
+
+.fact-row dd.fact-suspicious {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--gap-xs);
+  color: var(--amber);
+}
+
+.suspicious-marker {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
 }
 
 .action-buttons {

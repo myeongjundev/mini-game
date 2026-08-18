@@ -29,11 +29,23 @@ export default function AlertCard({ alert, timeRemainingRatio }: AlertCardProps)
           <h2>{alert.title}</h2>
         </div>
       </header>
+      <p className="fact-signal-guide">수상한 항목에 표시가 붙습니다</p>
       <dl className="fact-grid">
         {alert.facts.map((fact) => (
           <div className="fact-row" key={fact.label}>
             <dt>{fact.label}</dt>
-            <dd>{fact.value}</dd>
+            <dd className={fact.signal === 'suspicious' ? 'fact-suspicious' : undefined}>
+              {fact.signal === 'suspicious' ? (
+                <>
+                  <PixelIcon
+                    grid={PIXEL_ART.suspiciousMarker}
+                    className="suspicious-marker"
+                  />
+                  <span className="sr-only">수상한 항목: </span>
+                </>
+              ) : null}
+              <span>{fact.value}</span>
+            </dd>
           </div>
         ))}
       </dl>

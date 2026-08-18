@@ -1,13 +1,14 @@
 export type Category = 'traffic' | 'login' | 'scan' | 'dns' | 'critical'
 export type Action = 'ALLOW' | 'BLOCK'
 export type Tier = 1 | 2 | 3
+export type Signal = 'normal' | 'suspicious'
 
 export type Alert = {
   id: string
   tier: Tier
   category: Category
   title: string
-  facts: { label: string; value: string }[]
+  facts: { label: string; value: string; signal: Signal }[]
   correctAction: Action
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   explanation: string

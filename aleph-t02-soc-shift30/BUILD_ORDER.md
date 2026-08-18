@@ -122,13 +122,14 @@ mini-game/
 export type Category = 'traffic' | 'login' | 'scan' | 'dns' | 'critical';
 export type Action   = 'ALLOW' | 'BLOCK';
 export type Tier     = 1 | 2 | 3;
+export type Signal   = 'normal' | 'suspicious';
 
 export type Alert = {
   id: string;
   tier: Tier;
   category: Category;
   title: string;
-  facts: { label: string; value: string }[];
+  facts: { label: string; value: string; signal: Signal }[];
   correctAction: Action;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   explanation: string;
@@ -155,6 +156,10 @@ export type GameState = {
 ```
 
 `facts`는 **4개로 고정**한다. 개수가 들쭉날쭉하면 카드 높이가 변해 시선이 흔들리고, 30초 게임에서 그 손해가 크다.
+
+`signal`은 그 사실이 살펴볼 만한 항목인지를 나타낸다. 정답이 아니다.
+수상한 항목 수를 세는 것만으로는 맞힐 수 없도록 설계했다 — 2:2 동률인 세 장의 정답이 서로 다르다.
+전체 신호 배치와 근거는 `docs/ALERT_DATASET.md`에 있다.
 
 ---
 

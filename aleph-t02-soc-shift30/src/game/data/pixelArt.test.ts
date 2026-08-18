@@ -10,6 +10,7 @@ const EXPECTED_DIMENSIONS = {
   critical: [12, 12],
   heartFull: [9, 8],
   heartEmpty: [9, 8],
+  suspiciousMarker: [7, 7],
   correct: [16, 16],
   falsePositive: [16, 16],
   missedThreat: [16, 16],

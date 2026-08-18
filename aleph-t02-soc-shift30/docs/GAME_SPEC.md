@@ -29,7 +29,7 @@ type Alert = {
   id: string;
   category: "traffic" | "login" | "scan" | "dns" | "critical";
   title: string;
-  facts: { label: string; value: string }[];
+  facts: { label: string; value: string; signal: "normal" | "suspicious" }[];
   correctAction: "ALLOW" | "BLOCK";
   severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   explanation: string;

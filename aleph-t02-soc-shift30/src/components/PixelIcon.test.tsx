@@ -29,6 +29,17 @@ describe('PixelIcon', () => {
     expect(markup).not.toContain('aria-hidden')
   })
 
+  it('keeps the suspicious marker identifiable without a fixed color', () => {
+    const grid = PIXEL_ART.suspiciousMarker
+    const filledCells = grid.join('').replaceAll('.', '').length
+    const markup = renderToStaticMarkup(<PixelIcon grid={grid} />)
+
+    expect(markup).toContain('viewBox="0 0 7 7"')
+    expect(markup.match(/fill="currentColor"/g)).toHaveLength(filledCells)
+    expect(filledCells).toBe(24)
+    expect(grid[3]).toBe('###.###')
+  })
+
   it('rejects empty and inconsistent grids', () => {
     expect(() => renderToStaticMarkup(<PixelIcon grid={[]} />)).toThrow(
       'PixelIcon requires a non-empty grid with equal row widths',
