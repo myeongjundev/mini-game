@@ -56,6 +56,7 @@ button {
 
 .lobby-scene {
   position: relative;
+  container-type: inline-size;
   width: 100%;
   aspect-ratio: 1672 / 941;
   overflow: hidden;
@@ -83,7 +84,9 @@ button {
   border: 2px solid color-mix(in srgb, var(--cyan) 30%, transparent);
   border-radius: 4% / 7%;
   box-shadow: inset 0 0 24px color-mix(in srgb, var(--cyan) 15%, transparent);
-  font-size: clamp(13px, 0.95vw, 14px);
+  /* vw로 잡으면 셸이 1180px에서 멈춘 뒤에도 글자만 계속 커져서, 1920에서
+     상자는 그대로인데 내용이 넘친다. 상자를 기준으로 재야 맞다. */
+  font-size: clamp(13px, 1.12cqw, 14px);
   text-shadow: 0 0 6px currentColor;
 }
 
@@ -148,7 +151,7 @@ button {
 .intro-ready span,
 .intro-ready small {
   color: var(--text-dim);
-  font-size: 0.8em;
+  font-size: 0.93em;
   letter-spacing: 0.14em;
 }
 
@@ -163,15 +166,25 @@ button {
   right: 1.2em;
   bottom: 1em;
   color: var(--text-dim);
-  font-size: 0.85em;
+  font-size: 0.93em;
   letter-spacing: 0.08em;
 }
 
+/* minmax(0, 1fr)이어야 가운데 줄이 내용만큼 부풀지 않는다. 1fr은 최소가
+   auto라서 내용이 길면 헤더와 푸터를 CRT 밖으로 밀어낸다. */
 .lobby-console {
   display: grid;
   height: 100%;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.3em;
+}
+
+.lobby-menu {
+  display: grid;
+  align-content: safe center;
+  gap: 0.3em;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .lobby-console-header,
@@ -253,12 +266,27 @@ button {
   margin-top: 0.2em;
 }
 
+/* nowrap 한 줄로 두면 콘솔보다 넓어져서 CRT 안쪽 전체를 밀어낸다.
+   .crt-display가 overflow: hidden이라 스크롤바 없이 조용히 잘린다. */
 .lobby-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.1em 0.9em;
   margin: 0;
+  padding: 0;
   color: var(--text-dim);
   font-size: 0.93em;
-  text-align: center;
-  white-space: nowrap;
+  list-style: none;
+}
+
+.lobby-controls kbd {
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  letter-spacing: 0.06em;
 }
 
 .lobby-status-grid span {
@@ -266,16 +294,25 @@ button {
   gap: 0.2em;
 }
 
+/* 좁은 화면에서 예시 카드가 CRT보다 길어진다. safe center를 쓰지 않으면
+   넘칠 때 위쪽이 잘려서 스크롤로도 첫 줄에 닿을 수 없다. */
 .lobby-panel {
   display: grid;
-  align-content: center;
+  align-content: safe center;
   gap: 0.3em;
+  min-height: 0;
   padding: 0 1em;
+  overflow-y: auto;
 }
 
 .lobby-panel h2,
 .lobby-panel p {
   margin: 0;
+}
+
+.lobby-panel h2 {
+  font-size: 1.2em;
+  letter-spacing: 0.08em;
 }
 
 .lobby-panel p {
@@ -372,32 +409,10 @@ button {
   line-height: 1.6;
 }
 
-.ready-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--gap-md);
-  margin: var(--gap-lg) 0;
-}
-
-.ready-grid > div,
-.failure-legend,
 .result-grid {
   padding: var(--gap-md);
   background: var(--bg);
   border: 1px solid var(--line);
-}
-
-.ready-grid p,
-.failure-legend p {
-  margin: var(--gap-sm) 0 0;
-}
-
-.failure-legend strong:first-child {
-  color: var(--amber);
-}
-
-.failure-legend p:last-child strong {
-  color: var(--red);
 }
 
 kbd {
@@ -746,17 +761,11 @@ button:disabled {
   background: var(--red);
 }
 
-.ready-examples {
-  margin-bottom: var(--gap-lg);
-  padding-top: var(--gap-sm);
-  border-top: 1px solid var(--line);
-}
-
 .ready-examples-hint {
-  margin: var(--gap-xs) 0 var(--gap-sm);
+  margin: 0 0 0.25em;
   color: var(--text-dim);
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 0.93em;
+  line-height: 1.35;
 }
 
 .ready-examples-hint strong {
@@ -771,7 +780,7 @@ button:disabled {
 
 .ready-example {
   min-width: 0;
-  padding: 0.45em;
+  padding: 0.4em;
   background: var(--panel);
   border: 1px solid var(--line);
 }
@@ -789,7 +798,7 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   gap: 0.25em;
-  padding: 0.1em 0;
+  padding: 0.04em 0;
   font-size: 0.93em;
 }
 
@@ -1015,7 +1024,6 @@ button:disabled {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .ready-grid,
   .action-buttons {
     grid-template-columns: 1fr;
   }
@@ -1043,12 +1051,18 @@ button:disabled {
     transform: translateX(-50%);
   }
 
+  /* 11px 미만 글자 금지(DESIGN_TOKENS 8절)를 지키려면 화면이 좁을수록
+     글자가 아니라 CRT 상자를 키워야 한다. */
   .crt-display {
-    top: 13.2%;
+    top: 12%;
     left: 8.5%;
     width: 64%;
-    height: 42.3%;
-    font-size: clamp(7px, 1.85vw, 12px);
+    height: 69%;
+    font-size: clamp(12px, 3.1vw, 13px);
+  }
+
+  .ready-example-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1060,4 +1074,27 @@ time,
 [data-uppercase-label] {
   letter-spacing: 1.5px;
   text-transform: uppercase;
+}
+
+/* 641~1100px 구간은 CRT가 세로로 좁아 장식 줄이 조작 안내를 화면 밖으로
+   밀어낸다. C-1 기준(첫 화면에서 조작이 보인다)을 지키려고 장식부터 접는다. */
+@media (min-width: 641px) and (max-width: 1100px) {
+  .lobby-title span,
+  .lobby-title p,
+  .lobby-status-grid {
+    display: none;
+  }
+
+  .lobby-title h2 {
+    font-size: 1.5em;
+  }
+
+  .lobby-actions {
+    width: 84%;
+    gap: 0.3em;
+  }
+
+  .lobby-actions button {
+    padding: 0.22em 0.5em;
+  }
 }

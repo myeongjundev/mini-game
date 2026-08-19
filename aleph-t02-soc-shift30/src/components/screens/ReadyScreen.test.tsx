@@ -43,7 +43,11 @@ describe('ReadyScreen intro and lobby', () => {
   it('runs the complete intro sequence and enters the lobby once', () => {
     renderScreen()
     const scene = () => container.querySelector('.lobby-scene')
+    const live = () => container.querySelector('.lobby-live-status')
     expect(scene()?.getAttribute('data-lobby-phase')).toBe('BOOT')
+    // 라이브 리전은 첫 프레임부터 DOM에 있어야 이후 문구가 읽힌다.
+    expect(live()?.getAttribute('aria-live')).toBe('polite')
+    expect(live()?.textContent).toBe('시스템 부팅 중')
 
     act(() => vi.advanceTimersByTime(400))
     expect(scene()?.getAttribute('data-lobby-phase')).toBe('INITIALIZING')
@@ -57,6 +61,8 @@ describe('ReadyScreen intro and lobby', () => {
     expect(handlers.onIntroComplete).toHaveBeenCalledTimes(1)
     expect(container.textContent).toContain('START SHIFT')
     expect(document.activeElement?.textContent).toBe('START SHIFT')
+    // 같은 노드가 인트로 내내 유지되어야 스크린리더가 변화를 읽는다.
+    expect(live()?.textContent).toBe('야간 근무 로비')
   })
 
   it('skips by keyboard and cleared timers cannot change the lobby later', () => {
@@ -81,7 +87,7 @@ describe('ReadyScreen intro and lobby', () => {
     const howToPlay = [...container.querySelectorAll('button')]
       .find((button) => button.textContent === 'HOW TO PLAY')
     act(() => howToPlay?.click())
-    expect(container.textContent).toContain('표시가 하나도 없습니다')
+    expect(container.textContent).toContain('표시 개수로 정해지지 않으니')
     expect(container.querySelectorAll('.ready-example')).toHaveLength(2)
     expect(container.querySelectorAll('.suspicious-marker')).toHaveLength(3)
     expect(container.querySelector('.lobby-console')?.hasAttribute('aria-live')).toBe(false)
