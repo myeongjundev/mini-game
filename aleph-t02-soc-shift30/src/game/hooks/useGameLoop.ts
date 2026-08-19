@@ -7,6 +7,14 @@ const MAX_FRAME_DELTA_MS = 100
 export type UseGameLoopOptions = {
   isRunning: boolean
   currentAlertId: string | null
+  /**
+   * 메모가 떠 있는 동안 현재 경보의 제한 시간을 멈춘다.
+   *
+   * 경보 한 장의 수명은 `eventIntervalMs`, 즉 1.4초다. 메모를 읽고 닫는 데만
+   * 그 이상이 드니 멈추지 않으면 메모가 뜬 경보는 실력과 무관하게 미판정이
+   * 된다. 30초 근무 시계는 계속 흐르므로 메모를 오래 열어둘 이유는 없다.
+   */
+  isAlertClockFrozen?: boolean
   onTick: (deltaMs: number) => void
   onTimeout: () => void
 }
@@ -14,6 +22,7 @@ export type UseGameLoopOptions = {
 export function useGameLoop({
   isRunning,
   currentAlertId,
+  isAlertClockFrozen = false,
   onTick,
   onTimeout,
 }: UseGameLoopOptions): void {
@@ -21,8 +30,11 @@ export function useGameLoop({
   const previousTimeRef = useRef<number | null>(null)
   const alertElapsedRef = useRef(0)
   const currentAlertIdRef = useRef(currentAlertId)
+  const isAlertClockFrozenRef = useRef(isAlertClockFrozen)
   const onTickRef = useRef(onTick)
   const onTimeoutRef = useRef(onTimeout)
+
+  isAlertClockFrozenRef.current = isAlertClockFrozen
 
   useEffect(() => {
     currentAlertIdRef.current = currentAlertId
@@ -57,7 +69,7 @@ export function useGameLoop({
         if (deltaMs > 0) {
           onTickRef.current(deltaMs)
 
-          if (currentAlertIdRef.current !== null) {
+          if (currentAlertIdRef.current !== null && !isAlertClockFrozenRef.current) {
             alertElapsedRef.current += deltaMs
 
             if (alertElapsedRef.current >= DIFFICULTY.eventIntervalMs) {

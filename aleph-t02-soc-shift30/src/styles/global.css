@@ -1303,37 +1303,41 @@ time,
   }
 }
 
+/* 경보 카드와 메모를 같은 칸에 겹쳐 놓는 자리다.
+   메모가 카드를 덮어도 화면 높이가 변하지 않는다. */
+.alert-stage {
+  position: relative;
+}
+
 /* 근무 중 사내 공지. 규칙은 GAME_SPEC 13절.
-   판정 버튼 자리를 그대로 쓴다. 메모가 떠 있는 동안 판정은 어차피 막히고,
-   따로 쌓으면 1366x768에서 화면이 세로로 넘친다.
-   경보 카드의 사실 네 줄은 가리지 않는다. 가리면 다시 읽어야 해서
-   비용이 예측 불가능해진다. */
+   경보 카드를 덮는다. 시선이 이미 카드에 있어 놓치지 않고, 화면 아래
+   판정 표시(.verdict-flash)와 겹치지 않는다. 가려도 손해가 없는 이유는
+   메모가 떠 있는 동안 경보 제한 시간이 멈추기 때문이다. */
 .memo-toast {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
   display: flex;
-  align-items: center;
-  gap: var(--gap-sm);
-  margin: var(--gap-md) 0 0;
-  padding: var(--gap-xs) var(--gap-md);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--gap-md);
+  padding: var(--gap-lg);
   background: var(--panel);
-  border: 1px solid var(--amber);
-  border-left-width: 3px;
+  border: 2px solid var(--amber);
   animation: memo-in 140ms steps(2);
 }
 
 .memo-icon {
   flex: 0 0 auto;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   color: var(--amber);
-}
-
-.memo-text {
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .memo-head {
   display: flex;
+  align-items: center;
   gap: var(--gap-sm);
   margin: 0;
   font-size: 11px;
@@ -1353,16 +1357,23 @@ time,
 .memo-body {
   margin: 0;
   color: var(--text);
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.memo-note {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 0.5px;
 }
 
 .memo-dismiss {
   flex: 0 0 auto;
-  align-self: stretch;
-  padding: 0 var(--gap-sm);
-  color: var(--text-dim);
+  padding: var(--gap-sm) var(--gap-md);
+  color: var(--amber);
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1px solid var(--amber);
   cursor: pointer;
   font-size: 11px;
   letter-spacing: 1px;
@@ -1371,8 +1382,8 @@ time,
 
 .memo-dismiss:hover,
 .memo-dismiss:focus-visible {
-  color: var(--amber);
-  border-color: var(--amber);
+  color: var(--bg);
+  background: var(--amber);
 }
 
 @keyframes memo-in {

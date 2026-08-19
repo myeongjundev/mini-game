@@ -152,6 +152,12 @@ export default function App() {
     startTimeLeftMs: DIFFICULTY.totalTimeMs,
   })
   const currentAlertId = state.game.currentAlert?.id ?? null
+  const isMemoOpen = Boolean(state.game.activeMemo)
+  // 메모가 떠 있는 동안 흘러간 시간. 경보 제한 시간에서 빼야 눈금과
+  // 실제 만료 시각이 어긋나지 않는다. useGameLoop의 동결과 같은 규칙이다.
+  const memoFrozenMsRef = useRef(0)
+  const isMemoOpenRef = useRef(isMemoOpen)
+  isMemoOpenRef.current = isMemoOpen
   muteRef.current = saved.mute
 
   if (alertProgressRef.current.id !== currentAlertId) {
@@ -159,12 +165,15 @@ export default function App() {
       id: currentAlertId,
       startTimeLeftMs: state.game.timeLeftMs,
     }
+    memoFrozenMsRef.current = 0
   }
 
   const alertTimeRemainingRatio = currentAlertId === null
     ? 0
     : 1 -
-      (alertProgressRef.current.startTimeLeftMs - state.game.timeLeftMs) /
+      (alertProgressRef.current.startTimeLeftMs -
+        state.game.timeLeftMs -
+        memoFrozenMsRef.current) /
         DIFFICULTY.eventIntervalMs
 
   useEffect(() => {
@@ -262,6 +271,9 @@ export default function App() {
   }, [handleDecide])
 
   const handleTick = useCallback((deltaMs: number) => {
+    if (isMemoOpenRef.current) {
+      memoFrozenMsRef.current += deltaMs
+    }
     dispatch({ type: 'TICK', deltaMs })
   }, [])
 
@@ -336,6 +348,7 @@ export default function App() {
   useGameLoop({
     isRunning: state.game.phase === 'PLAYING',
     currentAlertId,
+    isAlertClockFrozen: isMemoOpen,
     onTick: handleTick,
     onTimeout: handleTimeout,
   })
@@ -379,27 +392,31 @@ export default function App() {
       {state.game.phase === 'PLAYING' ? (
         <>
           <Hud state={state.game} />
-          {state.game.currentAlert ? (
-            <AlertCard
-              alert={state.game.currentAlert}
-              timeRemainingRatio={alertTimeRemainingRatio}
-            />
-          ) : (
-            <div className="alert-placeholder" aria-live="polite">SCANNING…</div>
-          )}
-          {/* 메모가 떠 있는 동안 판정은 어차피 막힌다. 버튼 자리를 그대로
-              쓰면 화면 높이가 늘지 않고, 판정할 수 없다는 신호도 분명해진다. */}
-          {state.game.activeMemo ? (
-            <MemoToast
-              memo={state.game.activeMemo.memo}
-              onDismiss={handleDismissMemo}
-            />
-          ) : (
-            <ActionButtons
-              disabled={state.game.currentAlert === null}
-              onDecide={handleDecide}
-            />
-          )}
+          {/* 메모는 경보 카드 위를 덮는다. 시선이 이미 여기 있어서 놓치지 않고,
+              화면 높이가 늘지 않으며, 화면 아래 판정 표시와 겹치지도 않는다.
+              가려도 불공정하지 않은 이유는 경보 제한 시간이 멈추기 때문이다. */}
+          <div className="alert-stage">
+            {state.game.currentAlert ? (
+              <AlertCard
+                alert={state.game.currentAlert}
+                timeRemainingRatio={alertTimeRemainingRatio}
+              />
+            ) : (
+              <div className="alert-placeholder" aria-live="polite">SCANNING…</div>
+            )}
+            {state.game.activeMemo ? (
+              <MemoToast
+                memo={state.game.activeMemo.memo}
+                onDismiss={handleDismissMemo}
+              />
+            ) : null}
+          </div>
+          {/* 버튼은 사라지지 않고 자리를 지킨다. 메모 중에는 판정이 막히므로
+              비활성으로 둔다. 눌리지 않는 이유가 화면에 드러나야 한다. */}
+          <ActionButtons
+            disabled={state.game.currentAlert === null || isMemoOpen}
+            onDecide={handleDecide}
+          />
         </>
       ) : null}
 

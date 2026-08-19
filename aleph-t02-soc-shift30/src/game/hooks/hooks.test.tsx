@@ -318,4 +318,51 @@ describe('useGameLoop', () => {
     })
     expect(onTick).toHaveBeenLastCalledWith(50)
   })
+
+  it('freezes the alert clock while a memo is open but keeps ticking', () => {
+    // 경보 한 장의 수명은 1.4초다. 메모를 읽고 닫는 데만 그 이상이 드니
+    // 멈추지 않으면 메모가 뜬 경보는 실력과 무관하게 미판정이 된다.
+    const animation = installAnimationFrameStub()
+    const onTick = vi.fn()
+    const onTimeout = vi.fn()
+    const options = {
+      isRunning: true,
+      currentAlertId: 'alert-1',
+      onTick,
+      onTimeout,
+    }
+    const frozenUntil = DIFFICULTY.eventIntervalMs + 2_000
+
+    act(() => {
+      root.render(<GameLoopHarness isAlertClockFrozen {...options} />)
+    })
+    act(() => {
+      animation.frame(0)
+    })
+    act(() => {
+      for (let time = 100; time <= frozenUntil; time += 100) {
+        animation.frame(time)
+      }
+    })
+
+    // 30초 근무 시계는 계속 흐르지만 경보는 만료되지 않는다.
+    expect(onTick).toHaveBeenCalled()
+    expect(onTimeout).not.toHaveBeenCalled()
+
+    act(() => {
+      root.render(<GameLoopHarness isAlertClockFrozen={false} {...options} />)
+    })
+    act(() => {
+      for (
+        let time = frozenUntil + 100;
+        time <= frozenUntil + DIFFICULTY.eventIntervalMs + 400;
+        time += 100
+      ) {
+        animation.frame(time)
+      }
+    })
+
+    // 닫은 뒤에야 제한 시간이 흐르기 시작한다.
+    expect(onTimeout).toHaveBeenCalledOnce()
+  })
 })
