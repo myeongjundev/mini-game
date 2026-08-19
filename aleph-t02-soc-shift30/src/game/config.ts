@@ -5,8 +5,17 @@
  */
 export const VERDICT_FLASH_MS = 800
 
+/**
+ * eventIntervalMs는 경보 한 장의 제한 시간이다. 고정 박자가 아니라 상한이고,
+ * 먼저 판정하면 다음 경보가 즉시 온다.
+ *
+ * 2000ms인 이유는 경보 데이터 크기에서 나왔다. 티어 구간이 10초이고 티어당
+ * 경보가 5장이므로 10 / 2 = 5장이 되어 봉지와 정확히 맞는다. 1400ms에서는
+ * 구간당 7장이 뽑혀 봉지가 7초에 비고 같은 경보가 두 번 나왔다.
+ * 사실 항목이 4개라 1.4초는 읽는 데만 다 쓰였다.
+ */
 export const DIFFICULTY = {
-  eventIntervalMs: 1400,
+  eventIntervalMs: 2000,
   totalTimeMs: 30_000,
   lives: 3,
 } as const

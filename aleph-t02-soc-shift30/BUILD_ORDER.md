@@ -17,7 +17,7 @@
 | 프로젝트 루트 | `mini-game/aleph-t02-soc-shift30/` |
 | 배포 산출물 | `mini-game/site/` |
 | 디자인 방향 | NIGHT SHIFT 콘솔 — 뉴트럴 다크 + 시안 / 앰버 / 레드 3축, 도트는 아이콘에만 |
-| 난이도 실험 상수 | `eventIntervalMs` (A=1400 → B=1100) |
+| 난이도 실험 상수 | `eventIntervalMs` (A=2000 → B=미정) |
 | 저장 | localStorage. 최고 점수와 접근성 설정만 |
 
 ---
@@ -441,7 +441,7 @@ const DEFAULTS: Saved = { v: 1, bestScore: 0, mute: true, reduceMotion: false };
 ```ts
 // src/game/config.ts
 export const DIFFICULTY = {
-  eventIntervalMs: 1400,   // ← 실험에서 바꾸는 유일한 값. B안은 1100
+  eventIntervalMs: 2000,   // ← 실험에서 바꾸는 유일한 값. B안은 미정
   totalTimeMs: 30_000,
   lives: 3,
 } as const;

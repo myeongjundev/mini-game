@@ -35,9 +35,8 @@ function playingState(overrides: Partial<GameState> = {}): GameState {
 describe('feedback timing', () => {
   it('keeps the verdict flash shorter than the alert interval', () => {
     // 같거나 길면 판정 표시가 끊기지 않아 다음 경보와 계속 겹친다.
-    // 난이도 실험에서 eventIntervalMs를 1100으로 낮출 때도 성립해야 한다.
+    // 난이도 실험에서 eventIntervalMs를 낮추면 이 검사가 먼저 깨진다.
     expect(VERDICT_FLASH_MS).toBeLessThan(DIFFICULTY.eventIntervalMs)
-    expect(VERDICT_FLASH_MS).toBeLessThan(1_100)
   })
 })
 

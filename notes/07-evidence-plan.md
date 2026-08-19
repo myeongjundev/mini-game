@@ -77,7 +77,7 @@ run, setting_value, success, score, survival_seconds, alerts_reviewed,
 accuracy, false_positive, missed_threat, timeout, max_combo, failure_reason, notes
 ```
 
-`setting_value`에는 `eventIntervalMs` 값(1400 또는 1100)을 적습니다.
+`setting_value`에는 `eventIntervalMs` 값(기준 2000, 비교값은 미정)을 적습니다.
 **원하는 결과가 나올 때까지 판을 골라내지 않습니다.** 20판 전부 기록합니다.
 
 ### 17 개인정보·비밀값 점검
