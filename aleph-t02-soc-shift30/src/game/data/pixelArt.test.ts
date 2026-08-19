@@ -18,6 +18,7 @@ const EXPECTED_DIMENSIONS = {
   soundOff: [12, 12],
   motionOn: [12, 12],
   motionOff: [12, 12],
+  memo: [12, 12],
   gradeA: [16, 16],
   gradeB: [16, 16],
   gradeC: [16, 16],
