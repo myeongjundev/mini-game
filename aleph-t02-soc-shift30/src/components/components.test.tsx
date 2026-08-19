@@ -254,3 +254,61 @@ describe('memo toast', () => {
     expect(markup).toContain('사내 공지')
   })
 })
+
+describe('result screen memo tally', () => {
+  const base = {
+    ...createInitialGameState(),
+    phase: 'SUCCESS' as const,
+    timeLeftMs: 0,
+    reviewed: 4,
+  }
+
+  it('reports how many memos were read out of those shown', () => {
+    const markup = renderToStaticMarkup(
+      <ResultScreen
+        state={{ ...base, memosShown: 4, memosRead: 2 }}
+        bestScore={0}
+        onRestart={() => undefined}
+      />,
+    )
+
+    expect(markup).toContain('MEMOS READ')
+    expect(markup).toContain('2 / 4')
+  })
+
+  it('hides the row when no memo appeared', () => {
+    // "0 / 0"은 읽는 사람을 헷갈리게 한다.
+    const markup = renderToStaticMarkup(
+      <ResultScreen
+        state={{ ...base, memosShown: 0, memosRead: 0 }}
+        bestScore={0}
+        onRestart={() => undefined}
+      />,
+    )
+
+    expect(markup).not.toContain('MEMOS READ')
+  })
+
+  it('does not fold memos into score or accuracy', () => {
+    // 점수·등급에는 반영하지 않는다. GAME_SPEC 13.6절.
+    const withMemos = renderToStaticMarkup(
+      <ResultScreen
+        state={{ ...base, score: 900, threatsBlocked: 4, memosShown: 4, memosRead: 4 }}
+        bestScore={0}
+        onRestart={() => undefined}
+      />,
+    )
+    const withoutMemos = renderToStaticMarkup(
+      <ResultScreen
+        state={{ ...base, score: 900, threatsBlocked: 4, memosShown: 4, memosRead: 0 }}
+        bestScore={0}
+        onRestart={() => undefined}
+      />,
+    )
+
+    for (const markup of [withMemos, withoutMemos]) {
+      expect(markup).toContain('100.0%')
+      expect(markup).toContain('900')
+    }
+  })
+})

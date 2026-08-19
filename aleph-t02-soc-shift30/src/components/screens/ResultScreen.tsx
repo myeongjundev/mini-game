@@ -25,6 +25,10 @@ export default function ResultScreen({ state, bestScore, onRestart }: ResultScre
     ['NO DECISIONS', String(state.timeouts)],
     ['ACCURACY', formatAccuracy(correct, state.reviewed)],
     ['MAX COMBO', `×${state.maxCombo}`],
+    // 한 장도 뜨지 않은 판에서 "0 / 0"은 읽는 사람을 헷갈리게 한다.
+    ...(state.memosShown > 0
+      ? [['MEMOS READ', `${state.memosRead} / ${state.memosShown}`]]
+      : []),
     ['BEST SCORE', formatScore(bestScore)],
     ['SURVIVAL TIME', formatSeconds(DIFFICULTY.totalTimeMs - state.timeLeftMs)],
   ]
