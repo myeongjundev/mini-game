@@ -49,3 +49,22 @@ describe('PixelIcon', () => {
     ).toThrow('PixelIcon requires a non-empty grid with equal row widths')
   })
 })
+
+describe('pixel icon sizing', () => {
+  it('carries its grid size as attributes so a missing CSS rule cannot explode it', () => {
+    // 실제로 겪은 버그다. .memo-icon에 크기를 빠뜨리자 SVG가 부모를 다
+    // 채워버려 옆 글자가 1글자 폭으로 밀렸다.
+    const markup = renderToStaticMarkup(<PixelIcon grid={PIXEL_ART.memo} />)
+
+    expect(markup).toContain('width="12"')
+    expect(markup).toContain('height="12"')
+    expect(markup).toContain('viewBox="0 0 12 12"')
+  })
+
+  it('keeps the 16x16 grids at their own size', () => {
+    const markup = renderToStaticMarkup(<PixelIcon grid={PIXEL_ART.correct} />)
+
+    expect(markup).toContain('width="16"')
+    expect(markup).toContain('height="16"')
+  })
+})
