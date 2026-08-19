@@ -106,7 +106,7 @@ export function showMemo(
   memo: Memo,
   elapsedMs: number,
 ): GameState {
-  return state.phase !== 'PLAYING' || state.activeMemo !== null
+  return state.phase !== 'PLAYING' || state.activeMemo
     ? state
     : {
         ...state,
@@ -117,7 +117,7 @@ export function showMemo(
 
 /** 화면에 `MEMO.readThresholdMs` 이상 떠 있다가 닫히면 읽은 것으로 센다. */
 export function dismissMemo(state: GameState, elapsedMs: number): GameState {
-  if (state.activeMemo === null) {
+  if (!state.activeMemo) {
     return state
   }
 
@@ -136,7 +136,12 @@ export function decideCurrentAlert(
   action: Action,
 ): GameState {
   // 메모가 떠 있는 동안에는 판정을 받지 않는다. 눈 감고 누르는 사고를 막는다.
-  if (state.currentAlert === null || state.activeMemo !== null) {
+  //
+  // `!== null`이 아니라 참/거짓으로 본다. 필드가 없는 상태(undefined)에서
+  // `undefined !== null`은 참이라 판정이 영구히 막힌다. 화면은 버튼을
+  // 정상으로 그려서 눌러도 반응만 없는 형태로 나타난다. 개발 서버에서
+  // HMR로 코드만 갱신되고 판이 유지될 때 실제로 겪었다.
+  if (state.currentAlert === null || state.activeMemo) {
     return state
   }
 

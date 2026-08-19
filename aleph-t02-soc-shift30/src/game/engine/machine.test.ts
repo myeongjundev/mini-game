@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest'
 
 import { DIFFICULTY, VERDICT_FLASH_MS } from '../config'
+import { ALERTS } from '../data/alerts'
+import { MEMOS } from '../data/memos'
 import type { Alert, GameState } from '../types'
 import {
   applyVerdict,
   createInitialGameState,
   decideCurrentAlert,
+  dismissMemo,
   pauseGame,
   presentAlert,
   restartGame,
   resumeGame,
+  showMemo,
   startGame,
   tick,
   timeoutCurrentAlert,
@@ -253,5 +257,40 @@ describe('game state machine', () => {
       phase: 'SUCCESS',
       timeLeftMs: 0,
     })
+  })
+})
+
+describe('memo guards tolerate a state without the memo fields', () => {
+  // 개발 서버에서 HMR로 코드만 갱신되면 리듀서 상태는 이전 판 그대로다.
+  // 그 상태에는 activeMemo가 없어 undefined인데, `undefined !== null`이
+  // 참이라 판정이 영구히 막혔다. 화면은 버튼을 정상으로 그려서 눌러도
+  // 반응만 없는 형태로 나타났다. 실제로 겪은 버그다.
+  const legacyState = () => {
+    const state: Record<string, unknown> = {
+      ...createInitialGameState(),
+      phase: 'PLAYING',
+    }
+    delete state.activeMemo
+
+    return state as unknown as GameState
+  }
+
+  it('still accepts judgment when activeMemo is missing', () => {
+    const alert = ALERTS[0]
+    const playing = presentAlert(legacyState(), alert)
+    const decided = decideCurrentAlert(playing, alert.correctAction)
+
+    expect(decided.reviewed).toBe(1)
+    expect(decided.currentAlert).toBeNull()
+  })
+
+  it('still shows a memo when activeMemo is missing', () => {
+    const shown = showMemo(legacyState(), MEMOS[0], 3_000)
+
+    expect(shown.activeMemo).not.toBeNull()
+  })
+
+  it('does not throw when dismissing without an active memo', () => {
+    expect(() => dismissMemo(legacyState(), 3_000)).not.toThrow()
   })
 })
