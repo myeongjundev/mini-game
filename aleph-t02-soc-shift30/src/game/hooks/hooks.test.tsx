@@ -97,6 +97,47 @@ describe('useKeyboard', () => {
     expect(unknown.defaultPrevented).toBe(false)
   })
 
+  it('touches SPACE only while a memo is open', () => {
+    // 항상 가로채면 포커스된 버튼이 SPACE로 눌리지 않는다. 일시정지 화면의
+    // RESUME·RESTART가 실제로 그랬다. 버튼은 Enter와 SPACE 둘 다 받아야 한다.
+    const base = {
+      onAllow: vi.fn(),
+      onBlock: vi.fn(),
+      onPauseToggle: vi.fn(),
+    }
+
+    act(() => {
+      root.render(<KeyboardHarness enabled handlers={base} />)
+    })
+
+    const untouched = new KeyboardEvent('keydown', {
+      key: ' ',
+      code: 'Space',
+      cancelable: true,
+    })
+    window.dispatchEvent(untouched)
+    expect(untouched.defaultPrevented).toBe(false)
+
+    const onDismissMemo = vi.fn()
+
+    act(() => {
+      root.render(
+        <KeyboardHarness enabled handlers={{ ...base, onDismissMemo }} />,
+      )
+    })
+
+    const dismissed = new KeyboardEvent('keydown', {
+      key: ' ',
+      code: 'Space',
+      cancelable: true,
+    })
+    window.dispatchEvent(dismissed)
+    expect(onDismissMemo).toHaveBeenCalledOnce()
+    expect(dismissed.defaultPrevented).toBe(true)
+    expect(base.onAllow).not.toHaveBeenCalled()
+    expect(base.onBlock).not.toHaveBeenCalled()
+  })
+
   it('removes the keydown listener when disabled', () => {
     const handlers = {
       onAllow: vi.fn(),

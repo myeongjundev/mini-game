@@ -4,7 +4,12 @@ export type KeyboardHandlers = {
   onAllow: () => void
   onBlock: () => void
   onPauseToggle: () => void
-  /** 메모 닫기. 없으면 SPACE는 아무 일도 하지 않는다. */
+  /**
+   * 메모 닫기. 메모가 떠 있을 때만 넘긴다.
+   *
+   * 없으면 SPACE에 손을 대지 않는다. 항상 가로채면 포커스된 버튼이 SPACE로
+   * 눌리지 않는다. 일시정지 화면의 RESUME·RESTART가 실제로 그랬다.
+   */
   onDismissMemo?: () => void
 }
 
@@ -33,10 +38,17 @@ export function useKeyboard(
       const isBlock = key === 'd' || key === 'arrowright' || event.code === 'KeyD'
       const isPause = key === 'p' || key === 'escape' || event.code === 'KeyP'
       const isDismiss = key === ' ' || event.code === 'Space'
+      const dismissMemo = handlersRef.current.onDismissMemo
 
       if (isDismiss) {
+        // 메모가 없으면 기본 동작을 그대로 둔다. 버튼은 Enter와 SPACE
+        // 둘 다에 반응해야 한다.
+        if (!dismissMemo) {
+          return
+        }
+
         event.preventDefault()
-        handlersRef.current.onDismissMemo?.()
+        dismissMemo()
 
         return
       }

@@ -340,9 +340,11 @@ export default function App() {
       onAllow: handleAllow,
       onBlock: handleBlock,
       onPauseToggle: handlePauseToggle,
-      onDismissMemo: handleDismissMemo,
+      // 메모가 떠 있을 때만 넘긴다. 항상 넘기면 SPACE가 늘 가로채여
+      // 포커스된 버튼이 SPACE로 눌리지 않는다.
+      onDismissMemo: isMemoOpen ? handleDismissMemo : undefined,
     }),
-    [handleAllow, handleBlock, handlePauseToggle, handleDismissMemo],
+    [handleAllow, handleBlock, handlePauseToggle, handleDismissMemo, isMemoOpen],
   )
 
   useGameLoop({
