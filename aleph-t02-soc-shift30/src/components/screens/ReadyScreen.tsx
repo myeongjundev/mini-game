@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 
 import { DIFFICULTY } from '../../game/config'
+import { ALERTS } from '../../game/data/alerts'
+import { PIXEL_ART } from '../../game/data/pixelArt'
+import type { Alert } from '../../game/types'
 import { formatScore, formatSeconds } from '../../utils/format'
+import PixelIcon from '../PixelIcon'
 
 export type LobbyPhase = 'BOOT' | 'INITIALIZING' | 'TITLE' | 'READY' | 'LOBBY'
 type LobbyPanel = 'MENU' | 'HOW_TO_PLAY' | 'SHIFT_RECORD'
@@ -22,6 +26,52 @@ const BOOT_LOGS = [
   'LOADING SHIFT PROTOCOL ..... OK',
 ]
 
+const EXAMPLE_ALERT_IDS = ['https-normal', 'ssh-brute'] as const
+
+const EXAMPLE_ALERTS = EXAMPLE_ALERT_IDS.map((id) => {
+  const alert = ALERTS.find((item) => item.id === id)
+  if (!alert) throw new Error(`Missing lobby example alert: ${id}`)
+  return alert
+})
+
+function LobbyExample({ alert }: { alert: Alert }) {
+  const markerCount = alert.facts.filter((fact) => fact.signal === 'suspicious').length
+
+  return (
+    <article className="ready-example">
+      <strong className="ready-example-head">{alert.title}</strong>
+      <dl className="ready-example-facts">
+        {alert.facts.map((fact) => (
+          <div key={fact.label}>
+            <dt>{fact.label}</dt>
+            <dd>
+              {fact.signal === 'suspicious' ? (
+                <>
+                  <PixelIcon grid={PIXEL_ART.suspiciousMarker} className="suspicious-marker" />
+                  <span className="sr-only">수상한 항목: </span>
+                </>
+              ) : null}
+              <span>{fact.value}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="ready-example-verdict">
+        표시가 {markerCount === 0 ? '하나도 없습니다' : `${markerCount}개입니다`} →{' '}
+        <strong>{alert.correctAction}</strong>
+      </p>
+    </article>
+  )
+}
+
+export function LobbyExampleCards() {
+  return (
+    <div className="ready-example-grid">
+      {EXAMPLE_ALERTS.map((alert) => <LobbyExample alert={alert} key={alert.id} />)}
+    </div>
+  )
+}
+
 export type ReadyScreenProps = {
   bestScore: number
   mute: boolean
@@ -38,6 +88,7 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
   const [phase, setPhase] = useState<LobbyPhase>(playIntro ? 'BOOT' : 'LOBBY')
   const [panel, setPanel] = useState<LobbyPanel>('MENU')
   const completedRef = useRef(!playIntro)
+  const startButtonRef = useRef<HTMLButtonElement>(null)
   const introActive = phase !== 'LOBBY'
 
   const completeIntro = useCallback(() => {
@@ -72,15 +123,19 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
     return () => window.removeEventListener('keydown', handleSkipKey)
   }, [completeIntro, introActive])
 
+  useEffect(() => {
+    if (phase === 'LOBBY' && panel === 'MENU') startButtonRef.current?.focus()
+  }, [panel, phase])
+
   return (
     <section className="lobby-scene" aria-label="SOC SHIFT:30 analyst desk"
       data-lobby-phase={phase} onClick={introActive ? completeIntro : undefined}>
       <img className="lobby-office" src={`${import.meta.env.BASE_URL}lobby-office.png`}
         alt="80년대 야간 사무실의 CRT 관제 컴퓨터와 커피, 서류가 놓인 책상" />
-      <div className="crt-display" aria-live="polite">
-        {phase === 'BOOT' ? <span className="crt-cursor" aria-label="시스템 부팅 중">_</span> : null}
+      <div className="crt-display">
+        {phase === 'BOOT' ? <span className="crt-cursor" aria-label="시스템 부팅 중" aria-live="polite">_</span> : null}
         {phase === 'INITIALIZING' ? (
-          <div className="boot-log" aria-label="SOC 시스템 초기화 중">
+          <div className="boot-log" aria-label="SOC 시스템 초기화 중" aria-live="polite">
             <strong>SOC/SHIFT OS v3.0</strong>
             {BOOT_LOGS.map((line, index) => (
               <span key={line} style={{ '--log-index': index } as CSSProperties}>{line}</span>
@@ -88,11 +143,11 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
           </div>
         ) : null}
         {phase === 'TITLE' ? (
-          <div className="intro-title"><span>ALEPH SECURITY LAB</span>
+          <div className="intro-title" aria-live="polite"><span>ALEPH SECURITY LAB</span>
             <strong>SOC SHIFT:30</strong><small>30 SECONDS ON THE FRONT LINE</small></div>
         ) : null}
         {phase === 'READY' ? (
-          <div className="intro-ready"><span>NETWORK STATUS // ONLINE</span>
+          <div className="intro-ready" aria-live="polite"><span>NETWORK STATUS // ONLINE</span>
             <strong>ANALYST CONSOLE READY</strong><small>OPENING NIGHT SHIFT LOBBY…</small></div>
         ) : null}
         {phase === 'LOBBY' ? (
@@ -103,18 +158,17 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
               <div className="lobby-title"><span>ALEPH SECURITY LAB</span>
                 <h2>SOC SHIFT:30</h2><p>DETECT. DECIDE. DEFEND.</p></div>
               <div className="lobby-actions">
-                <button className="lobby-start" type="button" onClick={onStart}>START SHIFT</button>
+                <button ref={startButtonRef} className="lobby-start" type="button" onClick={onStart}>START SHIFT</button>
                 <button type="button" onClick={() => setPanel('HOW_TO_PLAY')}>HOW TO PLAY</button>
                 <button type="button" onClick={() => setPanel('SHIFT_RECORD')}>SHIFT RECORD</button>
               </div>
+              <p className="lobby-controls">A / ←&nbsp; ALLOW&nbsp;&nbsp; D / →&nbsp; BLOCK&nbsp;&nbsp; P / ESC&nbsp; PAUSE</p>
               <div className="lobby-status-grid"><span>INCIDENT FEED <strong>ACTIVE</strong></span>
                 <span>ANALYST STATUS <strong>READY</strong></span></div>
             </>) : null}
             {panel === 'HOW_TO_PLAY' ? (
-              <div className="lobby-panel"><h2>HOW TO PLAY</h2>
-                <p>수상한 표시가 붙은 사실을 확인하고 30초 동안 경보를 판정하세요.</p>
-                <p><kbd>A / ←</kbd> ALLOW · <kbd>D / →</kbd> BLOCK</p>
-                <p><kbd>P / ESC</kbd> PAUSE · SECURITY ×{DIFFICULTY.lives}</p>
+              <div className="lobby-panel" aria-label="HOW TO PLAY"><h2>HOW TO PLAY</h2>
+                <LobbyExampleCards />
                 <button type="button" onClick={() => setPanel('MENU')}>← BACK</button></div>
             ) : null}
             {panel === 'SHIFT_RECORD' ? (

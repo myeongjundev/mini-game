@@ -56,6 +56,7 @@ describe('ReadyScreen intro and lobby', () => {
     expect(scene()?.getAttribute('data-lobby-phase')).toBe('LOBBY')
     expect(handlers.onIntroComplete).toHaveBeenCalledTimes(1)
     expect(container.textContent).toContain('START SHIFT')
+    expect(document.activeElement?.textContent).toBe('START SHIFT')
   })
 
   it('skips by keyboard and cleared timers cannot change the lobby later', () => {
@@ -80,12 +81,16 @@ describe('ReadyScreen intro and lobby', () => {
     const howToPlay = [...container.querySelectorAll('button')]
       .find((button) => button.textContent === 'HOW TO PLAY')
     act(() => howToPlay?.click())
-    expect(container.textContent).toContain('수상한 표시가 붙은 사실')
+    expect(container.textContent).toContain('표시가 하나도 없습니다')
+    expect(container.querySelectorAll('.ready-example')).toHaveLength(2)
+    expect(container.querySelectorAll('.suspicious-marker')).toHaveLength(3)
+    expect(container.querySelector('.lobby-console')?.hasAttribute('aria-live')).toBe(false)
   })
 
   it('starts directly in the lobby on a return visit', () => {
     renderScreen({ playIntro: false })
     expect(container.querySelector('.lobby-scene')?.getAttribute('data-lobby-phase')).toBe('LOBBY')
     expect(handlers.onIntroComplete).not.toHaveBeenCalled()
+    expect(document.activeElement?.textContent).toBe('START SHIFT')
   })
 })

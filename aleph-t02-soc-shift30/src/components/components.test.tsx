@@ -7,7 +7,7 @@ import type { DecisionRecord } from '../game/types'
 import AlertCard from './AlertCard'
 import ShiftLog from './ShiftLog'
 import PausedScreen from './screens/PausedScreen'
-import ReadyScreen from './screens/ReadyScreen'
+import ReadyScreen, { LobbyExampleCards } from './screens/ReadyScreen'
 import ResultScreen from './screens/ResultScreen'
 
 describe('screen components', () => {
@@ -56,6 +56,14 @@ describe('screen components', () => {
     expect(markup).toContain('HOW TO PLAY')
     expect(markup).toContain('SHIFT RECORD')
     expect(markup).toContain('SOUND // OFF')
+    expect(markup).toContain('A / ←')
+    expect(markup).toContain('D / →')
+    expect(markup).toContain('P / ESC')
+
+    const examples = renderToStaticMarkup(<LobbyExampleCards />)
+    expect(examples).toContain('표시가 하나도 없습니다')
+    expect(examples).toContain('표시가 3개입니다')
+    expect(examples.match(/class="suspicious-marker"/g)).toHaveLength(3)
   })
 
   it('marks only suspicious facts with a shape and screen-reader text', () => {

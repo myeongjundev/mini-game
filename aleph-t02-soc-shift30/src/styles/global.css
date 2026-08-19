@@ -72,10 +72,10 @@ button {
 .crt-display {
   position: absolute;
   z-index: 1;
-  top: 13.2%;
-  left: 30.7%;
-  width: 29.9%;
-  height: 42.3%;
+  top: 12.2%;
+  left: 29.95%;
+  width: 31.5%;
+  height: 51%;
   padding: clamp(8px, 1.25vw, 20px);
   overflow: hidden;
   color: var(--cyan);
@@ -83,7 +83,7 @@ button {
   border: 2px solid color-mix(in srgb, var(--cyan) 30%, transparent);
   border-radius: 4% / 7%;
   box-shadow: inset 0 0 24px color-mix(in srgb, var(--cyan) 15%, transparent);
-  font-size: clamp(7px, 0.82vw, 13px);
+  font-size: clamp(13px, 0.95vw, 14px);
   text-shadow: 0 0 6px currentColor;
 }
 
@@ -163,7 +163,7 @@ button {
   right: 1.2em;
   bottom: 1em;
   color: var(--text-dim);
-  font-size: 0.72em;
+  font-size: 0.85em;
   letter-spacing: 0.08em;
 }
 
@@ -171,7 +171,7 @@ button {
   display: grid;
   height: 100%;
   grid-template-rows: auto 1fr auto;
-  gap: 0.5em;
+  gap: 0.3em;
 }
 
 .lobby-console-header,
@@ -181,7 +181,7 @@ button {
   align-items: center;
   justify-content: space-between;
   color: var(--text-dim);
-  font-size: 0.72em;
+  font-size: 0.93em;
   letter-spacing: 0.08em;
 }
 
@@ -197,20 +197,20 @@ button {
 
 .lobby-title span {
   color: var(--text-dim);
-  font-size: 0.72em;
+  font-size: 0.93em;
   letter-spacing: 0.16em;
 }
 
 .lobby-title h2 {
   margin: 0.12em 0 0;
-  font-size: 2.15em;
+  font-size: 1.9em;
   letter-spacing: 0.06em;
 }
 
 .lobby-title p {
   margin: 0.25em 0;
   color: var(--text-dim);
-  font-size: 0.7em;
+  font-size: 0.93em;
   letter-spacing: 0.16em;
 }
 
@@ -232,7 +232,7 @@ button {
 }
 
 .lobby-actions .lobby-start {
-  padding: 0.55em;
+  padding: 0.4em;
   color: var(--bg);
   background: var(--cyan);
   border-color: var(--cyan);
@@ -250,7 +250,15 @@ button {
 .lobby-status-grid {
   width: 92%;
   justify-self: center;
-  margin-top: 0.45em;
+  margin-top: 0.2em;
+}
+
+.lobby-controls {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.93em;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .lobby-status-grid span {
@@ -261,7 +269,7 @@ button {
 .lobby-panel {
   display: grid;
   align-content: center;
-  gap: 0.7em;
+  gap: 0.3em;
   padding: 0 1em;
 }
 
@@ -757,12 +765,13 @@ button:disabled {
 
 .ready-example-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--gap-sm);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45em;
 }
 
 .ready-example {
-  padding: var(--gap-sm);
+  min-width: 0;
+  padding: 0.45em;
   background: var(--panel);
   border: 1px solid var(--line);
 }
@@ -771,17 +780,17 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: var(--gap-xs);
-  margin-bottom: var(--gap-xs);
-  font-size: 12px;
+  margin-bottom: 0.25em;
+  font-size: 0.93em;
   letter-spacing: 1px;
 }
 
 .ready-example-facts > div {
   display: flex;
   justify-content: space-between;
-  gap: var(--gap-sm);
-  padding: 2px 0;
-  font-size: 12px;
+  gap: 0.25em;
+  padding: 0.1em 0;
+  font-size: 0.93em;
 }
 
 .ready-example-facts dt {
@@ -793,13 +802,14 @@ button:disabled {
   align-items: center;
   gap: var(--gap-xs);
   margin: 0;
+  text-align: right;
 }
 
 .ready-example-verdict {
   margin: var(--gap-xs) 0 0;
   padding-top: var(--gap-xs);
   color: var(--text-dim);
-  font-size: 12px;
+  font-size: 0.93em;
   border-top: 1px solid var(--line);
 }
 
