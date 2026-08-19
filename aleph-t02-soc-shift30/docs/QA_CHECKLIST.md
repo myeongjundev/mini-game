@@ -159,7 +159,7 @@ document.documentElement.scrollWidth - document.documentElement.clientWidth
 | 9.1 | 배포 번들 문자열 검색 | 개인정보 0건 | 미실행 |
 | 9.2 | 배포 번들 문자열 검색 | 토큰·API 키·비밀번호 0건 | 미실행 |
 | 9.3 | 공개 화면 캡처 | 실명·이메일·사번 노출 0건 | 미실행 |
-| 9.4 | 저장소 공개 범위 | `notes`, `records`, `evidence`가 공개 대상에 없음 | 미실행 |
+| 9.4 | 저장소 공개 범위 | `notes`·`records`는 공개한다(설계 기록이 과제 자산). `evidence`만 `.gitignore`로 제외 | 통과 |
 | 9.5 | `.env` 류 파일 | 저장소에 없음 | 미실행 |
 
 경보 데이터에 쓰는 사용자명(`employee_07`, `intern_03`, `admin`)은 **가상 값**이다. 실명을 넣지 않는다.
