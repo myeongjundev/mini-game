@@ -207,3 +207,83 @@ Reduce Motion에서 **정보 손실이 0**인 것이 중요하다.
 - 컴포넌트 안 하드코딩 hex
 - 색만으로 구분되는 상태
 - 11px 미만 글자
+
+---
+
+## 9. 로비 화면 유리 좌표
+
+로비는 배경 그림 속 모니터 화면 안에 실제 UI를 띄운다. 그 사각형은
+`global.css`의 `.lobby-scene`에 변수 넷으로 있다.
+
+```css
+--glass-left / --glass-top / --glass-width / --glass-height
+```
+
+`.crt-display`는 이 변수만 읽는다. **그림을 바꾸면 네 값만 다시 재서
+넣으면 되고 다른 곳은 손대지 않는다.**
+
+### 지금 값과 실측값이 다른 이유
+
+| | left | top | width | height |
+|---|---|---|---|---|
+| 그림 속 유리 (실측) | 31.76% | 13.60% | 29.84% | **39.21%** |
+| 지금 쓰는 값 | 29.95% | 12.20% | 31.50% | **51.00%** |
+
+셸 최대 폭 1180px에서 씬은 1178×663으로 그려진다. 이때 그림 속 유리는
+352×260px인데 콘솔이 필요한 높이는 **334px**다. 74px이 모자라서 상자를
+늘려 쓰고 있고, 그래서 오버레이가 베젤 아래로 흘러내린다.
+
+**새 배경 그림은 유리가 씬 높이의 52% 이상이어야 한다.** 원본 1672×941
+기준으로 유리가 최소 669×489px(지금 499×369px)이면 늘리지 않고 실측값을
+그대로 쓸 수 있다.
+
+### 재는 법
+
+이미지 도구 없이 브라우저로 잰다. 개발 서버를 띄우고 콘솔에 넣는다.
+
+```js
+const im = new Image()
+im.src = '/mini-game/lobby-office.png'
+await im.decode()
+const c = document.createElement('canvas')
+c.width = im.naturalWidth; c.height = im.naturalHeight
+const g = c.getContext('2d', { willReadFrequently: true })
+g.drawImage(im, 0, 0)
+// 유리는 r<=4, g>=6, b>g 인 아주 어두운 청록이다. 밤하늘도 r=0이므로
+// 모니터 주변으로 범위를 좁혀서 찾는다.
+const x0 = 400, x1 = 1160, y0 = 80, y1 = 620, W = x1 - x0, H = y1 - y0
+const d = g.getImageData(x0, y0, W, H).data
+const col = Array(W).fill(0), row = Array(H).fill(0)
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  const i = (y * W + x) * 4
+  if (d[i] <= 4 && d[i + 1] >= 6 && d[i + 2] > d[i + 1] && d[i + 2] < 40) {
+    col[x]++; row[y]++
+  }
+}
+const pick = (a) => { const t = Math.max(...a) * 0.5
+  const k = a.map((v, i) => v > t ? i : -1).filter((i) => i >= 0)
+  return [k[0], k[k.length - 1]] }
+const [cl, cr] = pick(col), [rt, rb] = pick(row)
+console.log({
+  left: (x0 + cl) / im.naturalWidth * 100,
+  top: (y0 + rt) / im.naturalHeight * 100,
+  width: (cr - cl) / im.naturalWidth * 100,
+  height: (rb - rt) / im.naturalHeight * 100,
+})
+```
+
+`x0 x1 y0 y1`은 모니터를 넉넉히 감싸는 범위로 잡는다. 새 그림에서 모니터가
+커지면 이 범위도 같이 넓힌다.
+
+### 640px 이하
+
+`.lobby-scene`의 비율이 `4 / 5`로 바뀌고 그림이 다시 잘리므로 유리 위치가
+달라진다. 같은 변수를 미디어 쿼리 안에서 다시 정의한다.
+
+### 알아둘 것
+
+- 씬의 `aspect-ratio: 1672 / 941`은 원본 이미지 비율이다. 새 그림이 다른
+  비율이면 이 값도 같이 바꿔야 하고, 그러면 좌표를 전부 다시 잡아야 한다.
+  **가능하면 16:9를 유지한다.**
+- 베젤과 유리 반사를 알파 PNG로 따로 받으면 UI 위에 얹어 3층으로 만들 수
+  있다. 글자가 유리 밑으로 들어가서 정렬 오차가 훨씬 덜 보인다.

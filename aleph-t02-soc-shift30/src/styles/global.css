@@ -54,7 +54,15 @@ button {
   border-color: var(--line-dim);
 }
 
+/* 배경 그림 속 모니터 유리의 사각형이다. 그림을 바꾸면 여기 네 값만
+   다시 재서 넣으면 되고, 다른 곳은 손대지 않아도 된다.
+   재는 법과 현재 값의 근거는 docs/DESIGN_TOKENS.md 9절에 있다. */
 .lobby-scene {
+  --glass-left: 29.95%;
+  --glass-top: 12.2%;
+  --glass-width: 31.5%;
+  --glass-height: 51%;
+
   position: relative;
   container-type: inline-size;
   width: 100%;
@@ -73,10 +81,10 @@ button {
 .crt-display {
   position: absolute;
   z-index: 1;
-  top: 12.2%;
-  left: 29.95%;
-  width: 31.5%;
-  height: 51%;
+  top: var(--glass-top);
+  left: var(--glass-left);
+  width: var(--glass-width);
+  height: var(--glass-height);
   padding: clamp(8px, 1.25vw, 20px);
   overflow: hidden;
   color: var(--cyan);
@@ -1040,7 +1048,13 @@ button:disabled {
     padding: 0;
   }
 
+  /* 세로 비율이 4/5로 바뀌면 그림이 다시 잘리므로 유리 위치도 달라진다. */
   .lobby-scene {
+    --glass-left: 8.5%;
+    --glass-top: 12%;
+    --glass-width: 64%;
+    --glass-height: 69%;
+
     aspect-ratio: 4 / 5;
   }
 
@@ -1054,10 +1068,6 @@ button:disabled {
   /* 11px 미만 글자 금지(DESIGN_TOKENS 8절)를 지키려면 화면이 좁을수록
      글자가 아니라 CRT 상자를 키워야 한다. */
   .crt-display {
-    top: 12%;
-    left: 8.5%;
-    width: 64%;
-    height: 69%;
     font-size: clamp(12px, 3.1vw, 13px);
   }
 
