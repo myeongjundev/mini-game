@@ -1,13 +1,15 @@
 import { PIXEL_ART } from '../game/data/pixelArt'
-import type { DecisionRecord } from '../game/types'
+import type { DecisionRecord, Memo } from '../game/types'
 import PixelIcon from './PixelIcon'
 import { VERDICT_VIEW } from './VerdictFlash'
 
 export type ShiftLogProps = {
   log: DecisionRecord[]
+  /** 근무 중 받은 공지. 경보를 돕던 것이 있으면 그 항목 안에 붙인다. */
+  memos?: Memo[]
 }
 
-export default function ShiftLog({ log }: ShiftLogProps) {
+export default function ShiftLog({ log, memos = [] }: ShiftLogProps) {
   const missed = log.filter((entry) => entry.verdict !== 'CORRECT').length
 
   return (
@@ -26,6 +28,9 @@ export default function ShiftLog({ log }: ShiftLogProps) {
           <ol className="shift-log-list" tabIndex={0} aria-label="판정 기록 목록">
             {log.map((entry, index) => {
               const view = VERDICT_VIEW[entry.verdict]
+              // 이 경보를 돕던 공지. 틀린 경보 밑에 붙으면 "그 정보를
+              // 갖고 있었다"가 드러난다. 짝은 GAME_SPEC 13.4에 있다.
+              const memo = memos.find((item) => item.alertId === entry.alertId)
 
               return (
                 <li
@@ -66,6 +71,21 @@ export default function ShiftLog({ log }: ShiftLogProps) {
                     </span>
                     {entry.explanation}
                   </p>
+                  {memo ? (
+                    <p className="shift-log-memo">
+                      <PixelIcon
+                        grid={PIXEL_ART.memo}
+                        title="사내 공지"
+                        className="shift-log-memo-icon"
+                      />
+                      <span>
+                        <span className="shift-log-memo-from">
+                          받았던 공지 · {memo.from} {memo.time}
+                        </span>
+                        {memo.body}
+                      </span>
+                    </p>
+                  ) : null}
                 </li>
               )
             })}

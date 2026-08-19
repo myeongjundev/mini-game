@@ -1578,3 +1578,41 @@ time,
     overflow-y: visible;
   }
 }
+
+/* 그 경보를 돕던 공지를 판정 기록 안에 붙인다. 규칙은 GAME_SPEC 13.6-1.
+   틀린 경보 밑에 붙으면 "그 정보를 갖고 있었다"가 드러난다. 오른쪽 목록만
+   따로 두면 어느 공지가 어느 경보용이었는지 사람이 맞춰봐야 한다. */
+.shift-log-memo {
+  display: flex;
+  gap: var(--gap-xs);
+  margin: var(--gap-xs) 0 0;
+  padding-top: var(--gap-xs);
+  color: var(--text-dim);
+  border-top: 1px dashed var(--line);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.shift-log-memo-icon {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  margin-top: 2px;
+  color: var(--amber);
+}
+
+.shift-log-memo-from {
+  display: block;
+  color: var(--amber);
+  letter-spacing: 1px;
+}
+
+/* 슬롯 3·4는 티어 3 경보를 돕는데 티어 3은 20초부터다. 그 전에 끝나면
+   가리킬 경보가 없었던 셈이라, 왜 쓸모가 없었는지 남긴다. */
+.memo-log-missed {
+  margin: 2px 0 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.75;
+}

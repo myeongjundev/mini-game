@@ -281,6 +281,75 @@ describe('action buttons while a memo is up', () => {
   })
 })
 
+describe('shift log carries the memo that helped that alert', () => {
+  // 오른쪽 목록만 두면 어느 공지가 어느 경보용이었는지 사람이 맞춰봐야
+  // 한다. 틀린 경보 밑에 붙어야 "그 정보를 갖고 있었다"가 드러난다.
+  const backupMemo = MEMOS.find((memo) => memo.alertId === 'backup-job')!
+  const entry: DecisionRecord = {
+    alertId: 'backup-job',
+    title: 'SCHEDULED NIGHT TRANSFER',
+    category: 'traffic',
+    severity: 'HIGH',
+    action: 'BLOCK',
+    verdict: 'FALSE_POSITIVE',
+    decisiveFact: 'DESTINATION',
+    explanation: '등록된 백업 서버로 가는 정기 작업이다.',
+  }
+
+  it('attaches the memo to the alert it was about', () => {
+    const markup = renderToStaticMarkup(
+      <ShiftLog log={[entry]} memos={[backupMemo]} />,
+    )
+
+    expect(markup).toContain('받았던 공지')
+    expect(markup).toContain(backupMemo.from)
+    expect(markup).toContain(backupMemo.body)
+  })
+
+  it('leaves an alert alone when no memo pointed at it', () => {
+    const other = MEMOS.find((memo) => memo.alertId !== 'backup-job')!
+    const markup = renderToStaticMarkup(
+      <ShiftLog log={[entry]} memos={[other]} />,
+    )
+
+    expect(markup).not.toContain('받았던 공지')
+  })
+
+  it('still renders without any memo prop', () => {
+    expect(renderToStaticMarkup(<ShiftLog log={[entry]} />)).toContain(
+      'SCHEDULED NIGHT TRANSFER',
+    )
+  })
+})
+
+describe('memo log marks memos whose alert never came', () => {
+  // 슬롯 3·4는 티어 3 경보를 돕는데 티어 3은 20초부터다. 19초에 끝나면
+  // 그 공지들은 가리킬 경보가 없었다. 실제로 그런 판이 나왔다.
+  const memo = MEMOS[0]
+
+  it('says so on the result screen', () => {
+    const markup = renderToStaticMarkup(
+      <MemoLog memos={[memo]} seenAlertIds={[]} />,
+    )
+
+    expect(markup).toContain('나오기 전에 근무가 끝났습니다')
+  })
+
+  it('stays quiet when the alert did come', () => {
+    const markup = renderToStaticMarkup(
+      <MemoLog memos={[memo]} seenAlertIds={[memo.alertId]} />,
+    )
+
+    expect(markup).not.toContain('나오기 전에 근무가 끝났습니다')
+  })
+
+  it('stays quiet during the shift, when the alert may still arrive', () => {
+    const markup = renderToStaticMarkup(<MemoLog memos={[memo]} />)
+
+    expect(markup).not.toContain('나오기 전에 근무가 끝났습니다')
+  })
+})
+
 describe('memo log', () => {
   it('shows every memo that arrived so it can be read again', () => {
     const markup = renderToStaticMarkup(<MemoLog memos={[MEMOS[0], MEMOS[1]]} />)
