@@ -71,7 +71,7 @@ function LobbyExample({ alert }: { alert: Alert }) {
         ))}
       </dl>
       <p className="ready-example-verdict">
-        <strong>{alert.correctAction}</strong> {alert.decisiveFact} 한 줄이 갈랐습니다
+        {alert.decisiveFact} → <strong>{alert.correctAction}</strong>
       </p>
     </article>
   )
@@ -81,8 +81,8 @@ export function LobbyExampleCards() {
   return (
     <>
       <p className="ready-examples-hint">
-        사실 네 줄 중 <strong>수상한 항목에만 표시</strong>가 붙습니다.
-        표시 개수로 정해지지 않으니 어떤 항목인지 보세요.
+        표시는 <strong>수상한 항목에만</strong> 붙습니다.
+        개수가 아니라 어떤 항목인지가 판정을 가릅니다.
       </p>
       <div className="ready-example-grid">
         {EXAMPLE_ALERTS.map((alert) => <LobbyExample alert={alert} key={alert.id} />)}
@@ -149,7 +149,7 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
   return (
     <section className="lobby-scene" aria-label="SOC SHIFT:30 analyst desk"
       data-lobby-phase={phase} onClick={introActive ? completeIntro : undefined}>
-      <img className="lobby-office" src={`${import.meta.env.BASE_URL}lobby-office.png`}
+      <img className="lobby-office" src={`${import.meta.env.BASE_URL}lobby-office-blank.png`}
         alt="80년대 야간 사무실의 CRT 관제 컴퓨터와 커피, 서류가 놓인 책상" />
       <div className="crt-display">
         <p className="sr-only lobby-live-status" aria-live="polite">{PHASE_STATUS[phase]}</p>
@@ -188,8 +188,6 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
                     <li key={action}><kbd>{keys}</kbd> {action}</li>
                   ))}
                 </ul>
-                <div className="lobby-status-grid"><span>INCIDENT FEED <strong>ACTIVE</strong></span>
-                  <span>ANALYST STATUS <strong>READY</strong></span></div>
               </div>
             ) : null}
             {panel === 'HOW_TO_PLAY' ? (

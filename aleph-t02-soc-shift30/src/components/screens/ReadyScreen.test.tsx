@@ -87,7 +87,7 @@ describe('ReadyScreen intro and lobby', () => {
     const howToPlay = [...container.querySelectorAll('button')]
       .find((button) => button.textContent === 'HOW TO PLAY')
     act(() => howToPlay?.click())
-    expect(container.textContent).toContain('표시 개수로 정해지지 않으니')
+    expect(container.textContent).toContain('개수가 아니라 어떤 항목인지')
     expect(container.querySelectorAll('.ready-example')).toHaveLength(2)
     expect(container.querySelectorAll('.suspicious-marker')).toHaveLength(3)
     expect(container.querySelector('.lobby-console')?.hasAttribute('aria-live')).toBe(false)

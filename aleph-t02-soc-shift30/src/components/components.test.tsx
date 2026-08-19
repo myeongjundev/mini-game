@@ -61,7 +61,7 @@ describe('screen components', () => {
     expect(markup).toContain('P / ESC')
 
     const examples = renderToStaticMarkup(<LobbyExampleCards />)
-    expect(examples).toContain('표시 개수로 정해지지 않으니')
+    expect(examples).toContain('개수가 아니라 어떤 항목인지')
     expect(examples).toContain('DEVICE')
     expect(examples).toContain('FAILED LOGIN')
     // 표시 개수 규칙은 15개 중 14개를 맞히는 사실상의 정답표라 가르치지 않는다.

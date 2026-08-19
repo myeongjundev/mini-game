@@ -212,38 +212,60 @@ Reduce Motion에서 **정보 손실이 0**인 것이 중요하다.
 
 ## 9. 로비 화면 유리 좌표
 
-로비는 배경 그림 속 모니터 화면 안에 실제 UI를 띄운다. 그 사각형은
-`global.css`의 `.lobby-scene`에 변수 넷으로 있다.
+로비는 배경 그림 `lobby-office-blank.png`의 모니터 화면 안에 실제 UI를
+띄운다. 그림의 화면은 비어 있고, 글자와 버튼은 전부 HTML이다.
+
+### 변수
+
+`global.css`의 `.lobby-scene`에 있다. `.crt-display`는 이 값만 읽는다.
 
 ```css
 --glass-left / --glass-top / --glass-width / --glass-height
+--scene-zoom                       /* 배경 확대 배율, 기본 1 */
+--glass-origin-x / --glass-origin-y /* 확대 기준점, 기본 46.65% 33.2% */
 ```
 
-`.crt-display`는 이 변수만 읽는다. **그림을 바꾸면 네 값만 다시 재서
-넣으면 되고 다른 곳은 손대지 않는다.**
+**그림을 바꾸면 유리를 다시 재서 이 값만 넣는다.** 다른 곳은 손대지 않는다.
 
-### 지금 값과 실측값이 다른 이유
+### 지금 값
 
-| | left | top | width | height |
-|---|---|---|---|---|
-| 그림 속 유리 (실측) | 31.76% | 13.60% | 29.84% | **39.21%** |
-| 지금 쓰는 값 | 29.95% | 12.20% | 31.50% | **51.00%** |
+원본 1672×941에서 실측한 유리는 `31.7 / 13.6 / 29.9 / 39.21`(%)이고,
+1100px 초과 구간은 이 값을 **그대로** 쓴다. 상자가 그려진 유리에 정확히
+얹힌다.
 
-셸 최대 폭 1180px에서 씬은 1178×663으로 그려진다. 이때 그림 속 유리는
-352×260px인데 콘솔이 필요한 높이는 **334px**다. 74px이 모자라서 상자를
-늘려 쓰고 있고, 그래서 오버레이가 베젤 아래로 흘러내린다.
+| 구간 | 확대 | left | top | width | height |
+|---|---|---|---|---|---|
+| 1101px 이상 | 1 | 31.70% | 13.60% | 29.90% | 39.21% |
+| 641~1100px | 1.35 | 26.47% | 6.74% | 40.37% | 52.93% |
+| 640px 이하 | 1.25 | 1.06% | 8.70% | 83.00% | 49.01% |
 
-**새 배경 그림은 유리가 씬 높이의 52% 이상이어야 한다.** 원본 1672×941
-기준으로 유리가 최소 669×489px(지금 499×369px)이면 늘리지 않고 실측값을
-그대로 쓸 수 있다.
+### 왜 확대하는가
 
-### 재는 법
+셸이 좁아지면 그려진 모니터도 같이 작아진다. 글자는 11px 아래로 못 내리므로
+(8절), 좁은 화면에서는 **배경을 확대해 모니터를 키운다.** 확대 기준점을
+유리의 중심에 두면 확대해도 유리가 제자리에 있고, `--glass-*`에 배율만
+곱하면 된다.
+
+```
+중심 = (left + width/2, top + height/2) = (46.65%, 33.2%)
+확대 후 left   = 중심x - width×배율/2
+확대 후 width  = width × 배율
+```
+
+640px 이하는 씬 비율이 `4 / 5`로 바뀌어 `object-fit: cover`가 좌우를
+잘라낸다. 그래서 가로 중심이 `42.56%`로 옮겨가고, 이 값을
+`--glass-origin-x`로 따로 준다. 세로는 잘리지 않아 중심이 그대로다.
+
+배경 그림에서 모니터가 더 커지면 확대 배율을 1에 가깝게 되돌릴 수 있다.
+유리가 씬 높이의 **52% 이상**이면 어느 구간에서도 확대가 필요 없다.
+
+### 유리 재는 법
 
 이미지 도구 없이 브라우저로 잰다. 개발 서버를 띄우고 콘솔에 넣는다.
 
 ```js
 const im = new Image()
-im.src = '/mini-game/lobby-office.png'
+im.src = '/mini-game/lobby-office-blank.png'
 await im.decode()
 const c = document.createElement('canvas')
 c.width = im.naturalWidth; c.height = im.naturalHeight
@@ -251,7 +273,7 @@ const g = c.getContext('2d', { willReadFrequently: true })
 g.drawImage(im, 0, 0)
 // 유리는 r<=4, g>=6, b>g 인 아주 어두운 청록이다. 밤하늘도 r=0이므로
 // 모니터 주변으로 범위를 좁혀서 찾는다.
-const x0 = 400, x1 = 1160, y0 = 80, y1 = 620, W = x1 - x0, H = y1 - y0
+const x0 = 380, x1 = 1220, y0 = 60, y1 = 660, W = x1 - x0, H = y1 - y0
 const d = g.getImageData(x0, y0, W, H).data
 const col = Array(W).fill(0), row = Array(H).fill(0)
 for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -272,18 +294,43 @@ console.log({
 })
 ```
 
-`x0 x1 y0 y1`은 모니터를 넉넉히 감싸는 범위로 잡는다. 새 그림에서 모니터가
-커지면 이 범위도 같이 넓힌다.
+`x0 x1 y0 y1`은 모니터를 넉넉히 감싸는 범위다. 모니터가 커지면 넓힌다.
 
-### 640px 이하
+### 정렬이 맞는지 확인하는 법
 
-`.lobby-scene`의 비율이 `4 / 5`로 바뀌고 그림이 다시 잘리므로 유리 위치가
-달라진다. 같은 변수를 미디어 쿼리 안에서 다시 정의한다.
+계산만 믿지 말고 실제로 얹혔는지 본다. 그려진 유리의 최종 화면 좌표를
+역산해 `.crt-display`와 비교한다. **오차가 1px 미만이면 통과다.**
+
+```js
+const img = document.querySelector('.lobby-office')
+const crt = document.querySelector('.crt-display')
+const scene = document.querySelector('.lobby-scene').getBoundingClientRect()
+const cs = getComputedStyle(img)
+const ew = img.offsetWidth, eh = img.offsetHeight
+const ir = 1672 / 941, er = ew / eh
+const [cw, ch] = er > ir ? [ew, ew / ir] : [eh * ir, eh]
+const cx = scene.left + (ew - cw) / 2, cy = scene.top + (eh - ch) / 2
+let gx = cx + 0.317 * cw, gy = cy + 0.136 * ch
+let gw = 0.299 * cw, gh = 0.3921 * ch
+const z = parseFloat(cs.getPropertyValue('--scene-zoom')) || 1
+const [tox, toy] = cs.transformOrigin.split(' ').map(parseFloat)
+const ox = scene.left + tox, oy = scene.top + toy
+gx = ox + (gx - ox) * z; gy = oy + (gy - oy) * z; gw *= z; gh *= z
+const c = crt.getBoundingClientRect()
+console.log({ left: c.left - gx, top: c.top - gy,
+  right: c.left + c.width - (gx + gw), bottom: c.top + c.height - (gy + gh) })
+```
+
+실측 기준 오차는 1366에서 0.04px, 800에서 0.1px, 375에서 0.1px이다.
 
 ### 알아둘 것
 
 - 씬의 `aspect-ratio: 1672 / 941`은 원본 이미지 비율이다. 새 그림이 다른
   비율이면 이 값도 같이 바꿔야 하고, 그러면 좌표를 전부 다시 잡아야 한다.
   **가능하면 16:9를 유지한다.**
+- `.crt-display`는 배경·테두리·안쪽 그림자를 **그리지 않는다.** 그림의 유리가
+  이미 화면이므로, 상자가 화면을 한 겹 더 그리면 UI가 화면 안이 아니라
+  화면 앞에 붙은 것처럼 보인다.
+- 스캔라인 오버레이도 같은 이유로 제거했다. 그림에 이미 주사선이 있다.
 - 베젤과 유리 반사를 알파 PNG로 따로 받으면 UI 위에 얹어 3층으로 만들 수
   있다. 글자가 유리 밑으로 들어가서 정렬 오차가 훨씬 덜 보인다.

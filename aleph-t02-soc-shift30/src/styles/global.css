@@ -58,10 +58,10 @@ button {
    다시 재서 넣으면 되고, 다른 곳은 손대지 않아도 된다.
    재는 법과 현재 값의 근거는 docs/DESIGN_TOKENS.md 9절에 있다. */
 .lobby-scene {
-  --glass-left: 29.95%;
-  --glass-top: 12.2%;
-  --glass-width: 31.5%;
-  --glass-height: 51%;
+  --glass-left: 31.7%;
+  --glass-top: 13.6%;
+  --glass-width: 29.9%;
+  --glass-height: 39.21%;
 
   position: relative;
   container-type: inline-size;
@@ -71,11 +71,18 @@ button {
   background: var(--bg);
 }
 
+/* 화면이 좁아지면 그려진 모니터도 같이 작아져서 조작 안내가 유리 밖으로
+   밀린다. 글자를 줄일 수는 없으므로(11px 하한) 배경을 확대해 모니터를
+   키운다. 확대 기준점은 유리의 중심이라 확대해도 유리가 제자리에 있고,
+   그만큼 --glass-* 값만 배율을 곱해서 다시 넣으면 된다.
+   중심 46.65% 33.2% = left 31.7 + width 29.9/2, top 13.6 + height 39.21/2 */
 .lobby-office {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: scale(var(--scene-zoom, 1));
+  transform-origin: var(--glass-origin-x, 46.65%) var(--glass-origin-y, 33.2%);
 }
 
 .crt-display {
@@ -85,32 +92,20 @@ button {
   left: var(--glass-left);
   width: var(--glass-width);
   height: var(--glass-height);
-  padding: clamp(8px, 1.25vw, 20px);
+  /* 그림의 화면이 비어 있으므로 상자가 스스로 화면을 그리지 않는다.
+     배경·테두리·안쪽 그림자를 얹으면 그려진 유리 위에 상자가 한 겹 더
+     덮여서 UI가 화면 안이 아니라 화면 앞에 붙은 것처럼 보인다. */
+  padding: clamp(6px, 0.8cqw, 12px);
   overflow: hidden;
   color: var(--cyan);
-  background: var(--bg);
-  border: 2px solid color-mix(in srgb, var(--cyan) 30%, transparent);
-  border-radius: 4% / 7%;
-  box-shadow: inset 0 0 24px color-mix(in srgb, var(--cyan) 15%, transparent);
   /* vw로 잡으면 셸이 1180px에서 멈춘 뒤에도 글자만 계속 커져서, 1920에서
      상자는 그대로인데 내용이 넘친다. 상자를 기준으로 재야 맞다. */
   font-size: clamp(13px, 1.12cqw, 14px);
   text-shadow: 0 0 6px currentColor;
 }
 
-.crt-display::after {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  content: '';
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 3px,
-    color-mix(in srgb, var(--bg) 24%, transparent) 4px
-  );
-  pointer-events: none;
-}
+/* 스캔라인 오버레이는 제거했다. 그림의 유리에 이미 주사선이 그려져 있어
+   겹치면 판독성만 나빠지고, DESIGN_TOKENS 8절이 금지한 항목이기도 하다. */
 
 .crt-cursor,
 .intro-title,
@@ -196,8 +191,7 @@ button {
 }
 
 .lobby-console-header,
-.lobby-console-footer,
-.lobby-status-grid {
+.lobby-console-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -206,8 +200,7 @@ button {
   letter-spacing: 0.08em;
 }
 
-.status-online,
-.lobby-status-grid strong {
+.status-online {
   color: var(--green);
 }
 
@@ -268,12 +261,6 @@ button {
   box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 50%, transparent);
 }
 
-.lobby-status-grid {
-  width: 92%;
-  justify-self: center;
-  margin-top: 0.2em;
-}
-
 /* nowrap 한 줄로 두면 콘솔보다 넓어져서 CRT 안쪽 전체를 밀어낸다.
    .crt-display가 overflow: hidden이라 스크롤바 없이 조용히 잘린다. */
 .lobby-controls {
@@ -297,11 +284,6 @@ button {
   letter-spacing: 0.06em;
 }
 
-.lobby-status-grid span {
-  display: grid;
-  gap: 0.2em;
-}
-
 /* 좁은 화면에서 예시 카드가 CRT보다 길어진다. safe center를 쓰지 않으면
    넘칠 때 위쪽이 잘려서 스크롤로도 첫 줄에 닿을 수 없다. */
 .lobby-panel {
@@ -309,7 +291,7 @@ button {
   align-content: safe center;
   gap: 0.3em;
   min-height: 0;
-  padding: 0 1em;
+  padding: 0;
   overflow-y: auto;
 }
 
@@ -319,7 +301,7 @@ button {
 }
 
 .lobby-panel h2 {
-  font-size: 1.2em;
+  font-size: 1em;
   letter-spacing: 0.08em;
 }
 
@@ -806,8 +788,9 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   gap: 0.25em;
-  padding: 0.04em 0;
+  padding: 0;
   font-size: 0.93em;
+  line-height: 1.15;
 }
 
 .ready-example-facts dt {
@@ -1048,21 +1031,18 @@ button:disabled {
     padding: 0;
   }
 
-  /* 세로 비율이 4/5로 바뀌면 그림이 다시 잘리므로 유리 위치도 달라진다. */
+  /* 세로 4/5로 바뀌면 object-fit: cover가 좌우를 잘라내므로 유리의 위치와
+     확대 기준점이 모두 달라진다. 가로 중심은 42.56%로 옮겨간다.
+     여기에 1.25배를 더 확대해 세로 여유를 만든다. */
   .lobby-scene {
-    --glass-left: 8.5%;
-    --glass-top: 12%;
-    --glass-width: 64%;
-    --glass-height: 69%;
+    --scene-zoom: 1.25;
+    --glass-origin-x: 42.56%;
+    --glass-left: 1.06%;
+    --glass-top: 8.7%;
+    --glass-width: 83%;
+    --glass-height: 49.01%;
 
     aspect-ratio: 4 / 5;
-  }
-
-  .lobby-office {
-    width: auto;
-    max-width: none;
-    margin-left: 50%;
-    transform: translateX(-50%);
   }
 
   /* 11px 미만 글자 금지(DESIGN_TOKENS 8절)를 지키려면 화면이 좁을수록
@@ -1088,10 +1068,21 @@ time,
 
 /* 641~1100px 구간은 CRT가 세로로 좁아 장식 줄이 조작 안내를 화면 밖으로
    밀어낸다. C-1 기준(첫 화면에서 조작이 보인다)을 지키려고 장식부터 접는다. */
+/* 1.35배 확대. 유리도 그만큼 커지므로 네 값에 1.35를 곱해 넣는다.
+   640px 이하는 화면 비율부터 달라서 따로 계산한다. */
 @media (min-width: 641px) and (max-width: 1100px) {
+  .lobby-scene {
+    --scene-zoom: 1.35;
+    --glass-left: 26.47%;
+    --glass-top: 6.74%;
+    --glass-width: 40.37%;
+    --glass-height: 52.93%;
+  }
+}
+
+@media (max-width: 1100px) {
   .lobby-title span,
-  .lobby-title p,
-  .lobby-status-grid {
+  .lobby-title p {
     display: none;
   }
 
