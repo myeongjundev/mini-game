@@ -87,10 +87,58 @@ describe('ReadyScreen intro and lobby', () => {
     const howToPlay = [...container.querySelectorAll('button')]
       .find((button) => button.textContent === 'HOW TO PLAY')
     act(() => howToPlay?.click())
+    // 첫 쪽은 규칙과 조작키다. 조작을 모르는 사람이 제일 먼저 보는 곳이다.
+    expect(container.textContent).toContain('가만히 있으면 집니다')
+    expect(container.querySelector('.guide-controls')?.textContent).toContain('A / ←')
+    expect(container.querySelector('.lobby-console')?.hasAttribute('aria-live')).toBe(false)
+  })
+
+  const openGuide = () => {
+    renderScreen({ playIntro: false })
+    const howToPlay = [...container.querySelectorAll('button')]
+      .find((button) => button.textContent === 'HOW TO PLAY')
+    act(() => howToPlay?.click())
+  }
+
+  const pager = (label: string) => [...container.querySelectorAll('.lobby-guide-pager button')]
+    .find((button) => button.getAttribute('aria-label') === label) as HTMLButtonElement | undefined
+
+  it('pages through the guide and stops at both ends', () => {
+    openGuide()
+    const prev = () => pager('이전 쪽')
+    const next = () => pager('다음 쪽')
+
+    expect(prev()?.disabled).toBe(true)
+    expect(container.querySelector('h2')?.textContent).toBe('근무 요령')
+
+    act(() => next()?.click())
+    expect(container.querySelector('h2')?.textContent).toBe('카드 읽는 법')
     expect(container.textContent).toContain('개수가 아니라 어떤 항목인지')
     expect(container.querySelectorAll('.ready-example')).toHaveLength(2)
     expect(container.querySelectorAll('.suspicious-marker')).toHaveLength(3)
-    expect(container.querySelector('.lobby-console')?.hasAttribute('aria-live')).toBe(false)
+
+    // 목적지 한 줄만 다른 두 경보. 표시 개수로 세면 안 된다는 것을 보여준다.
+    act(() => next()?.click())
+    expect(container.querySelectorAll('.guide-compare-row')).toHaveLength(2)
+    expect(container.textContent).toContain('목적지 한 줄이 갈랐습니다')
+
+    act(() => next()?.click())
+    expect(container.textContent).toContain('FALSE POSITIVE')
+    expect(container.textContent).toContain('MISSED THREAT')
+    expect(next()?.disabled).toBe(true)
+
+    act(() => prev()?.click())
+    expect(container.querySelector('h2')?.textContent).toBe('같아 보이지만 다른 것')
+  })
+
+  it('returns to the menu from the guide and refocuses START SHIFT', () => {
+    openGuide()
+    const back = [...container.querySelectorAll<HTMLButtonElement>('.lobby-guide-pager button')]
+      .find((button) => button.textContent === 'MENU')
+
+    act(() => back?.click())
+    expect(container.querySelector('.lobby-menu')).not.toBeNull()
+    expect(document.activeElement?.textContent).toBe('START SHIFT')
   })
 
   it('starts directly in the lobby on a return visit', () => {

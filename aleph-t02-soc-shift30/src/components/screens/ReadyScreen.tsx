@@ -42,13 +42,17 @@ const CONTROL_HINTS = [
   { keys: 'P / ESC', action: 'PAUSE' },
 ]
 
-const EXAMPLE_ALERT_IDS = ['https-normal', 'ssh-brute'] as const
-
-const EXAMPLE_ALERTS = EXAMPLE_ALERT_IDS.map((id) => {
+function findAlert(id: string): Alert {
   const alert = ALERTS.find((item) => item.id === id)
-  if (!alert) throw new Error(`Missing lobby example alert: ${id}`)
+  if (!alert) throw new Error(`Missing lobby alert: ${id}`)
   return alert
-})
+}
+
+const EXAMPLE_ALERTS = ['https-normal', 'ssh-brute'].map(findAlert)
+
+// 거의 같은 카드인데 목적지 한 줄에서 갈린다. 표시가 붙었으니 위험하다는
+// 오해를 깨는 데 이 한 쌍이 설명 열 줄보다 낫다.
+const COMPARE_ALERTS = ['exfil', 'backup-job'].map(findAlert)
 
 function LobbyExample({ alert }: { alert: Alert }) {
   return (
@@ -88,6 +92,104 @@ export function LobbyExampleCards() {
         {EXAMPLE_ALERTS.map((alert) => <LobbyExample alert={alert} key={alert.id} />)}
       </div>
     </>
+  )
+}
+
+function CompareRow({ alert }: { alert: Alert }) {
+  const decisive = alert.facts.find((fact) => fact.label === alert.decisiveFact)
+
+  return (
+    <article className="guide-compare-row" data-action={alert.correctAction}>
+      <strong>{alert.title}</strong>
+      <p className="guide-compare-fact">
+        <span className="guide-compare-label">{alert.decisiveFact}</span>
+        <span>{decisive?.value}</span>
+      </p>
+      <span className="guide-compare-verdict">{alert.correctAction}</span>
+    </article>
+  )
+}
+
+export const GUIDE_PAGE_COUNT = 4
+
+export function LobbyGuidePage({ page }: { page: number }) {
+  if (page === 0) {
+    return (
+      <>
+        <p className="guide-lead">
+          들어오는 보안 경보를 <strong>ALLOW</strong>(통과) 또는{' '}
+          <strong>BLOCK</strong>(차단)으로 판정합니다.
+        </p>
+        <ul className="guide-list">
+          <li>근무 시간 {formatSeconds(DIFFICULTY.totalTimeMs)}, 보안 라이프 {DIFFICULTY.lives}개</li>
+          <li>경보 하나를 넘길 때까지 {formatSeconds(DIFFICULTY.eventIntervalMs)}</li>
+          <li>판정하지 않고 넘기면 라이프가 줄어듭니다. <strong>가만히 있으면 집니다</strong></li>
+        </ul>
+        <ul className="lobby-controls guide-controls">
+          {CONTROL_HINTS.map(({ keys, action }) => (
+            <li key={action}><kbd>{keys}</kbd> {action}</li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+
+  if (page === 1) {
+    return <LobbyExampleCards />
+  }
+
+  if (page === 2) {
+    return (
+      <>
+        <p className="guide-lead">
+          둘 다 새벽에 몇 GB를 내보냅니다. 표시도 둘 다 붙어 있습니다.
+          <strong> 목적지 한 줄이 갈랐습니다.</strong>
+        </p>
+        <div className="guide-compare">
+          {COMPARE_ALERTS.map((alert) => <CompareRow alert={alert} key={alert.id} />)}
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <p className="guide-lead">한 일보다 <strong>그럴 자격이 있는지</strong>를 보세요.</p>
+      <ul className="guide-list">
+        <li>기기·계정·목적지가 <strong>등록된</strong> 것인가</li>
+        <li>이상한 수치에 <strong>설명이 붙어</strong> 있는가 (정기 백업, 판촉 행사)</li>
+        <li>인증을 통과해도 <strong>평소 하지 않던 일</strong>인가</li>
+      </ul>
+      <dl className="guide-failure">
+        <div><dt>FALSE POSITIVE</dt><dd>정상을 막아 가용성을 잃습니다</dd></div>
+        <div><dt>MISSED THREAT</dt><dd>위협을 통과시켜 침해를 놓칩니다</dd></div>
+      </dl>
+    </>
+  )
+}
+
+const GUIDE_TITLES = ['근무 요령', '카드 읽는 법', '같아 보이지만 다른 것', '자주 갈리는 지점']
+
+function LobbyGuide({ onBack }: { onBack: () => void }) {
+  const [page, setPage] = useState(0)
+  const last = GUIDE_PAGE_COUNT - 1
+
+  return (
+    <div className="lobby-panel lobby-guide" aria-label="HOW TO PLAY">
+      <h2>{GUIDE_TITLES[page]}</h2>
+      <div className="lobby-guide-body">
+        <LobbyGuidePage page={page} />
+      </div>
+      <div className="lobby-guide-pager">
+        <button type="button" aria-label="이전 쪽" disabled={page === 0}
+          onClick={() => setPage((value) => Math.max(0, value - 1))}>←</button>
+        <span aria-hidden="true">{page + 1} / {GUIDE_PAGE_COUNT}</span>
+        <span className="sr-only">{GUIDE_PAGE_COUNT}쪽 중 {page + 1}쪽</span>
+        <button type="button" aria-label="다음 쪽" disabled={page === last}
+          onClick={() => setPage((value) => Math.min(last, value + 1))}>→</button>
+        <button type="button" className="guide-back" onClick={onBack}>MENU</button>
+      </div>
+    </div>
   )
 }
 
@@ -190,11 +292,7 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
                 </ul>
               </div>
             ) : null}
-            {panel === 'HOW_TO_PLAY' ? (
-              <div className="lobby-panel" aria-label="HOW TO PLAY"><h2>HOW TO PLAY</h2>
-                <LobbyExampleCards />
-                <button type="button" onClick={() => setPanel('MENU')}>← BACK</button></div>
-            ) : null}
+            {panel === 'HOW_TO_PLAY' ? <LobbyGuide onBack={() => setPanel('MENU')} /> : null}
             {panel === 'SHIFT_RECORD' ? (
               <div className="lobby-panel"><h2>SHIFT RECORD</h2><span>LOCAL BEST</span>
                 <strong className="lobby-best">{formatScore(bestScore)}</strong>

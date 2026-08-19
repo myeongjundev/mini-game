@@ -310,6 +310,159 @@ button {
   line-height: 1.5;
 }
 
+/* 가이드는 유리 안에서 쪽을 넘겨 읽는다. 여백을 아끼되 글자는 0.93em
+   아래로 내리지 않는다.
+   제목과 쪽 넘김은 고정하고 본문만 스크롤한다. 셋을 함께 스크롤시키면
+   내용이 긴 쪽에서 넘김 버튼이 화면 밖으로 밀려 다음 쪽으로 갈 수 없다. */
+.lobby-guide {
+  align-content: stretch;
+  gap: 0.35em;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+.lobby-guide-body {
+  display: grid;
+  align-content: start;
+  gap: 0.35em;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.guide-lead {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.93em;
+  line-height: 1.4;
+}
+
+.guide-lead strong,
+.guide-list strong {
+  color: var(--text);
+}
+
+.guide-list {
+  display: grid;
+  gap: 0.2em;
+  margin: 0;
+  padding-left: 1.1em;
+  color: var(--text-dim);
+  font-size: 0.93em;
+  line-height: 1.35;
+}
+
+.guide-controls {
+  justify-content: start;
+  padding-top: 0.3em;
+  border-top: 1px solid var(--line-dim);
+}
+
+.guide-compare {
+  display: grid;
+  gap: 0.3em;
+}
+
+.guide-compare-row {
+  display: grid;
+  align-items: baseline;
+  gap: 0.15em 0.5em;
+  padding: 0.35em 0.45em;
+  grid-template-columns: 1fr auto;
+  background: var(--panel);
+  border-left: 2px solid var(--line);
+  font-size: 0.93em;
+}
+
+.guide-compare-row[data-action='BLOCK'] {
+  border-left-color: var(--amber);
+}
+
+.guide-compare-row[data-action='ALLOW'] {
+  border-left-color: var(--green);
+}
+
+.guide-compare-fact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1em 0.4em;
+  margin: 0;
+  color: var(--text);
+  grid-column: 1;
+}
+
+.guide-compare-label {
+  color: var(--text-dim);
+}
+
+.guide-compare-verdict {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  letter-spacing: 0.08em;
+}
+
+.guide-compare-row[data-action='BLOCK'] .guide-compare-verdict {
+  color: var(--amber);
+}
+
+.guide-compare-row[data-action='ALLOW'] .guide-compare-verdict {
+  color: var(--green);
+}
+
+.guide-failure {
+  display: grid;
+  gap: 0.15em;
+  margin: 0;
+  padding-top: 0.3em;
+  font-size: 0.93em;
+  border-top: 1px solid var(--line-dim);
+}
+
+.guide-failure > div {
+  display: flex;
+  gap: 0.5em;
+}
+
+.guide-failure dt {
+  flex: 0 0 auto;
+  width: 8.5em;
+}
+
+.guide-failure > div:first-child dt {
+  color: var(--amber);
+}
+
+.guide-failure > div:last-child dt {
+  color: var(--red);
+}
+
+.guide-failure dd {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.lobby-guide-pager {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding-top: 0.3em;
+  color: var(--text-dim);
+  font-size: 0.93em;
+}
+
+.lobby-guide-pager button {
+  padding: 0.15em 0.6em;
+}
+
+.lobby-guide-pager button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.lobby-guide-pager .guide-back {
+  margin-left: auto;
+}
+
 .lobby-best {
   font-size: 2.5em;
   font-variant-numeric: tabular-nums;
