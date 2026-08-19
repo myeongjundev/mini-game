@@ -149,7 +149,7 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
   return (
     <section className="lobby-scene" aria-label="SOC SHIFT:30 analyst desk"
       data-lobby-phase={phase} onClick={introActive ? completeIntro : undefined}>
-      <img className="lobby-office" src={`${import.meta.env.BASE_URL}lobby-office-blank.png`}
+      <img className="lobby-office" src={`${import.meta.env.BASE_URL}lobby-office-blank.webp`}
         alt="80년대 야간 사무실의 CRT 관제 컴퓨터와 커피, 서류가 놓인 책상" />
       <div className="crt-display">
         <p className="sr-only lobby-live-status" aria-live="polite">{PHASE_STATUS[phase]}</p>

@@ -212,8 +212,31 @@ Reduce Motion에서 **정보 손실이 0**인 것이 중요하다.
 
 ## 9. 로비 화면 유리 좌표
 
-로비는 배경 그림 `lobby-office-blank.png`의 모니터 화면 안에 실제 UI를
+로비는 배경 그림 `lobby-office-blank.webp`의 모니터 화면 안에 실제 UI를
 띄운다. 그림의 화면은 비어 있고, 글자와 버튼은 전부 HTML이다.
+
+### 배경 그림 만들기
+
+원본 PNG를 받아 1180px WebP로 줄여서 `public/`에 넣는다. 셸 최대 폭이
+1180px이라 그보다 큰 원본은 화면에서 쓰이지 않는다.
+
+```bash
+npm i -D sharp
+node --input-type=module -e "
+import sharp from 'sharp'
+const out = await sharp('원본.png').resize({ width: 1180 })
+  .webp({ quality: 92, effort: 6 })
+  .toFile('public/lobby-office-blank.webp')
+console.log(out.width + 'x' + out.height, (out.size / 1024).toFixed(1) + ' KB')
+"
+npm uninstall sharp
+```
+
+**변환 후에는 sharp를 지운다.** 20MB짜리 네이티브 모듈인데 lint·build·test
+어디에도 쓰이지 않아서, 남겨두면 CI의 `npm ci`가 매번 내려받는다.
+
+품질 92에서 143KB다. 이 그림은 평면 음영이 많아 잘 눌린다. 참고로
+q82는 79KB, 원본 해상도(1672px) q92는 244KB다.
 
 ### 변수
 
@@ -261,11 +284,17 @@ Reduce Motion에서 **정보 손실이 0**인 것이 중요하다.
 
 ### 유리 재는 법
 
-이미지 도구 없이 브라우저로 잰다. 개발 서버를 띄우고 콘솔에 넣는다.
+**WebP가 아니라 변환 전 원본 PNG로 잰다.** 1180px으로 줄이고 손실 압축을
+거치면 경계가 흐려져 값이 0.1~0.2%p 흔들린다. 실측하면 WebP 쪽이
+`31.78 / 13.70 / 29.75 / 39.01`로 나오는데, 화면에서 1px쯤 어긋난다.
+원본에서 잰 값이 맞다.
+
+이미지 도구 없이 브라우저로 잰다. 원본 PNG를 잠시 `public/`에 두고
+개발 서버를 띄운 뒤 콘솔에 넣는다.
 
 ```js
 const im = new Image()
-im.src = '/mini-game/lobby-office-blank.png'
+im.src = '/mini-game/원본.png'
 await im.decode()
 const c = document.createElement('canvas')
 c.width = im.naturalWidth; c.height = im.naturalHeight
