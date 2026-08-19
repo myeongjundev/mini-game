@@ -1476,3 +1476,105 @@ time,
 .app-shell[data-reduce-motion='true'] .memo-toast {
   animation: none;
 }
+
+/* 근무 중 받은 공지를 모아 둔다. 규칙은 GAME_SPEC 13.6-1.
+   메모는 닫으면 사라지는데 연결 경보는 최대 17초 뒤에 온다. 다시 읽을
+   데가 없으면 방해만 남고 정보는 못 준다. 그래서 닫아도 여기 남는다. */
+.memo-log {
+  margin-top: var(--gap-md);
+  padding: var(--gap-sm);
+  background: var(--panel);
+  border: 1px solid var(--line-dim);
+}
+
+.memo-log-title {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  margin: 0 0 var(--gap-xs);
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+.memo-log-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--amber);
+}
+
+.memo-log-empty {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+/* 좁은 화면에서는 버튼 아래로 흐른다. 본편 화면은 390×844에서 로그 없이도
+   이미 44px 넘치므로, 공지 넉 장을 다 펼치면 274px이 더 붙는다. 높이를
+   묶고 안에서만 굴려서 페이지가 부풀지 않게 한다. */
+.memo-log-list {
+  display: grid;
+  max-height: 104px;
+  gap: var(--gap-xs);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.memo-log-item {
+  padding-left: var(--gap-sm);
+  border-left: 2px solid var(--amber);
+}
+
+.memo-log-head {
+  display: flex;
+  gap: var(--gap-sm);
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.memo-log-from {
+  color: var(--amber);
+}
+
+.memo-log-time {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.memo-log-body {
+  margin: 1px 0 0;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* 셸이 720px 고정이라 넓은 화면에서는 오른쪽 여백이 남는다. 거기 세우면
+   본편 레이아웃을 밀지 않고 세로도 늘지 않는다. 절대 위치라 셸이 가운데
+   그대로 있고, 판이 시작될 때 화면이 옆으로 튀지 않는다.
+
+   경계는 셸이 가운데라는 데서 나온다. 한쪽 여백이 (V - 48 - 720) / 2이므로
+   패널 240px과 간격 24px이 들어가려면 V >= 1296이어야 한다. 1320px으로
+   잡아 24px 여유를 뒀다. 1366에서 여백 299px, 필요 264px이다.
+   1280×720은 이 아래라 버튼 밑으로 흐르는데, 그 해상도는 로그가 없어도
+   이미 19px 넘치는 상태다. */
+@media (min-width: 1320px) {
+  .memo-log {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 240px;
+    max-height: 100%;
+    margin-top: 0;
+    margin-left: var(--gap-lg);
+    overflow-y: auto;
+  }
+
+  .memo-log-list {
+    max-height: none;
+    overflow-y: visible;
+  }
+}

@@ -66,6 +66,8 @@ export type GameState = {
   lastVerdict: Verdict | null
   log: DecisionRecord[]
   activeMemo: ActiveMemo | null
+  /** 근무 중 받은 공지 전부. 닫아도 남아서 다시 읽을 수 있다. GAME_SPEC 13.6-1. */
+  memoLog: Memo[]
   memosShown: number
   memosRead: number
 }

@@ -10,6 +10,7 @@ import {
 import ActionButtons from './components/ActionButtons'
 import AlertCard from './components/AlertCard'
 import Hud from './components/Hud'
+import MemoLog from './components/MemoLog'
 import MemoToast from './components/MemoToast'
 import SettingsBar from './components/SettingsBar'
 import VerdictFlash from './components/VerdictFlash'
@@ -419,6 +420,7 @@ export default function App() {
             disabled={state.game.currentAlert === null || isMemoOpen}
             onDecide={handleDecide}
           />
+          <MemoLog memos={state.game.memoLog} />
         </>
       ) : null}
 

@@ -58,6 +58,7 @@ export function createInitialGameState(): GameState {
     lastVerdict: null,
     log: [],
     activeMemo: null,
+    memoLog: [],
     memosShown: 0,
     memosRead: 0,
   }
@@ -100,6 +101,9 @@ export function presentAlert(state: GameState, alert: Alert): GameState {
  *
  * 호출은 새 경보가 뜨는 순간에만 한다. 경보가 끝나갈 때 끼어들면 아무리
  * 빨리 닫아도 미판정이 되어 실력으로 피할 수 없다.
+ *
+ * 띄우는 즉시 `memoLog`에도 넣는다. 닫으면 사라지는데 연결 경보는 최대
+ * 17초 뒤에 오므로, 다시 읽을 데가 없으면 방해만 남고 정보는 못 준다.
  */
 export function showMemo(
   state: GameState,
@@ -111,6 +115,7 @@ export function showMemo(
     : {
         ...state,
         activeMemo: { memo, shownAtMs: elapsedMs },
+        memoLog: [...state.memoLog, memo],
         memosShown: state.memosShown + 1,
       }
 }

@@ -9,6 +9,7 @@ import ActionButtons from './ActionButtons'
 import AlertCard from './AlertCard'
 import ShiftLog from './ShiftLog'
 import PausedScreen from './screens/PausedScreen'
+import MemoLog from './MemoLog'
 import MemoToast from './MemoToast'
 import ReadyScreen, { GUIDE_PAGE_COUNT, LobbyGuidePage } from './screens/ReadyScreen'
 import ResultScreen from './screens/ResultScreen'
@@ -277,6 +278,24 @@ describe('action buttons while a memo is up', () => {
 
     expect(markup.match(/<button/g)).toHaveLength(2)
     expect(markup).not.toContain('disabled')
+  })
+})
+
+describe('memo log', () => {
+  it('shows every memo that arrived so it can be read again', () => {
+    const markup = renderToStaticMarkup(<MemoLog memos={[MEMOS[0], MEMOS[1]]} />)
+
+    expect(markup).toContain(MEMOS[0].from)
+    expect(markup).toContain(MEMOS[0].body)
+    expect(markup).toContain(MEMOS[1].body)
+  })
+
+  it('keeps its place before the first memo arrives', () => {
+    // 3초에 갑자기 나타나면 그때 화면이 밀리고, 여기 쌓인다는 것도 모른다.
+    const markup = renderToStaticMarkup(<MemoLog memos={[]} />)
+
+    expect(markup).toContain('받은 공지가 없습니다')
+    expect(markup).not.toContain('memo-log-list')
   })
 })
 

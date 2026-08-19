@@ -260,6 +260,40 @@ describe('game state machine', () => {
   })
 })
 
+describe('memo log', () => {
+  // 메모는 닫으면 사라지는데 연결 경보는 최대 17초 뒤에 온다. 다시 읽을
+  // 데가 없으면 방해만 남고 정보는 못 준다. GAME_SPEC 13.6-1.
+  it('keeps every memo in play order so it can be read again', () => {
+    let state = playingState()
+    state = showMemo(state, MEMOS[0], 3_000)
+    state = dismissMemo(state, 4_000)
+    state = showMemo(state, MEMOS[1], 7_000)
+
+    expect(state.memoLog.map((memo) => memo.id)).toEqual([
+      MEMOS[0].id,
+      MEMOS[1].id,
+    ])
+  })
+
+  it('starts empty and clears on restart', () => {
+    expect(createInitialGameState().memoLog).toEqual([])
+
+    const shown = showMemo(playingState(), MEMOS[0], 3_000)
+    expect(shown.memoLog).toHaveLength(1)
+
+    const finished = { ...shown, phase: 'FAILURE' } as GameState
+    expect(restartGame(finished).memoLog).toEqual([])
+  })
+
+  it('does not record a memo that was refused', () => {
+    // 이미 떠 있으면 새 메모를 받지 않는다. 로그에도 들어가면 안 된다.
+    const first = showMemo(playingState(), MEMOS[0], 3_000)
+    const second = showMemo(first, MEMOS[1], 7_000)
+
+    expect(second.memoLog).toHaveLength(1)
+  })
+})
+
 describe('memo guards tolerate a state without the memo fields', () => {
   // 개발 서버에서 HMR로 코드만 갱신되면 리듀서 상태는 이전 판 그대로다.
   // 그 상태에는 activeMemo가 없어 undefined인데, `undefined !== null`이
