@@ -111,11 +111,17 @@ describe('ReadyScreen intro and lobby', () => {
     expect(prev()?.disabled).toBe(true)
     expect(container.querySelector('h2')?.textContent).toBe('근무 요령')
 
+    // 통과와 차단을 쪽으로 나눠 각각 이유까지 보여준다.
     act(() => next()?.click())
-    expect(container.querySelector('h2')?.textContent).toBe('카드 읽는 법')
-    expect(container.textContent).toContain('개수가 아니라 어떤 항목인지')
-    expect(container.querySelectorAll('.ready-example')).toHaveLength(2)
+    expect(container.querySelector('h2')?.textContent).toBe('통과시키는 경보')
+    expect(container.querySelectorAll('.ready-example')).toHaveLength(1)
+    expect(container.querySelectorAll('.suspicious-marker')).toHaveLength(0)
+    expect(container.querySelector('.ready-example-why')?.textContent).toBeTruthy()
+
+    act(() => next()?.click())
+    expect(container.querySelector('h2')?.textContent).toBe('막는 경보')
     expect(container.querySelectorAll('.suspicious-marker')).toHaveLength(3)
+    expect(container.querySelector('.ready-example-why')?.textContent).toBeTruthy()
 
     // 목적지 한 줄만 다른 두 경보. 표시 개수로 세면 안 된다는 것을 보여준다.
     act(() => next()?.click())
@@ -123,6 +129,7 @@ describe('ReadyScreen intro and lobby', () => {
     expect(container.textContent).toContain('목적지 한 줄이 갈랐습니다')
 
     act(() => next()?.click())
+    expect(container.textContent).toContain('표시 개수가 아니라')
     expect(container.textContent).toContain('FALSE POSITIVE')
     expect(container.textContent).toContain('MISSED THREAT')
     expect(next()?.disabled).toBe(true)

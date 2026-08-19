@@ -7,7 +7,7 @@ import type { DecisionRecord } from '../game/types'
 import AlertCard from './AlertCard'
 import ShiftLog from './ShiftLog'
 import PausedScreen from './screens/PausedScreen'
-import ReadyScreen, { LobbyExampleCards } from './screens/ReadyScreen'
+import ReadyScreen, { GUIDE_PAGE_COUNT, LobbyGuidePage } from './screens/ReadyScreen'
 import ResultScreen from './screens/ResultScreen'
 
 describe('screen components', () => {
@@ -60,13 +60,37 @@ describe('screen components', () => {
     expect(markup).toContain('D / →')
     expect(markup).toContain('P / ESC')
 
-    const examples = renderToStaticMarkup(<LobbyExampleCards />)
-    expect(examples).toContain('개수가 아니라 어떤 항목인지')
-    expect(examples).toContain('DEVICE')
-    expect(examples).toContain('FAILED LOGIN')
+    const allowPage = renderToStaticMarkup(<LobbyGuidePage page={1} />)
+    expect(allowPage).toContain('DEVICE')
+    expect(allowPage).not.toContain('class="suspicious-marker"')
+
+    // 개수로 세지 말라는 원칙은 판단 기준 쪽에 모아둔다.
+    expect(renderToStaticMarkup(<LobbyGuidePage page={4} />))
+      .toContain('표시 개수가 아니라')
+
+    const blockPage = renderToStaticMarkup(<LobbyGuidePage page={2} />)
+    expect(blockPage).toContain('FAILED LOGIN')
+    expect(blockPage.match(/class="suspicious-marker"/g)).toHaveLength(3)
+
     // 표시 개수 규칙은 15개 중 14개를 맞히는 사실상의 정답표라 가르치지 않는다.
-    expect(examples).not.toMatch(/표시가 \d+개/)
-    expect(examples.match(/class="suspicious-marker"/g)).toHaveLength(3)
+    for (const page of [allowPage, blockPage]) {
+      expect(page).not.toMatch(/표시가 \d+개/)
+    }
+  })
+
+  it('explains why each example alert is allowed or blocked', () => {
+    // 결정적 항목만 짚으면 "왜"가 빠진다. 경보 데이터의 설명을 그대로 쓴다.
+    const allow = ALERTS.find((item) => item.id === 'https-normal')
+    const block = ALERTS.find((item) => item.id === 'ssh-brute')
+
+    expect(renderToStaticMarkup(<LobbyGuidePage page={1} />)).toContain(allow!.explanation)
+    expect(renderToStaticMarkup(<LobbyGuidePage page={2} />)).toContain(block!.explanation)
+  })
+
+  it('renders every guide page without throwing', () => {
+    for (let page = 0; page < GUIDE_PAGE_COUNT; page += 1) {
+      expect(renderToStaticMarkup(<LobbyGuidePage page={page} />).length).toBeGreaterThan(0)
+    }
   })
 
   it('marks only suspicious facts with a shape and screen-reader text', () => {

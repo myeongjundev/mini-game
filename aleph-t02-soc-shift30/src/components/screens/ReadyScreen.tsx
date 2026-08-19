@@ -77,21 +77,8 @@ function LobbyExample({ alert }: { alert: Alert }) {
       <p className="ready-example-verdict">
         {alert.decisiveFact} → <strong>{alert.correctAction}</strong>
       </p>
+      <p className="ready-example-why">{alert.explanation}</p>
     </article>
-  )
-}
-
-export function LobbyExampleCards() {
-  return (
-    <>
-      <p className="ready-examples-hint">
-        표시는 <strong>수상한 항목에만</strong> 붙습니다.
-        개수가 아니라 어떤 항목인지가 판정을 가릅니다.
-      </p>
-      <div className="ready-example-grid">
-        {EXAMPLE_ALERTS.map((alert) => <LobbyExample alert={alert} key={alert.id} />)}
-      </div>
-    </>
   )
 }
 
@@ -110,7 +97,7 @@ function CompareRow({ alert }: { alert: Alert }) {
   )
 }
 
-export const GUIDE_PAGE_COUNT = 4
+export const GUIDE_PAGE_COUNT = 5
 
 export function LobbyGuidePage({ page }: { page: number }) {
   if (page === 0) {
@@ -135,10 +122,24 @@ export function LobbyGuidePage({ page }: { page: number }) {
   }
 
   if (page === 1) {
-    return <LobbyExampleCards />
+    return (
+      <>
+        <p className="guide-lead">표시는 <strong>수상한 항목에만</strong> 붙습니다.</p>
+        <LobbyExample alert={EXAMPLE_ALERTS[0]} />
+      </>
+    )
   }
 
   if (page === 2) {
+    return (
+      <>
+        <p className="guide-lead"><strong>사람이 할 수 없는 수준</strong>이면 자동화입니다.</p>
+        <LobbyExample alert={EXAMPLE_ALERTS[1]} />
+      </>
+    )
+  }
+
+  if (page === 3) {
     return (
       <>
         <p className="guide-lead">
@@ -159,6 +160,7 @@ export function LobbyGuidePage({ page }: { page: number }) {
         <li>기기·계정·목적지가 <strong>등록된</strong> 것인가</li>
         <li>이상한 수치에 <strong>설명이 붙어</strong> 있는가 (정기 백업, 판촉 행사)</li>
         <li>인증을 통과해도 <strong>평소 하지 않던 일</strong>인가</li>
+        <li>표시 개수가 아니라 <strong>어떤 항목인지</strong>를 보세요</li>
       </ul>
       <dl className="guide-failure">
         <div><dt>FALSE POSITIVE</dt><dd>정상을 막아 가용성을 잃습니다</dd></div>
@@ -168,7 +170,13 @@ export function LobbyGuidePage({ page }: { page: number }) {
   )
 }
 
-const GUIDE_TITLES = ['근무 요령', '카드 읽는 법', '같아 보이지만 다른 것', '자주 갈리는 지점']
+const GUIDE_TITLES = [
+  '근무 요령',
+  '통과시키는 경보',
+  '막는 경보',
+  '같아 보이지만 다른 것',
+  '자주 갈리는 지점',
+]
 
 function LobbyGuide({ onBack }: { onBack: () => void }) {
   const [page, setPage] = useState(0)
@@ -273,7 +281,7 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
             <strong>ANALYST CONSOLE READY</strong><small>OPENING NIGHT SHIFT LOBBY…</small></div>
         ) : null}
         {phase === 'LOBBY' ? (
-          <div className="lobby-console">
+          <div className="lobby-console" data-panel={panel}>
             <header className="lobby-console-header"><span>SOC NODE // 01</span>
               <span className="status-online">● ONLINE</span></header>
             {panel === 'MENU' ? (

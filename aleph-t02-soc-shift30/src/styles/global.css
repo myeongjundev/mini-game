@@ -909,6 +909,21 @@ button:disabled {
   background: var(--red);
 }
 
+/* 결정적 항목만 짚으면 "왜"가 빠진다. 경보 데이터의 설명을 그대로 보여준다.
+   유리가 좁아 구분선은 판정 줄 하나만 두고 여기서는 생략한다. */
+.ready-example-why {
+  margin: 0.1em 0 0;
+  color: var(--text-dim);
+  font-size: 0.93em;
+  line-height: 1.35;
+}
+
+/* 가이드에서는 콘솔 머리글을 접는다. SOC NODE 표시는 장식인데, 유리가
+   작아 이 한 줄이 설명을 화면 밖으로 밀어낸다. */
+.lobby-console[data-panel='HOW_TO_PLAY'] .lobby-console-header {
+  display: none;
+}
+
 .ready-examples-hint {
   margin: 0 0 0.25em;
   color: var(--text-dim);
@@ -964,8 +979,8 @@ button:disabled {
 }
 
 .ready-example-verdict {
-  margin: var(--gap-xs) 0 0;
-  padding-top: var(--gap-xs);
+  margin: 0.25em 0 0;
+  padding-top: 0.25em;
   color: var(--text-dim);
   font-size: 0.93em;
   border-top: 1px solid var(--line);
