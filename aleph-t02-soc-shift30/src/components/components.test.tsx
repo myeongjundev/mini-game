@@ -5,6 +5,7 @@ import { ALERTS } from '../game/data/alerts'
 import { MEMOS } from '../game/data/memos'
 import { createInitialGameState } from '../game/engine/machine'
 import type { DecisionRecord } from '../game/types'
+import ActionButtons from './ActionButtons'
 import AlertCard from './AlertCard'
 import ShiftLog from './ShiftLog'
 import PausedScreen from './screens/PausedScreen'
@@ -252,6 +253,30 @@ describe('memo toast', () => {
 
     expect(markup).toContain('aria-live="assertive"')
     expect(markup).toContain('사내 공지')
+  })
+})
+
+describe('action buttons while a memo is up', () => {
+  // GAME_SPEC 13.2-1. 버튼을 지우면 "눌렀는데 왜 안 되지"가 아니라
+  // "버튼이 어디 갔지"가 된다. 비활성 버튼은 막혔다는 사실을 화면에 남긴다.
+  it('keeps both buttons in place and only disables them', () => {
+    const markup = renderToStaticMarkup(
+      <ActionButtons disabled onDecide={() => undefined} />,
+    )
+
+    expect(markup).toContain('ALLOW')
+    expect(markup).toContain('BLOCK')
+    expect(markup.match(/<button/g)).toHaveLength(2)
+    expect(markup.match(/disabled=""/g)).toHaveLength(2)
+  })
+
+  it('leaves them pressable when no memo is up', () => {
+    const markup = renderToStaticMarkup(
+      <ActionButtons disabled={false} onDecide={() => undefined} />,
+    )
+
+    expect(markup.match(/<button/g)).toHaveLength(2)
+    expect(markup).not.toContain('disabled')
   })
 })
 
