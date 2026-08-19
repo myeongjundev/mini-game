@@ -1,9 +1,10 @@
-import { DIFFICULTY } from '../config'
+import { DIFFICULTY, MEMO } from '../config'
 import type {
   Action,
   Alert,
   DecisionRecord,
   GameState,
+  Memo,
   Verdict,
 } from '../types'
 import { resolveAlert } from './rules'
@@ -56,6 +57,9 @@ export function createInitialGameState(): GameState {
     currentAlert: null,
     lastVerdict: null,
     log: [],
+    activeMemo: null,
+    memosShown: 0,
+    memosRead: 0,
   }
 }
 
@@ -91,11 +95,48 @@ export function presentAlert(state: GameState, alert: Alert): GameState {
   }
 }
 
+/**
+ * 메모를 띄운다. 규칙은 `docs/GAME_SPEC.md` 13절.
+ *
+ * 호출은 새 경보가 뜨는 순간에만 한다. 경보가 끝나갈 때 끼어들면 아무리
+ * 빨리 닫아도 미판정이 되어 실력으로 피할 수 없다.
+ */
+export function showMemo(
+  state: GameState,
+  memo: Memo,
+  elapsedMs: number,
+): GameState {
+  return state.phase !== 'PLAYING' || state.activeMemo !== null
+    ? state
+    : {
+        ...state,
+        activeMemo: { memo, shownAtMs: elapsedMs },
+        memosShown: state.memosShown + 1,
+      }
+}
+
+/** 화면에 `MEMO.readThresholdMs` 이상 떠 있다가 닫히면 읽은 것으로 센다. */
+export function dismissMemo(state: GameState, elapsedMs: number): GameState {
+  if (state.activeMemo === null) {
+    return state
+  }
+
+  const visibleMs = elapsedMs - state.activeMemo.shownAtMs
+
+  return {
+    ...state,
+    activeMemo: null,
+    memosRead:
+      visibleMs >= MEMO.readThresholdMs ? state.memosRead + 1 : state.memosRead,
+  }
+}
+
 export function decideCurrentAlert(
   state: GameState,
   action: Action,
 ): GameState {
-  if (state.currentAlert === null) {
+  // 메모가 떠 있는 동안에는 판정을 받지 않는다. 눈 감고 누르는 사고를 막는다.
+  if (state.currentAlert === null || state.activeMemo !== null) {
     return state
   }
 

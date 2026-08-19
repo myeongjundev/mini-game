@@ -1302,3 +1302,81 @@ time,
     padding: 0.22em 0.5em;
   }
 }
+
+/* 근무 중 사내 공지. 규칙은 GAME_SPEC 13절.
+   판정 버튼 자리를 그대로 쓴다. 메모가 떠 있는 동안 판정은 어차피 막히고,
+   따로 쌓으면 1366x768에서 화면이 세로로 넘친다.
+   경보 카드의 사실 네 줄은 가리지 않는다. 가리면 다시 읽어야 해서
+   비용이 예측 불가능해진다. */
+.memo-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  margin: var(--gap-md) 0 0;
+  padding: var(--gap-xs) var(--gap-md);
+  background: var(--panel);
+  border: 1px solid var(--amber);
+  border-left-width: 3px;
+  animation: memo-in 140ms steps(2);
+}
+
+.memo-icon {
+  flex: 0 0 auto;
+  color: var(--amber);
+}
+
+.memo-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.memo-head {
+  display: flex;
+  gap: var(--gap-sm);
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.memo-from {
+  color: var(--amber);
+}
+
+.memo-time {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.memo-body {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.memo-dismiss {
+  flex: 0 0 auto;
+  align-self: stretch;
+  padding: 0 var(--gap-sm);
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.memo-dismiss:hover,
+.memo-dismiss:focus-visible {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+@keyframes memo-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+.app-shell[data-reduce-motion='true'] .memo-toast {
+  animation: none;
+}

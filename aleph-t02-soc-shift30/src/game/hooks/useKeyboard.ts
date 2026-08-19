@@ -4,6 +4,8 @@ export type KeyboardHandlers = {
   onAllow: () => void
   onBlock: () => void
   onPauseToggle: () => void
+  /** 메모 닫기. 없으면 SPACE는 아무 일도 하지 않는다. */
+  onDismissMemo?: () => void
 }
 
 export function useKeyboard(
@@ -30,6 +32,14 @@ export function useKeyboard(
       const isAllow = key === 'a' || key === 'arrowleft' || event.code === 'KeyA'
       const isBlock = key === 'd' || key === 'arrowright' || event.code === 'KeyD'
       const isPause = key === 'p' || key === 'escape' || event.code === 'KeyP'
+      const isDismiss = key === ' ' || event.code === 'Space'
+
+      if (isDismiss) {
+        event.preventDefault()
+        handlersRef.current.onDismissMemo?.()
+
+        return
+      }
 
       if (isAllow) {
         event.preventDefault()

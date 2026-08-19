@@ -33,6 +33,22 @@ export type DecisionRecord = {
   explanation: string
 }
 
+/** 근무 중 올라오는 사내 공지. 규칙은 `docs/GAME_SPEC.md` 13절. */
+export type Memo = {
+  id: string
+  from: string
+  time: string
+  body: string
+  /** 이 메모가 근거를 주는 경보의 id. `ALERTS`에 반드시 존재해야 한다. */
+  alertId: string
+}
+
+export type ActiveMemo = {
+  memo: Memo
+  /** 표시를 시작한 시점의 경과 시간. 읽음 판정에 쓴다. */
+  shownAtMs: number
+}
+
 export type GameState = {
   phase: 'READY' | 'PLAYING' | 'PAUSED' | 'SUCCESS' | 'FAILURE'
   timeLeftMs: number
@@ -49,4 +65,7 @@ export type GameState = {
   currentAlert: Alert | null
   lastVerdict: Verdict | null
   log: DecisionRecord[]
+  activeMemo: ActiveMemo | null
+  memosShown: number
+  memosRead: number
 }

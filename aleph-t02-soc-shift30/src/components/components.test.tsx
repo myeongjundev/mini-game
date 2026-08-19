@@ -2,11 +2,13 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
 import { ALERTS } from '../game/data/alerts'
+import { MEMOS } from '../game/data/memos'
 import { createInitialGameState } from '../game/engine/machine'
 import type { DecisionRecord } from '../game/types'
 import AlertCard from './AlertCard'
 import ShiftLog from './ShiftLog'
 import PausedScreen from './screens/PausedScreen'
+import MemoToast from './MemoToast'
 import ReadyScreen, { GUIDE_PAGE_COUNT, LobbyGuidePage } from './screens/ReadyScreen'
 import ResultScreen from './screens/ResultScreen'
 
@@ -225,5 +227,30 @@ describe('shift log', () => {
 
     expect(markup).toContain('판정한 경보가 없습니다.')
     expect(markup).not.toContain('shift-log-list')
+  })
+})
+
+describe('memo toast', () => {
+  const memo = MEMOS[0]
+
+  it('shows who sent it, when, and what it says', () => {
+    const markup = renderToStaticMarkup(
+      <MemoToast memo={memo} onDismiss={() => undefined} />,
+    )
+
+    expect(markup).toContain(memo.from)
+    expect(markup).toContain(memo.time)
+    expect(markup).toContain(memo.body)
+    // 닫는 방법을 화면에 적어둔다. 모르면 판정이 막힌 채로 시간이 흐른다.
+    expect(markup).toContain('SPACE')
+  })
+
+  it('announces itself so screen reader users are not stuck', () => {
+    const markup = renderToStaticMarkup(
+      <MemoToast memo={memo} onDismiss={() => undefined} />,
+    )
+
+    expect(markup).toContain('aria-live="assertive"')
+    expect(markup).toContain('사내 공지')
   })
 })

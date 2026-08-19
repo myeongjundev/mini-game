@@ -10,6 +10,7 @@ import {
 import ActionButtons from './components/ActionButtons'
 import AlertCard from './components/AlertCard'
 import Hud from './components/Hud'
+import MemoToast from './components/MemoToast'
 import SettingsBar from './components/SettingsBar'
 import VerdictFlash from './components/VerdictFlash'
 import PausedScreen from './components/screens/PausedScreen'
@@ -25,14 +26,17 @@ import {
 import {
   createInitialGameState,
   decideCurrentAlert,
+  dismissMemo,
   pauseGame,
   presentAlert,
   restartGame,
   resumeGame,
+  showMemo,
   startGame,
   tick,
   timeoutCurrentAlert,
 } from './game/engine/machine'
+import { createMemoPlan, takeDueMemo, type MemoPlan } from './game/engine/memoQueue'
 import { useGameLoop } from './game/hooks/useGameLoop'
 import { useKeyboard } from './game/hooks/useKeyboard'
 import { useVisibilityPause } from './game/hooks/useVisibilityPause'
@@ -43,6 +47,7 @@ import { loadInitialSaved, saveSaved, type Saved } from './services/storage'
 export type GameReducerState = {
   game: GameState
   alertQueue: AlertQueueState
+  memoPlan: MemoPlan
 }
 
 export type GameAction =
@@ -54,11 +59,15 @@ export type GameAction =
   | { type: 'TIMEOUT' }
   | { type: 'TICK'; deltaMs: number }
   | { type: 'PRESENT_ALERT' }
+  | { type: 'DISMISS_MEMO' }
 
 export function createGameReducerState(): GameReducerState {
+  const alertQueue = createAlertQueue(ALERTS)
+
   return {
     game: createInitialGameState(),
-    alertQueue: createAlertQueue(ALERTS),
+    alertQueue,
+    memoPlan: createMemoPlan(alertQueue.randomState),
   }
 }
 
@@ -76,12 +85,13 @@ export function gameReducer(
     case 'RESTART': {
       const game = restartGame(state.game)
 
-      return game === state.game
-        ? state
-        : {
-            game,
-            alertQueue: createAlertQueue(ALERTS, state.alertQueue.randomState),
-          }
+      if (game === state.game) {
+        return state
+      }
+
+      const alertQueue = createAlertQueue(ALERTS, state.alertQueue.randomState)
+
+      return { game, alertQueue, memoPlan: createMemoPlan(alertQueue.randomState) }
     }
     case 'DECIDE':
       return { ...state, game: decideCurrentAlert(state.game, action.action) }
@@ -96,12 +106,24 @@ export function gameReducer(
 
       const elapsedMs = DIFFICULTY.totalTimeMs - state.game.timeLeftMs
       const draw = drawNextAlert(state.alertQueue, elapsedMs)
+      // 메모는 새 경보가 뜨는 이 순간에만 끼어든다. GAME_SPEC 13.3절.
+      const due = takeDueMemo(state.memoPlan, elapsedMs)
+      const presented = presentAlert(state.game, draw.alert)
 
       return {
-        game: presentAlert(state.game, draw.alert),
+        game: due ? showMemo(presented, due.memo, elapsedMs) : presented,
         alertQueue: draw.queue,
+        memoPlan: due ? due.plan : state.memoPlan,
       }
     }
+    case 'DISMISS_MEMO':
+      return {
+        ...state,
+        game: dismissMemo(
+          state.game,
+          DIFFICULTY.totalTimeMs - state.game.timeLeftMs,
+        ),
+      }
   }
 }
 
@@ -297,13 +319,18 @@ export default function App() {
     updateSaved({ reduceMotion: !saved.reduceMotion })
   }, [saved.reduceMotion, updateSaved])
 
+  const handleDismissMemo = useCallback(() => {
+    dispatch({ type: 'DISMISS_MEMO' })
+  }, [])
+
   const keyboardHandlers = useMemo(
     () => ({
       onAllow: handleAllow,
       onBlock: handleBlock,
       onPauseToggle: handlePauseToggle,
+      onDismissMemo: handleDismissMemo,
     }),
-    [handleAllow, handleBlock, handlePauseToggle],
+    [handleAllow, handleBlock, handlePauseToggle, handleDismissMemo],
   )
 
   useGameLoop({
@@ -360,10 +387,19 @@ export default function App() {
           ) : (
             <div className="alert-placeholder" aria-live="polite">SCANNING…</div>
           )}
-          <ActionButtons
-            disabled={state.game.currentAlert === null}
-            onDecide={handleDecide}
-          />
+          {/* 메모가 떠 있는 동안 판정은 어차피 막힌다. 버튼 자리를 그대로
+              쓰면 화면 높이가 늘지 않고, 판정할 수 없다는 신호도 분명해진다. */}
+          {state.game.activeMemo ? (
+            <MemoToast
+              memo={state.game.activeMemo.memo}
+              onDismiss={handleDismissMemo}
+            />
+          ) : (
+            <ActionButtons
+              disabled={state.game.currentAlert === null}
+              onDecide={handleDecide}
+            />
+          )}
         </>
       ) : null}
 
