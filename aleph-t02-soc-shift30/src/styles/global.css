@@ -316,15 +316,20 @@ button {
 }
 
 .lobby-console-footer {
+  flex-wrap: wrap;
   gap: 0.5em;
   padding-top: 0.45em;
   border-top: 1px solid var(--line-dim);
 }
 
+/* 유리가 좁아지면 flex가 버튼을 눌러 라벨이 두 줄로 접히고, 그만큼 푸터가
+   두 배로 높아져 메뉴를 밀어낸다. 줄이는 대신 줄바꿈으로 넘긴다. */
 .lobby-console-footer button {
+  flex: 0 0 auto;
   padding: 0;
   border: 0;
   font-size: inherit;
+  white-space: nowrap;
 }
 
 @keyframes crt-cursor-blink {
@@ -1077,6 +1082,36 @@ time,
     --glass-top: 6.74%;
     --glass-width: 40.37%;
     --glass-height: 52.93%;
+  }
+}
+
+/* 구간의 아래쪽 끝은 1.35로도 모자란다. 641px에서 유리가 239x176까지
+   작아져 메뉴가 21px 넘친다. 1.5배까지가 한계다. 그 이상 키우면
+   유리 위쪽이 씬 밖으로 나가 윗 베젤이 잘린다(한계 배율 1.69). */
+@media (min-width: 641px) and (max-width: 820px) {
+  .lobby-scene {
+    --scene-zoom: 1.5;
+    --glass-left: 24.23%;
+    --glass-top: 3.79%;
+    --glass-width: 44.85%;
+    --glass-height: 58.82%;
+  }
+
+  .lobby-title h2 {
+    font-size: 1.2em;
+  }
+
+  .lobby-menu {
+    gap: 0.2em;
+  }
+}
+
+/* SHIFT READY는 장식이고 헤더의 ONLINE 표시와 겹친다. 900px 아래에서는
+   푸터 세 조각이 유리 폭을 거의 다 써서, 글꼴 폭이 조금만 달라져도
+   줄이 넘어간다. 여유가 생길 때까지 이 한 조각을 접는다. */
+@media (max-width: 900px) {
+  .lobby-console-footer > span {
+    display: none;
   }
 }
 
