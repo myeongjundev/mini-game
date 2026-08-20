@@ -332,13 +332,6 @@ button {
    아래로 내리지 않는다.
    제목과 쪽 넘김은 고정하고 본문만 스크롤한다. 셋을 함께 스크롤시키면
    내용이 긴 쪽에서 넘김 버튼이 화면 밖으로 밀려 다음 쪽으로 갈 수 없다. */
-.lobby-guide {
-  align-content: stretch;
-  gap: 0.35em;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  overflow: hidden;
-}
-
 .lobby-guide-body {
   display: grid;
   align-content: start;
@@ -457,28 +450,6 @@ button {
 .guide-failure dd {
   margin: 0;
   color: var(--text-dim);
-}
-
-.lobby-guide-pager {
-  display: flex;
-  align-items: center;
-  gap: 0.4em;
-  padding-top: 0.3em;
-  color: var(--text-dim);
-  font-size: 0.93em;
-}
-
-.lobby-guide-pager button {
-  padding: 0.15em 0.6em;
-}
-
-.lobby-guide-pager button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.lobby-guide-pager .guide-back {
-  margin-left: auto;
 }
 
 .lobby-best {
@@ -1615,4 +1586,257 @@ time,
   font-size: 11px;
   line-height: 1.4;
   opacity: 0.75;
+}
+
+/* ── 로비 모달 ────────────────────────────────────────────────────────────
+   규격은 prompts/04_LOBBY_MODAL_WINDOW_HANDOFF.md에 있다.
+
+   lobby-modal-window.webp는 프레임만 그린 335×165 그림이다. 제목·본문·버튼은
+   전부 HTML로 그림 위에 얹는다. 그림에 글자를 구워넣으면 메뉴가 바뀔 때
+   그림이 거짓말을 한다. 배경 그림에서 겪은 일이다(리뷰 m-3).
+
+   아래 좌표는 그림을 디코딩해 실측한 값이다. 335×165 기준 픽셀을 백분율로
+   바꿨다. 그림을 다시 뽑으면 이 값도 다시 재야 한다.
+
+     제목줄   x 19-304  y 11-23
+     앰버 줄  y 25
+     닫기     x 306-314 y 13-21
+     본문     x 21-313  y 31-126
+     버튼 1   x 223-266 y 131-144
+     버튼 2   x 270-313 y 131-144 */
+.lobby-modal-backdrop {
+  --modal-title-top: 6.06%;
+  --modal-title-left: 5.67%;
+  --modal-title-width: 85.07%;
+  --modal-title-height: 9.09%;
+  --modal-close-top: 7.88%;
+  --modal-close-left: 91.34%;
+  --modal-close-size-x: 2.69%;
+  --modal-close-size-y: 5.45%;
+  --modal-body-top: 18.79%;
+  --modal-body-left: 6.27%;
+  --modal-body-width: 87.46%;
+  --modal-body-height: 58.18%;
+  --modal-command-top: 79.39%;
+  --modal-command-width: 13.13%;
+  --modal-command-height: 8.48%;
+
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  /* 블러는 쓰지 않는다. DESIGN_TOKENS 8절 금지 항목이다. */
+  background: rgb(4 6 9 / 72%);
+  animation: modal-in 120ms steps(2);
+}
+
+/* 원본 비율 335:165(2.03)를 지킨다.
+
+   유리는 씬 기준 폭 29.9% × 높이 39.21%이고 씬이 1672:941이므로
+   유리 자체의 비율은 0.299 / (0.3921 × 941/1672) = 1.355다.
+   모달이 유리보다 훨씬 옆으로 길므로 **항상 폭이 먼저 걸린다.**
+   높이에서 폭을 유도하면 max-width에 잘려 비율이 깨진다.
+   폭 96%일 때 높이는 유리 높이의 64%라 세로는 넉넉하다. */
+.lobby-modal {
+  position: relative;
+  width: 96%;
+  aspect-ratio: 335 / 165;
+}
+
+.lobby-modal-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* 정수 배율이 아닐 때도 픽셀이 뭉개지지 않게 한다. */
+  image-rendering: pixelated;
+}
+
+.lobby-modal-title,
+.lobby-modal-close,
+.lobby-modal-body,
+.lobby-modal-commands {
+  position: absolute;
+  margin: 0;
+}
+
+.lobby-modal-title {
+  top: var(--modal-title-top);
+  left: var(--modal-title-left);
+  display: flex;
+  align-items: center;
+  width: var(--modal-title-width);
+  height: var(--modal-title-height);
+  overflow: hidden;
+  color: var(--amber);
+  font-size: max(11px, 0.86em);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  text-shadow: none;
+}
+
+.lobby-modal-close {
+  top: var(--modal-close-top);
+  left: var(--modal-close-left);
+  display: grid;
+  place-items: center;
+  width: var(--modal-close-size-x);
+  height: var(--modal-close-size-y);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--amber);
+  font: inherit;
+  font-size: max(11px, 0.8em);
+  line-height: 1;
+  cursor: pointer;
+  text-shadow: none;
+}
+
+/* 그림의 닫기 자리는 335px 기준 9px이라 화면에서 10px 안팎이 된다.
+   보이는 크기는 그대로 두고 누를 수 있는 넓이만 넓힌다. */
+.lobby-modal-close::before {
+  position: absolute;
+  content: '';
+  inset: -10px;
+}
+
+.lobby-modal-body {
+  top: var(--modal-body-top);
+  left: var(--modal-body-left);
+  display: grid;
+  align-content: start;
+  gap: 0.3em;
+  width: var(--modal-body-width);
+  height: var(--modal-body-height);
+  padding: 0.15em 0.3em;
+  overflow-y: auto;
+  /* 하한이 12px인 이유는 안에 들어오는 가이드 본문 때문이다.
+     .guide-lead·.guide-list·.lobby-controls가 0.93em이라 본문이 11px이면
+     10.23px이 되어 DESIGN_TOKENS 8절 "11px 미만 글자" 금지를 어긴다.
+     12 × 0.93 = 11.16px이다. 리뷰 M-1과 같은 계열의 실수다. */
+  font-size: max(12px, 0.92em);
+}
+
+/* 버튼 자리 둘은 그림에 박혀 있으므로 각자 제 좌표에 놓는다.
+   flex로 묶고 padding으로 밀면 자식의 % 폭이 패딩을 뺀 폭 기준이 되어
+   44px 자리에 14.7px이 들어간다. 실제로 그렇게 났다. */
+/* inset: 0이라 모달 전체를 덮는다. 자리를 잡아주는 층일 뿐인데 그대로 두면
+   나중에 온 이 층이 닫기 버튼 위에 얹혀 마우스 클릭을 가로챈다.
+   실제로 우측 상단 닫기가 마우스로 눌리지 않았다. 검사는 .click()으로
+   히트 테스트를 건너뛰어서 통과했다. */
+.lobby-modal-commands {
+  inset: 0;
+  pointer-events: none;
+}
+
+.lobby-modal-command {
+  position: absolute;
+  pointer-events: auto;
+  top: var(--modal-command-top);
+  width: var(--modal-command-width);
+  height: var(--modal-command-height);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: max(11px, 0.72em);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  text-shadow: none;
+}
+
+.lobby-modal-command:nth-child(1) {
+  left: 66.57%;
+}
+
+.lobby-modal-command:nth-child(2) {
+  left: 80.6%;
+}
+
+.lobby-modal-command:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.lobby-guide-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  color: var(--amber);
+}
+
+.lobby-guide-head h3 {
+  margin: 0;
+  font-size: 1em;
+}
+
+.lobby-guide-head span {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.lobby-settings {
+  display: grid;
+  gap: 0.35em;
+  margin: 0;
+}
+
+.lobby-settings-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+}
+
+.lobby-settings-row dt {
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+
+.lobby-settings-row dd {
+  margin: 0;
+  margin-left: auto;
+}
+
+.lobby-settings-row button {
+  padding: 0.1em 0.5em;
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+
+.lobby-settings-note {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: max(11px, 0.85em);
+}
+
+@keyframes modal-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* reduceMotion과 OS 설정 양쪽을 본다. 어느 쪽이든 켜져 있으면 전환을 없앤다. */
+.lobby-modal-backdrop[data-reduce-motion='true'] {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lobby-modal-backdrop {
+    animation: none;
+  }
+}
+
+/* 좁은 화면에서는 글자를 줄이지 않고 본문 스크롤에 맡긴다.
+   제목줄과 하단 버튼은 그림의 자리에 고정된 채로 남는다. */
+@media (max-width: 640px) {
+  .lobby-modal {
+    width: 99%;
+  }
+
+  .lobby-modal-body {
+    font-size: 12px;
+  }
 }

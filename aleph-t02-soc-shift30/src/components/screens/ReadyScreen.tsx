@@ -5,10 +5,13 @@ import { ALERTS } from '../../game/data/alerts'
 import { PIXEL_ART } from '../../game/data/pixelArt'
 import type { Alert } from '../../game/types'
 import { formatScore, formatSeconds } from '../../utils/format'
+import LobbyModal from '../LobbyModal'
 import PixelIcon from '../PixelIcon'
 
 export type LobbyPhase = 'BOOT' | 'INITIALIZING' | 'TITLE' | 'READY' | 'LOBBY'
-type LobbyPanel = 'MENU' | 'HOW_TO_PLAY' | 'SHIFT_RECORD'
+// HOW TO PLAY는 패널 교체가 아니라 모달이 됐다. SHIFT_RECORD는 그대로 패널이다.
+type LobbyPanel = 'MENU' | 'SHIFT_RECORD'
+type LobbyModalType = 'GUIDE' | 'SETTINGS' | null
 
 const NEXT_PHASE: Partial<Record<LobbyPhase, LobbyPhase>> = {
   BOOT: 'INITIALIZING', INITIALIZING: 'TITLE', TITLE: 'READY', READY: 'LOBBY',
@@ -178,26 +181,98 @@ const GUIDE_TITLES = [
   '자주 갈리는 지점',
 ]
 
-function LobbyGuide({ onBack }: { onBack: () => void }) {
+function LobbyGuideModal({ onClose, reduceMotion }: { onClose: () => void; reduceMotion: boolean }) {
   const [page, setPage] = useState(0)
   const last = GUIDE_PAGE_COUNT - 1
 
   return (
-    <div className="lobby-panel lobby-guide" aria-label="HOW TO PLAY">
-      <h2>{GUIDE_TITLES[page]}</h2>
+    <LobbyModal
+      title="HOW TO PLAY"
+      onClose={onClose}
+      reduceMotion={reduceMotion}
+      // 그림의 하단 버튼 자리는 둘이다. 마지막 쪽에서는 다음 쪽이 없으므로
+      // 그 자리를 CLOSE로 바꿔 하단에서도 닫을 수 있게 한다.
+      buttons={[
+        {
+          label: 'PREV',
+          ariaLabel: '이전 쪽',
+          disabled: page === 0,
+          onClick: () => setPage((value) => Math.max(0, value - 1)),
+        },
+        page === last
+          ? { label: 'CLOSE', ariaLabel: 'HOW TO PLAY 닫기', onClick: onClose }
+          : {
+              label: 'NEXT',
+              ariaLabel: '다음 쪽',
+              onClick: () => setPage((value) => Math.min(last, value + 1)),
+            },
+      ]}
+    >
+      <div className="lobby-guide-head">
+        <h3>{GUIDE_TITLES[page]}</h3>
+        <span aria-hidden="true">{page + 1} / {GUIDE_PAGE_COUNT}</span>
+        <span className="sr-only">{GUIDE_PAGE_COUNT}쪽 중 {page + 1}쪽</span>
+      </div>
       <div className="lobby-guide-body">
         <LobbyGuidePage page={page} />
       </div>
-      <div className="lobby-guide-pager">
-        <button type="button" aria-label="이전 쪽" disabled={page === 0}
-          onClick={() => setPage((value) => Math.max(0, value - 1))}>←</button>
-        <span aria-hidden="true">{page + 1} / {GUIDE_PAGE_COUNT}</span>
-        <span className="sr-only">{GUIDE_PAGE_COUNT}쪽 중 {page + 1}쪽</span>
-        <button type="button" aria-label="다음 쪽" disabled={page === last}
-          onClick={() => setPage((value) => Math.min(last, value + 1))}>→</button>
-        <button type="button" className="guide-back" onClick={onBack}>MENU</button>
-      </div>
-    </div>
+    </LobbyModal>
+  )
+}
+
+function LobbySettingsModal({
+  mute, reduceMotion, onClose, onToggleMute, onToggleReduceMotion,
+}: {
+  mute: boolean
+  reduceMotion: boolean
+  onClose: () => void
+  onToggleMute: () => void
+  onToggleReduceMotion: () => void
+}) {
+  // 저장 기본값은 `services/storage.ts`의 DEFAULTS다. 소리 꺼짐, 움직임 그대로.
+  const atDefaults = mute && !reduceMotion
+
+  return (
+    <LobbyModal
+      title="SYSTEM SETTINGS"
+      onClose={onClose}
+      reduceMotion={reduceMotion}
+      buttons={[
+        {
+          label: 'RESET',
+          ariaLabel: '설정을 기본값으로 되돌리기',
+          disabled: atDefaults,
+          onClick: () => {
+            if (!mute) onToggleMute()
+            if (reduceMotion) onToggleReduceMotion()
+          },
+        },
+        { label: 'CLOSE', ariaLabel: 'SYSTEM SETTINGS 닫기', onClick: onClose },
+      ]}
+    >
+      {/* 누르는 즉시 반영한다. 저장 단계가 따로 없으므로 APPLY도 없다. */}
+      <dl className="lobby-settings">
+        <div className="lobby-settings-row">
+          <dt id="setting-sound">SOUND</dt>
+          <dd>
+            <button type="button" onClick={onToggleMute} aria-describedby="setting-sound"
+              aria-pressed={!mute}>
+              // {mute ? 'OFF' : 'ON'}
+            </button>
+          </dd>
+        </div>
+        <div className="lobby-settings-row">
+          <dt id="setting-motion">REDUCE MOTION</dt>
+          <dd>
+            <button type="button" onClick={onToggleReduceMotion} aria-describedby="setting-motion"
+              aria-pressed={reduceMotion}>
+              // {reduceMotion ? 'ON' : 'OFF'}
+            </button>
+          </dd>
+        </div>
+      </dl>
+      <p className="lobby-settings-note">바꾸면 바로 적용됩니다. 이 기기에 저장됩니다.</p>
+    </LobbyModal>
   )
 }
 
@@ -216,9 +291,34 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
   onIntroComplete, onStart, onToggleMute, onToggleReduceMotion }: ReadyScreenProps) {
   const [phase, setPhase] = useState<LobbyPhase>(playIntro ? 'BOOT' : 'LOBBY')
   const [panel, setPanel] = useState<LobbyPanel>('MENU')
+  const [activeModal, setActiveModal] = useState<LobbyModalType>(null)
   const completedRef = useRef(!playIntro)
   const startButtonRef = useRef<HTMLButtonElement>(null)
+  const lobbyFocusedRef = useRef(false)
+  // 모달을 연 버튼. 닫은 뒤 여기로 포커스를 돌려준다.
+  const modalTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const wasModalOpenRef = useRef(false)
   const introActive = phase !== 'LOBBY'
+  const modalOpen = activeModal !== null
+  const closeModal = useCallback(() => setActiveModal(null), [])
+
+  const openModal = useCallback(
+    (type: Exclude<LobbyModalType, null>) =>
+      (event: React.MouseEvent<HTMLButtonElement>) => {
+        modalTriggerRef.current = event.currentTarget
+        setActiveModal(type)
+      },
+    [],
+  )
+
+  // 모달이 떠 있는 동안 뒤쪽 로비는 클릭·포커스·키보드를 받지 않는다.
+  //
+  // effect로 걸면 안 된다. 모달이 사라질 때 정리(포커스 복원)가 부모 effect보다
+  // 먼저 돌아서, 아직 inert인 버튼에 포커스가 거부되고 body로 떨어진다.
+  // 실제로 그렇게 났다. 렌더에서 걸면 커밋 시점에 속성이 먼저 사라진다.
+  //
+  // React 18 타입에는 inert가 없어서 속성으로 펼친다.
+  const inertProps = (modalOpen ? { inert: '' } : {}) as Record<string, string>
 
   const completeIntro = useCallback(() => {
     setPhase('LOBBY')
@@ -252,9 +352,27 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
     return () => window.removeEventListener('keydown', handleSkipKey)
   }, [completeIntro, introActive])
 
+  // 로비 메뉴에 처음 들어올 때만 START SHIFT를 잡는다. 모달을 닫을 때마다
+  // 다시 잡으면 모달이 돌려준 포커스를 뺏어간다.
   useEffect(() => {
-    if (phase === 'LOBBY' && panel === 'MENU') startButtonRef.current?.focus()
+    if (phase !== 'LOBBY' || panel !== 'MENU') {
+      lobbyFocusedRef.current = false
+      return
+    }
+    if (lobbyFocusedRef.current) return
+    lobbyFocusedRef.current = true
+    startButtonRef.current?.focus()
   }, [panel, phase])
+
+  // 모달이 닫힌 뒤 연 버튼으로 포커스를 돌려준다. 이 effect는 inert를 지운
+  // 커밋 다음에 돌기 때문에 포커스가 거부되지 않는다.
+  useEffect(() => {
+    if (wasModalOpenRef.current && !modalOpen) {
+      const trigger = modalTriggerRef.current
+      if (trigger?.isConnected) trigger.focus()
+    }
+    wasModalOpenRef.current = modalOpen
+  }, [modalOpen])
 
   return (
     <section className="lobby-scene" aria-label="SOC SHIFT:30 analyst desk"
@@ -281,38 +399,52 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
             <strong>ANALYST CONSOLE READY</strong><small>OPENING NIGHT SHIFT LOBBY…</small></div>
         ) : null}
         {phase === 'LOBBY' ? (
-          <div className="lobby-console" data-panel={panel}>
-            <header className="lobby-console-header"><span>SOC NODE // 01</span>
-              <span className="status-online">● ONLINE</span></header>
-            {panel === 'MENU' ? (
-              <div className="lobby-menu">
-                <div className="lobby-title"><span>ALEPH SECURITY LAB</span>
-                  <h2>SOC SHIFT:30</h2><p>DETECT. DECIDE. DEFEND.</p></div>
-                <div className="lobby-actions">
-                  <button ref={startButtonRef} className="lobby-start" type="button" onClick={onStart}>START SHIFT</button>
-                  <button type="button" onClick={() => setPanel('HOW_TO_PLAY')}>HOW TO PLAY</button>
-                  <button type="button" onClick={() => setPanel('SHIFT_RECORD')}>SHIFT RECORD</button>
+          <>
+            <div className="lobby-console" data-panel={panel} {...inertProps}>
+              <header className="lobby-console-header"><span>SOC NODE // 01</span>
+                <span className="status-online">● ONLINE</span></header>
+              {panel === 'MENU' ? (
+                <div className="lobby-menu">
+                  <div className="lobby-title"><span>ALEPH SECURITY LAB</span>
+                    <h2>SOC SHIFT:30</h2><p>DETECT. DECIDE. DEFEND.</p></div>
+                  <div className="lobby-actions">
+                    <button ref={startButtonRef} className="lobby-start" type="button" onClick={onStart}>START SHIFT</button>
+                    <button type="button" onClick={openModal('GUIDE')}>HOW TO PLAY</button>
+                    <button type="button" onClick={openModal('SETTINGS')}>SETTINGS</button>
+                    <button type="button" onClick={() => setPanel('SHIFT_RECORD')}>SHIFT RECORD</button>
+                  </div>
+                  <ul className="lobby-controls">
+                    {CONTROL_HINTS.map(({ keys, action }) => (
+                      <li key={action}><kbd>{keys}</kbd> {action}</li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="lobby-controls">
-                  {CONTROL_HINTS.map(({ keys, action }) => (
-                    <li key={action}><kbd>{keys}</kbd> {action}</li>
-                  ))}
-                </ul>
-              </div>
+              ) : null}
+              {panel === 'SHIFT_RECORD' ? (
+                <div className="lobby-panel"><h2>SHIFT RECORD</h2><span>LOCAL BEST</span>
+                  <strong className="lobby-best">{formatScore(bestScore)}</strong>
+                  <p>SHIFT LIMIT // {formatSeconds(DIFFICULTY.totalTimeMs)}</p>
+                  <button type="button" onClick={() => setPanel('MENU')}>← BACK</button></div>
+              ) : null}
+              <footer className="lobby-console-footer">
+                <button type="button" onClick={onToggleMute}>SOUND // {mute ? 'OFF' : 'ON'}</button>
+                <button type="button" onClick={onToggleReduceMotion}>REDUCE MOTION // {reduceMotion ? 'ON' : 'OFF'}</button>
+                <span>SHIFT READY</span>
+              </footer>
+            </div>
+            {activeModal === 'GUIDE' ? (
+              <LobbyGuideModal onClose={closeModal} reduceMotion={reduceMotion} />
             ) : null}
-            {panel === 'HOW_TO_PLAY' ? <LobbyGuide onBack={() => setPanel('MENU')} /> : null}
-            {panel === 'SHIFT_RECORD' ? (
-              <div className="lobby-panel"><h2>SHIFT RECORD</h2><span>LOCAL BEST</span>
-                <strong className="lobby-best">{formatScore(bestScore)}</strong>
-                <p>SHIFT LIMIT // {formatSeconds(DIFFICULTY.totalTimeMs)}</p>
-                <button type="button" onClick={() => setPanel('MENU')}>← BACK</button></div>
+            {activeModal === 'SETTINGS' ? (
+              <LobbySettingsModal
+                mute={mute}
+                reduceMotion={reduceMotion}
+                onClose={closeModal}
+                onToggleMute={onToggleMute}
+                onToggleReduceMotion={onToggleReduceMotion}
+              />
             ) : null}
-            <footer className="lobby-console-footer">
-              <button type="button" onClick={onToggleMute}>SOUND // {mute ? 'OFF' : 'ON'}</button>
-              <button type="button" onClick={onToggleReduceMotion}>REDUCE MOTION // {reduceMotion ? 'ON' : 'OFF'}</button>
-              <span>SHIFT READY</span>
-            </footer>
-          </div>
+          </>
         ) : <span className="intro-skip">ENTER / SPACE / CLICK TO SKIP</span>}
       </div>
     </section>

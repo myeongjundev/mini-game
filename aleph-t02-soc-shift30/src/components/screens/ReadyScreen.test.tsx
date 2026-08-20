@@ -100,8 +100,12 @@ describe('ReadyScreen intro and lobby', () => {
     act(() => howToPlay?.click())
   }
 
-  const pager = (label: string) => [...container.querySelectorAll('.lobby-guide-pager button')]
+  // 가이드는 로비 패널이 아니라 모달이 됐다. 쪽 넘김은 그림의 하단 버튼
+  // 자리 둘을 쓴다. 규격은 prompts/04_LOBBY_MODAL_WINDOW_HANDOFF.md에 있다.
+  const pager = (label: string) => [...container.querySelectorAll('.lobby-modal-command')]
     .find((button) => button.getAttribute('aria-label') === label) as HTMLButtonElement | undefined
+
+  const guideHeading = () => container.querySelector('.lobby-guide-head h3')?.textContent
 
   it('pages through the guide and stops at both ends', () => {
     openGuide()
@@ -109,17 +113,17 @@ describe('ReadyScreen intro and lobby', () => {
     const next = () => pager('다음 쪽')
 
     expect(prev()?.disabled).toBe(true)
-    expect(container.querySelector('h2')?.textContent).toBe('근무 요령')
+    expect(guideHeading()).toBe('근무 요령')
 
     // 통과와 차단을 쪽으로 나눠 각각 이유까지 보여준다.
     act(() => next()?.click())
-    expect(container.querySelector('h2')?.textContent).toBe('통과시키는 경보')
+    expect(guideHeading()).toBe('통과시키는 경보')
     expect(container.querySelectorAll('.ready-example')).toHaveLength(1)
     expect(container.querySelectorAll('.suspicious-marker')).toHaveLength(0)
     expect(container.querySelector('.ready-example-why')?.textContent).toBeTruthy()
 
     act(() => next()?.click())
-    expect(container.querySelector('h2')?.textContent).toBe('막는 경보')
+    expect(guideHeading()).toBe('막는 경보')
     expect(container.querySelectorAll('.suspicious-marker')).toHaveLength(3)
     expect(container.querySelector('.ready-example-why')?.textContent).toBeTruthy()
 
@@ -132,20 +136,24 @@ describe('ReadyScreen intro and lobby', () => {
     expect(container.textContent).toContain('표시 개수가 아니라')
     expect(container.textContent).toContain('FALSE POSITIVE')
     expect(container.textContent).toContain('MISSED THREAT')
-    expect(next()?.disabled).toBe(true)
+    // 마지막 쪽에는 다음이 없다. 그 자리가 CLOSE로 바뀐다.
+    expect(next()).toBeUndefined()
+    expect(container.querySelectorAll('.lobby-modal-command')[1].textContent).toBe('CLOSE')
 
     act(() => prev()?.click())
-    expect(container.querySelector('h2')?.textContent).toBe('같아 보이지만 다른 것')
+    expect(guideHeading()).toBe('같아 보이지만 다른 것')
   })
 
-  it('returns to the menu from the guide and refocuses START SHIFT', () => {
+  it('closes the guide back to the menu and refocuses the button that opened it', () => {
     openGuide()
-    const back = [...container.querySelectorAll<HTMLButtonElement>('.lobby-guide-pager button')]
-      .find((button) => button.textContent === 'MENU')
+    const close = container.querySelector<HTMLButtonElement>('.lobby-modal-close')
 
-    act(() => back?.click())
+    act(() => close?.click())
+
+    expect(container.querySelector('.lobby-modal')).toBeNull()
     expect(container.querySelector('.lobby-menu')).not.toBeNull()
-    expect(document.activeElement?.textContent).toBe('START SHIFT')
+    // 모달을 연 버튼으로 돌아온다. START SHIFT가 아니다.
+    expect(document.activeElement?.textContent).toBe('HOW TO PLAY')
   })
 
   it('starts directly in the lobby on a return visit', () => {
