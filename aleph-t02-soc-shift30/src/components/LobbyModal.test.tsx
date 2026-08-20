@@ -64,6 +64,9 @@ describe('로비 모달', () => {
   const modal = () => container.querySelector('.lobby-modal')
   const commands = () => [...container.querySelectorAll('.lobby-modal-command')]
   const click = (element: Element | undefined) => act(() => (element as HTMLElement)?.click())
+  const closeButton = () => container.querySelector('.lobby-modal-close')
+  const toggle = (index: number) =>
+    container.querySelectorAll('.lobby-settings-row button')[index]
   const press = (key: string) =>
     act(() => {
       modal()?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
@@ -183,6 +186,91 @@ describe('로비 모달', () => {
 
     click(commands()[1])
     expect(modal()).toBeNull()
+  })
+
+  it('가이드에서 좌우 방향키가 쪽을 넘기고 양 끝에서 멈춘다', () => {
+    renderLobby()
+    click(button('HOW TO PLAY'))
+
+    // 읽는 중에 PREV·NEXT를 찾아 누르지 않아도 되게 한다.
+    press('ArrowRight')
+    expect(modal()?.textContent).toContain('근무 중 공지')
+    press('ArrowLeft')
+    expect(modal()?.textContent).toContain('근무 요령')
+
+    // 첫 쪽에서 더 왼쪽은 없다. 하단 PREV가 비활성인 것과 같은 규칙이다.
+    press('ArrowLeft')
+    expect(modal()?.textContent).toContain('근무 요령')
+
+    for (let index = 0; index < GUIDE_PAGE_COUNT; index += 1) press('ArrowRight')
+    // 마지막 쪽을 넘어 닫히지 않는다. 닫는 것은 CLOSE와 Escape만 한다.
+    expect(modal()?.textContent).toContain('자주 갈리는 지점')
+  })
+
+  it('모달 안에서 위아래 방향키가 버튼 사이를 돈다', () => {
+    renderLobby()
+    click(button('SETTINGS'))
+
+    // 열리면 첫 조작 대상인 닫기 버튼을 잡고 있다.
+    expect(document.activeElement).toBe(closeButton())
+
+    press('ArrowDown')
+    expect(document.activeElement).toBe(toggle(0))
+    press('ArrowDown')
+    // 소리가 꺼져 있어 크기는 비활성이다. 건너뛴다.
+    expect(document.activeElement).toBe(toggle(2))
+
+    press('ArrowUp')
+    expect(document.activeElement).toBe(toggle(0))
+  })
+
+  it('쪽 넘김이 없는 모달에서는 좌우도 포커스를 옮긴다', () => {
+    renderLobby()
+    click(button('SETTINGS'))
+
+    press('ArrowRight')
+    expect(document.activeElement).toBe(toggle(0))
+    press('ArrowLeft')
+    expect(document.activeElement).toBe(closeButton())
+  })
+
+  it('방향키가 모달 밖으로 새지 않는다', () => {
+    renderLobby()
+    click(button('SETTINGS'))
+
+    press('ArrowDown')
+
+    // 뒤쪽 로비 버튼으로 넘어가면 막아둔 화면을 키보드로 조작하게 된다.
+    expect(modal()?.contains(document.activeElement)).toBe(true)
+  })
+
+  it('누르고 있어도 쪽이 한 번에 넘어가지 않는다', () => {
+    renderLobby()
+    click(button('HOW TO PLAY'))
+
+    act(() => {
+      modal()?.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowRight', repeat: true, bubbles: true }),
+      )
+    })
+
+    expect(modal()?.textContent).toContain('근무 요령')
+  })
+
+  it('누른 버튼이 비활성이 되면 포커스를 닫기 버튼이 받는다', () => {
+    renderLobby()
+    click(button('HOW TO PLAY'))
+
+    // PREV는 첫 쪽으로 돌아온 순간 자기 자신이 비활성이 된다.
+    click(commands()[1])
+    const prev = commands()[0] as HTMLButtonElement
+    act(() => prev.focus())
+    click(prev)
+
+    expect((commands()[0] as HTMLButtonElement).disabled).toBe(true)
+    // 그대로 두면 포커스가 body로 떨어져 방향키도 Tab도 시작점을 잃는다.
+    expect(modal()?.contains(document.activeElement)).toBe(true)
+    expect(document.activeElement).toBe(closeButton())
   })
 
   it('SOUND와 REDUCE MOTION은 기존 콜백을 그대로 부른다', () => {

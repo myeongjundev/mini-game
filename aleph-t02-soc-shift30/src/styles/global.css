@@ -2006,6 +2006,18 @@ time,
   font-variant-numeric: tabular-nums;
 }
 
+/* 쪽 번호보다 한 단계 약하게 둔다. 안내지 읽을 값이 아니다. */
+.lobby-guide-head .guide-page-hint {
+  opacity: 0.55;
+  letter-spacing: 0.1em;
+}
+
+/* 남는 자리는 앞의 하나만 먹는다. 둘 다 auto면 여백을 나눠 가져
+   안내가 제목과 쪽 번호 사이에 떠 버린다. */
+.lobby-guide-head .guide-page-hint + span {
+  margin-left: 0;
+}
+
 .lobby-settings {
   display: grid;
   gap: 0.35em;

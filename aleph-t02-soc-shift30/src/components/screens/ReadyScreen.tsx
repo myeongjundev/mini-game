@@ -221,12 +221,16 @@ export const GUIDE_TITLES = [
 function LobbyGuideModal({ onClose, reduceMotion }: { onClose: () => void; reduceMotion: boolean }) {
   const [page, setPage] = useState(0)
   const last = GUIDE_PAGE_COUNT - 1
+  // 양 끝에서는 멈춘다. 하단 버튼과 같은 규칙이라야 헷갈리지 않는다.
+  const turn = (step: -1 | 1) =>
+    setPage((value) => Math.min(last, Math.max(0, value + step)))
 
   return (
     <LobbyModal
       title="HOW TO PLAY"
       onClose={onClose}
       reduceMotion={reduceMotion}
+      onPage={turn}
       // 그림의 하단 버튼 자리는 둘이다. 마지막 쪽에서는 다음 쪽이 없으므로
       // 그 자리를 CLOSE로 바꿔 하단에서도 닫을 수 있게 한다.
       buttons={[
@@ -234,21 +238,21 @@ function LobbyGuideModal({ onClose, reduceMotion }: { onClose: () => void; reduc
           label: 'PREV',
           ariaLabel: '이전 쪽',
           disabled: page === 0,
-          onClick: () => setPage((value) => Math.max(0, value - 1)),
+          onClick: () => turn(-1),
         },
         page === last
           ? { label: 'CLOSE', ariaLabel: 'HOW TO PLAY 닫기', onClick: onClose }
-          : {
-              label: 'NEXT',
-              ariaLabel: '다음 쪽',
-              onClick: () => setPage((value) => Math.min(last, value + 1)),
-            },
+          : { label: 'NEXT', ariaLabel: '다음 쪽', onClick: () => turn(1) },
       ]}
     >
       <div className="lobby-guide-head">
         <h3>{GUIDE_TITLES[page]}</h3>
+        {/* 방향키로 넘길 수 있다는 것을 아무도 모르면 없는 기능이다. */}
+        <span className="guide-page-hint" aria-hidden="true">← →</span>
         <span aria-hidden="true">{page + 1} / {GUIDE_PAGE_COUNT}</span>
-        <span className="sr-only">{GUIDE_PAGE_COUNT}쪽 중 {page + 1}쪽</span>
+        <span className="sr-only">
+          {GUIDE_PAGE_COUNT}쪽 중 {page + 1}쪽. 좌우 방향키로 넘깁니다.
+        </span>
       </div>
       <div className="lobby-guide-body">
         <LobbyGuidePage page={page} />
