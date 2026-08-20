@@ -11,6 +11,7 @@ import ShiftLog from './ShiftLog'
 import PausedScreen from './screens/PausedScreen'
 import MemoLog from './MemoLog'
 import MemoToast from './MemoToast'
+import PhoneOverlay from './PhoneOverlay'
 import ReadyScreen, { GUIDE_PAGE_COUNT, LobbyGuidePage } from './screens/ReadyScreen'
 import ResultScreen from './screens/ResultScreen'
 
@@ -254,6 +255,66 @@ describe('memo toast', () => {
 
     expect(markup).toContain('aria-live="assertive"')
     expect(markup).toContain('사내 공지')
+  })
+})
+
+describe('phone overlay preview', () => {
+  it('renders an incoming call without exposing a team instruction', () => {
+    const markup = renderToStaticMarkup(
+      <PhoneOverlay
+        mode="ringing"
+        caller="야간 팀장"
+        message="보안 우선 회선에서 호출 중입니다."
+        ringProgress={0.5}
+        onAnswer={() => undefined}
+        onLater={() => undefined}
+      />,
+    )
+
+    expect(markup).toContain('phone-call.webp')
+    expect(markup).toContain('SECURE LINE // INCOMING')
+    expect(markup).toContain('↑')
+    expect(markup).toContain('받기')
+    expect(markup).toContain('↓')
+    expect(markup).toContain('나중에')
+    expect(markup).toContain('aria-valuenow="50"')
+    expect(markup).not.toContain('team-lead-portrait-128.png')
+  })
+
+  it('puts the caller portrait and instruction in HTML after connecting', () => {
+    const instruction = '다음 운영 DB 접근은 통과시켜.'
+    const markup = renderToStaticMarkup(
+      <PhoneOverlay
+        mode="connected"
+        caller="야간 팀장"
+        message={instruction}
+        onHangUp={() => undefined}
+      />,
+    )
+
+    expect(markup).toContain('team-lead-portrait-128.png')
+    expect(markup).toContain('phone-connected.webp')
+    expect(markup).toContain('SECURE LINE // CONNECTED')
+    expect(markup).toContain(instruction)
+    expect(markup).toContain('통화 종료')
+    expect(markup).toContain('카드의 증거와 대조')
+    expect(markup).not.toContain('role="progressbar"')
+  })
+
+  it('clamps the incoming-call timer to an accessible percentage', () => {
+    const markup = renderToStaticMarkup(
+      <PhoneOverlay
+        mode="ringing"
+        caller="야간 팀장"
+        message="호출 중"
+        ringProgress={2}
+        onAnswer={() => undefined}
+        onLater={() => undefined}
+      />,
+    )
+
+    expect(markup).toContain('aria-valuenow="100"')
+    expect(markup).toContain('scaleX(1)')
   })
 })
 
