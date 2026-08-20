@@ -35,6 +35,11 @@ jobs:
 
       - run: npm run lint
 
+      # 검사 195개가 이 프로젝트의 주력 품질 장치인데 파이프라인이 한 번도
+      # 돌리지 않고 있었다. 그래서 App.memo-hang 검사가 제한 시간에 걸린
+      # 채로 배포가 계속 통과했다. 깨진 검사가 공개본에 올라가지 않게 한다.
+      - run: npm test -- --run
+
       - run: npm run build
 
       # vite.config.ts의 outDir이 '../site'이므로 산출물은 저장소 루트의 site/에 생긴다

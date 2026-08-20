@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react'
 
 import { DIFFICULTY } from '../config'
 
-const MAX_FRAME_DELTA_MS = 100
+/**
+ * 한 프레임에 반영하는 시간의 상한. 탭이 멈췄다 돌아올 때 밀린 시간이
+ * 한꺼번에 들어오는 것을 막는다. 검사에서 프레임을 직접 돌릴 때도 이
+ * 값을 쓴다.
+ */
+export const MAX_FRAME_DELTA_MS = 100
 
 export type UseGameLoopOptions = {
   isRunning: boolean

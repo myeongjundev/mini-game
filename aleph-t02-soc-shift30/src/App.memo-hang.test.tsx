@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
 import { DIFFICULTY } from './game/config'
+import { MAX_FRAME_DELTA_MS } from './game/hooks/useGameLoop'
 
 /**
  * 메모가 떠 있는 동안 들어온 판정 입력.
@@ -48,12 +49,18 @@ describe('메모 중 판정 입력', () => {
     vi.unstubAllGlobals()
   })
 
-  /** rAF가 없는 환경이라 프레임을 직접 돌린다. 한 프레임 상한은 루프와 같다. */
+/**
+   * rAF가 없는 환경이라 프레임을 직접 돌린다.
+   *
+   * 한 걸음을 루프의 상한과 같게 잡는다. 이보다 잘게 돌려도 루프가 보는
+   * 값은 달라지지 않는데 act() 렌더만 배로 늘어난다. 50ms로 돌던 때
+   * 30초짜리 검사가 600번을 돌아 5.8초가 걸렸고 기본 제한 5초를 넘겼다.
+   */
   const advance = (totalMs: number) => {
     let left = totalMs
 
     while (left > 0) {
-      const delta = Math.min(50, left)
+      const delta = Math.min(MAX_FRAME_DELTA_MS, left)
       now += delta
       left -= delta
       const frame = frames[frames.length - 1]
@@ -127,6 +134,8 @@ describe('메모 중 판정 입력', () => {
     expect(alertTitle()).not.toBe(title)
   })
 
+  // 30초를 전부 돌리는 유일한 검사다. 느린 기계에서도 넘어가지 않게
+  // 제한을 따로 준다.
   it('메모 중 키를 누른 경보도 판정 기록에 남는다', () => {
     startShiftAndWaitForMemo()
     const title = alertTitle()
@@ -143,5 +152,5 @@ describe('메모 중 판정 입력', () => {
       (entry) => entry.textContent,
     )
     expect(logged).toContain(title)
-  })
+  }, 15_000)
 })
