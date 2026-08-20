@@ -40,6 +40,7 @@ import {
 import { createMemoPlan, takeDueMemo, type MemoPlan } from './game/engine/memoQueue'
 import { useGameLoop } from './game/hooks/useGameLoop'
 import { useKeyboard } from './game/hooks/useKeyboard'
+import { useMenuKeys } from './game/hooks/useMenuKeys'
 import { useVisibilityPause } from './game/hooks/useVisibilityPause'
 import type { Action, GameState, Verdict } from './game/types'
 import { audioEngine } from './services/audio'
@@ -158,6 +159,7 @@ export default function App() {
   // 메모가 떠 있는 동안 흘러간 시간. 경보 제한 시간에서 빼야 눈금과
   // 실제 만료 시각이 어긋나지 않는다. useGameLoop의 동결과 같은 규칙이다.
   const memoFrozenMsRef = useRef(0)
+  const shellRef = useRef<HTMLElement>(null)
   const isMemoOpenRef = useRef(isMemoOpen)
   isMemoOpenRef.current = isMemoOpen
   muteRef.current = saved.mute
@@ -377,6 +379,20 @@ export default function App() {
     state.game.phase === 'PLAYING' || state.game.phase === 'PAUSED',
     keyboardHandlers,
   )
+  // 판이 멈춘 화면에서는 방향키로 버튼을 고른다. 근무 중에는 켜면 안 된다.
+  // 그때 좌우는 ALLOW·BLOCK이다.
+  const isSettled =
+    state.game.phase === 'PAUSED' ||
+    state.game.phase === 'SUCCESS' ||
+    state.game.phase === 'FAILURE'
+  useMenuKeys(isSettled, shellRef)
+
+  // 들어오는 순간 첫 버튼을 잡는다. 잡아주지 않으면 방향키를 눌러도 시작점이
+  // 없어 한 번은 헛돈다. 로비가 START SHIFT를 잡는 것과 같은 규칙이다.
+  useEffect(() => {
+    if (!isSettled) return
+    shellRef.current?.querySelector<HTMLButtonElement>('.primary-button')?.focus()
+  }, [isSettled])
   useVisibilityPause(
     state.game.phase === 'PLAYING',
     handleVisibilityPause,
@@ -384,6 +400,7 @@ export default function App() {
 
   return (
     <main
+      ref={shellRef}
       className={`app-shell${state.game.phase === 'READY' ? ' app-shell-lobby' : ''}`}
       data-reduce-motion={saved.reduceMotion ? 'true' : 'false'}
       data-feedback={

@@ -7,6 +7,7 @@ import { PIXEL_ART } from '../../game/data/pixelArt'
 import type { Alert } from '../../game/types'
 import type { VolumeLevel } from '../../services/storage'
 import { formatScore, formatSeconds } from '../../utils/format'
+import { useMenuKeys } from '../../game/hooks/useMenuKeys'
 import LobbyModal from '../LobbyModal'
 import PixelIcon from '../PixelIcon'
 
@@ -350,7 +351,7 @@ export default function ReadyScreen({ bestScore, mute, volume, reduceMotion, pla
   const completedRef = useRef(!playIntro)
   const startButtonRef = useRef<HTMLButtonElement>(null)
   const lobbyFocusedRef = useRef(false)
-  const sceneRef = useRef<HTMLElement>(null)
+  const consoleRef = useRef<HTMLDivElement>(null)
   // 모달을 연 버튼. 닫은 뒤 여기로 포커스를 돌려준다.
   const modalTriggerRef = useRef<HTMLButtonElement | null>(null)
   const wasModalOpenRef = useRef(false)
@@ -420,44 +421,9 @@ export default function ReadyScreen({ bestScore, mute, volume, reduceMotion, pla
     startButtonRef.current?.focus()
   }, [panel, phase])
 
-  // 로비 버튼을 방향키로 옮겨 다닌다. Tab으로도 되지만 옛 콘솔 메뉴는
-  // 방향키로 고르는 것이 자연스럽고, 게임 화면에서 판정에 쓰는 손 모양과도
-  // 이어진다.
-  //
-  // 게임의 ←·→는 판정 키지만 그것은 PLAYING 구간에서만 살아 있다(useKeyboard).
-  // 로비는 READY라 겹치지 않는다.
-  useEffect(() => {
-    if (phase !== 'LOBBY' || modalOpen) return
-
-    const handleArrow = (event: KeyboardEvent) => {
-      const step = event.key === 'ArrowDown' || event.key === 'ArrowRight'
-        ? 1
-        : event.key === 'ArrowUp' || event.key === 'ArrowLeft'
-          ? -1
-          : 0
-
-      if (step === 0 || event.repeat) return
-
-      const console_ = sceneRef.current?.querySelector('.lobby-console')
-      const items = [...(console_?.querySelectorAll<HTMLButtonElement>('button') ?? [])]
-        .filter((item) => !item.disabled)
-
-      if (items.length === 0) return
-
-      event.preventDefault()
-      const active = document.activeElement
-      const index = items.findIndex((item) => item === active)
-      // 로비 밖에 포커스가 있으면 방향에 맞는 끝에서 시작한다.
-      const next = index === -1
-        ? (step === 1 ? 0 : items.length - 1)
-        : (index + step + items.length) % items.length
-
-      items[next].focus()
-    }
-
-    window.addEventListener('keydown', handleArrow)
-    return () => window.removeEventListener('keydown', handleArrow)
-  }, [modalOpen, phase])
+  // 로비 버튼을 방향키로 옮겨 다닌다. 모달이 떠 있으면 멈춘다.
+  // 모달 안 포커스를 뒤쪽 로비로 끌고 가면 안 된다.
+  useMenuKeys(phase === 'LOBBY' && !modalOpen, consoleRef)
 
   // 모달이 닫힌 뒤 연 버튼으로 포커스를 돌려준다. 이 effect는 inert를 지운
   // 커밋 다음에 돌기 때문에 포커스가 거부되지 않는다.
@@ -470,7 +436,7 @@ export default function ReadyScreen({ bestScore, mute, volume, reduceMotion, pla
   }, [modalOpen])
 
   return (
-    <section className="lobby-scene" ref={sceneRef} aria-label="SOC SHIFT:30 analyst desk"
+    <section className="lobby-scene" aria-label="SOC SHIFT:30 analyst desk"
       data-lobby-phase={phase} onClick={introActive ? completeIntro : undefined}>
       <img className="lobby-office" src={`${import.meta.env.BASE_URL}lobby-office-blank.webp`}
         alt="80년대 야간 사무실의 CRT 관제 컴퓨터와 커피, 서류가 놓인 책상" />
@@ -495,7 +461,7 @@ export default function ReadyScreen({ bestScore, mute, volume, reduceMotion, pla
         ) : null}
         {phase === 'LOBBY' ? (
           <>
-            <div className="lobby-console" data-panel={panel} {...inertProps}>
+            <div className="lobby-console" data-panel={panel} ref={consoleRef} {...inertProps}>
               <header className="lobby-console-header"><span>SOC NODE // 01</span>
                 <span className="status-online">● ONLINE</span></header>
               {panel === 'MENU' ? (
