@@ -1,7 +1,7 @@
 # File Index
 
-`aleph-t02-soc-shift30/` 안의 파일 목록이다. Git이 추적하는 것과 이번 작업에서
-새로 만든 것을 함께 적는다. `node_modules/`와 빌드 산출물 `../site/`는 제외한다.
+`aleph-t02-soc-shift30/` 안의 파일 목록이다. Git이 추적하는 것과 아직 추적하지
+않는 것을 나눠 적는다. `node_modules/`와 빌드 산출물 `../site/`는 제외한다.
 
 - `.claude/launch.json`
 - `.gitignore`
@@ -31,8 +31,13 @@
 - `prompts/03_PHONE_PASSWORD_DISTRACTIONS_HANDOFF.md`
 - `prompts/04_LOBBY_MODAL_WINDOW_HANDOFF.md`
 - `public/favicon.svg`
+- `public/infra-engineer-portrait-128.png`
 - `public/lobby-modal-window.webp`
 - `public/lobby-office-blank.webp`
+- `public/phone-call.webp`
+- `public/phone-connected.webp`
+- `public/security-specialist-portrait-128.png`
+- `public/team-lead-portrait-128.png`
 - `src/App.integration.test.tsx`
 - `src/App.memo-hang.test.tsx`
 - `src/App.test.ts`
@@ -44,6 +49,7 @@
 - `src/components/LobbyModal.tsx`
 - `src/components/MemoLog.tsx`
 - `src/components/MemoToast.tsx`
+- `src/components/PhoneOverlay.tsx`
 - `src/components/PixelIcon.test.tsx`
 - `src/components/PixelIcon.tsx`
 - `src/components/SettingsBar.tsx`
@@ -89,12 +95,11 @@
 
 ## 아직 추적하지 않는 자산
 
-전화·패스워드 방해 요소는 `GAME_SPEC` 14절에 규칙만 있고 구현 전이다.
-그림은 `prompts/03`이 최종안으로 정리해뒀지만 아직 커밋하지 않았다.
+패스워드 방해 요소는 `GAME_SPEC`에 규칙이 없고 참조하는 코드도 없다.
+규격과 생성 경위는 `prompts/03`에 있다.
 
-- `public/phone-call.webp` — 전화 수신 (사용 예정)
-- `public/phone-connected.webp` — 전화 연결 (사용 예정)
-- `public/password-window-locked.webp` — 패스워드 잠금 창 (사용 예정)
-- `public/password-window-unlocked.webp` — 패스워드 해제 창 (사용 예정)
+- `public/password-window-locked.webp` — 잠금 창 (쓸 예정)
+- `public/password-window-unlocked.webp` — 해제 창 (쓸 예정)
 - `public/password-locked.webp` — **쓰지 않는다.** 물리 장치로 잘못 만든 초기안
 - `public/password-unlocked.webp` — **쓰지 않는다.** 위와 같음
+- `prompts/art-source/` — 초상 원본과 반려본. **5.7MB.** 저장소에 넣을지 미정
