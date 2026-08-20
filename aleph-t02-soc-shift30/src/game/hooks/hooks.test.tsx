@@ -361,7 +361,7 @@ describe('useGameLoop', () => {
   })
 
   it('freezes the alert clock while a memo is open but keeps ticking', () => {
-    // 경보 한 장의 수명은 2초다. 메모를 읽고 닫는 데 그 절반 이상이 드니
+    // 경보 한 장의 수명은 3초다. 메모를 읽고 닫는 데 그 상당 부분이 드니
     // 멈추지 않으면 메모가 뜬 경보는 실력과 무관하게 미판정이 된다.
     const animation = installAnimationFrameStub()
     const onTick = vi.fn()

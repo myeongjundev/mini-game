@@ -220,7 +220,7 @@ useVisibilityPause(isPlaying: boolean, onPause: () => void): void
 ## 6-1. SHIFT LOG — 판정 기록
 
 판정 직후의 `VerdictFlash`는 다음 경보가 밀려오기 전까지만 떠 있다.
-`eventIntervalMs`가 2000ms인 게임에서 설명 한 문장까지 읽을 시간은 없다.
+`eventIntervalMs`가 3000ms인 게임에서 설명 한 문장까지 읽을 시간은 없다.
 그래서 **한 판이 끝난 뒤 전체를 몰아서 읽을 수 있어야 한다.**
 
 `docs/GAME_SPEC.md` 12절의 "왜 틀렸는지 즉시 알 수 있어야 한다"를 실제로 만족시키는 장치다.

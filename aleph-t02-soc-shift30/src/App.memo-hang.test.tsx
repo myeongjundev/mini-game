@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
+import { DIFFICULTY } from './game/config'
 
 /**
  * 메모가 떠 있는 동안 들어온 판정 입력.
@@ -120,7 +121,8 @@ describe('메모 중 판정 입력', () => {
 
     press('a')
     press(' ')
-    advance(2500)
+    // 상수에서 파생시킨다. 난이도 실험으로 값이 바뀌어도 검사가 썩지 않는다.
+    advance(DIFFICULTY.eventIntervalMs + 500)
 
     expect(alertTitle()).not.toBe(title)
   })
