@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import {
+  useCallback, useEffect, useRef, useState,
+  type CSSProperties, type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 
 import { DIFFICULTY, MEMO } from '../../game/config'
 import { ALERTS } from '../../game/data/alerts'
 import { MEMOS } from '../../game/data/memos'
 import { PIXEL_ART } from '../../game/data/pixelArt'
 import type { Alert } from '../../game/types'
+import { VOLUME_PERCENT } from '../../services/audio'
 import type { VolumeLevel } from '../../services/storage'
 import { formatScore, formatSeconds } from '../../utils/format'
 import { useMenuKeys } from '../../game/hooks/useMenuKeys'
@@ -263,6 +267,38 @@ function LobbyGuideModal({ onClose, reduceMotion }: { onClose: () => void; reduc
 
 const VOLUME_LABELS = ['LOW', 'MID', 'HIGH'] as const
 
+/**
+ * 줄 하나를 좌우 방향키로 조절한다. 위아래는 모달이 받아 줄을 옮기므로
+ * 좌우만 여기서 먹고 멈춘다.
+ *
+ * 켜고 끄는 줄에서도 왼쪽은 끄기, 오른쪽은 켜기다. 누를 때마다 뒤집는 것과
+ * 달리 어느 쪽이 켜짐인지가 손에 남는다.
+ */
+function horizontalKeys(onStep: (step: -1 | 1) => void) {
+  return (event: ReactKeyboardEvent<HTMLElement>) => {
+    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+
+    if (step === 0 || event.repeat) {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+    onStep(step)
+  }
+}
+
+/** 켜짐 칸을 채운 눈금. 값은 옆의 백분율이 읽어준다. */
+function VolumeBar({ level }: { level: VolumeLevel }) {
+  return (
+    <span className="volume-bar" aria-hidden="true">
+      {VOLUME_LABELS.map((_, index) => (
+        <span key={index} data-filled={index <= level ? 'true' : 'false'} />
+      ))}
+    </span>
+  )
+}
+
 function LobbySettingsModal({
   mute, volume, reduceMotion, onClose, onToggleMute, onSetVolume, onToggleReduceMotion,
 }: {
@@ -303,7 +339,10 @@ function LobbySettingsModal({
           <dt id="setting-sound">SOUND</dt>
           <dd>
             <button type="button" onClick={onToggleMute} aria-describedby="setting-sound"
-              aria-pressed={!mute}>
+              aria-pressed={!mute}
+              onKeyDown={horizontalKeys((step) => {
+                if (step === 1 ? mute : !mute) onToggleMute()
+              })}>
               // {mute ? 'OFF' : 'ON'}
             </button>
           </dd>
@@ -313,9 +352,22 @@ function LobbySettingsModal({
         <div className="lobby-settings-row">
           <dt id="setting-volume">VOLUME</dt>
           <dd>
-            <button type="button" disabled={mute} aria-describedby="setting-volume"
-              onClick={() => onSetVolume(((volume + 1) % 3) as VolumeLevel)}>
-              // {VOLUME_LABELS[volume]}
+            {/* 값을 가진 눈금이라 slider로 읽힌다. 마우스로는 눌러서 한 칸씩
+                돌고, 방향키로는 양 끝에서 멈춘다. 슬라이더에서 방향키가
+                반대편으로 튀면 잘못 누른 것처럼 느껴진다. */}
+            <button type="button" className="volume-control" disabled={mute}
+              role="slider" aria-describedby="setting-volume"
+              aria-valuemin={0}
+              aria-valuemax={VOLUME_LABELS.length - 1}
+              aria-valuenow={volume}
+              aria-valuetext={`${VOLUME_LABELS[volume]} ${VOLUME_PERCENT[volume]}퍼센트`}
+              onClick={() => onSetVolume(((volume + 1) % VOLUME_LABELS.length) as VolumeLevel)}
+              onKeyDown={horizontalKeys((step) => {
+                const next = Math.min(VOLUME_LABELS.length - 1, Math.max(0, volume + step))
+                if (next !== volume) onSetVolume(next as VolumeLevel)
+              })}>
+              <VolumeBar level={volume} />
+              <span className="volume-value">{VOLUME_PERCENT[volume]}%</span>
             </button>
           </dd>
         </div>
@@ -323,13 +375,24 @@ function LobbySettingsModal({
           <dt id="setting-motion">REDUCE MOTION</dt>
           <dd>
             <button type="button" onClick={onToggleReduceMotion} aria-describedby="setting-motion"
-              aria-pressed={reduceMotion}>
+              aria-pressed={reduceMotion}
+              onKeyDown={horizontalKeys((step) => {
+                if (step === 1 ? !reduceMotion : reduceMotion) onToggleReduceMotion()
+              })}>
               // {reduceMotion ? 'ON' : 'OFF'}
             </button>
           </dd>
         </div>
       </dl>
       <p className="lobby-settings-note">바꾸면 바로 적용됩니다. 이 기기에 저장됩니다.</p>
+      {/* 방향키로 되는 것을 모르면 없는 기능이다. 가이드 머리줄의 안내와
+          같은 이유로 여기에 적는다. */}
+      <dl className="lobby-key-hints">
+        <div><dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd>줄 이동</dd></div>
+        <div><dt><kbd>←</kbd><kbd>→</kbd></dt><dd>값 바꾸기</dd></div>
+        <div><dt><kbd>Enter</kbd></dt><dd>고르기</dd></div>
+        <div><dt><kbd>Esc</kbd></dt><dd>닫기</dd></div>
+      </dl>
     </LobbyModal>
   )
 }

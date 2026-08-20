@@ -18,6 +18,21 @@ const TONES: Record<
   CRITICAL: { frequency: 880, durationSeconds: 0.12, type: 'triangle' },
 }
 
+/**
+ * 단계별 최고 음량. MID가 지금까지 쓰던 0.08이라 기본값에서는 소리가
+ * 달라지지 않는다. 지수 램프를 쓰므로 0이 될 수 없다.
+ */
+export const PEAK_BY_VOLUME = [0.04, 0.08, 0.14] as const
+
+/**
+ * 설정 화면에 보여줄 백분율. 가장 큰 단계를 100으로 놓은 실제 음량 비다.
+ * 손으로 적어두면 위 표만 바뀔 때 조용히 거짓말이 되므로 계산해서 쓴다.
+ * 3단계짜리 눈금이라 5 단위로 맞춘다.
+ */
+export const VOLUME_PERCENT = PEAK_BY_VOLUME.map((peak) =>
+  Math.round((peak / Math.max(...PEAK_BY_VOLUME)) * 20) * 5,
+)
+
 function createBrowserAudioContext(): AudioContext | null {
   try {
     return typeof globalThis.AudioContext === 'function'
@@ -42,12 +57,6 @@ export class AudioEngine {
     }
   }
 
-  /**
-   * 단계별 최고 음량. MID가 지금까지 쓰던 0.08이라 기본값에서는 소리가
-   * 달라지지 않는다. 지수 램프를 쓰므로 0이 될 수 없다.
-   */
-  private static readonly PEAK_BY_VOLUME = [0.04, 0.08, 0.14] as const
-
   play(kind: ToneKind, muted: boolean, volume: VolumeLevel = 1): void {
     if (muted) {
       return
@@ -65,7 +74,7 @@ export class AudioEngine {
 
     try {
       const tone = TONES[kind]
-      const peak = AudioEngine.PEAK_BY_VOLUME[volume] ?? AudioEngine.PEAK_BY_VOLUME[1]
+      const peak = PEAK_BY_VOLUME[volume] ?? PEAK_BY_VOLUME[1]
       const now = context.currentTime
       const oscillator = context.createOscillator()
       const gain = context.createGain()

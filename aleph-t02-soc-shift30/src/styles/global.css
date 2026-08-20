@@ -2046,10 +2046,78 @@ time,
   font-variant-numeric: tabular-nums;
 }
 
+/* 눈금과 백분율. 값이 바뀔 때 자리가 흔들리지 않게 폭을 고정한다. */
+.lobby-settings-row .volume-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.volume-bar {
+  display: flex;
+  gap: 2px;
+}
+
+.volume-bar span {
+  width: 0.75em;
+  height: 0.75em;
+  border: 1px solid var(--amber);
+  /* 픽셀 화면이라 모서리를 굴리지 않는다. */
+  background: transparent;
+}
+
+.volume-bar span[data-filled='true'] {
+  background: var(--amber);
+}
+
+.volume-value {
+  min-width: 3.2em;
+  text-align: right;
+}
+
+/* 비활성일 때도 지금 값은 읽힌다. 어디로 돌아올지 보이는 편이 낫다. */
+.lobby-settings-row button:disabled .volume-bar span {
+  border-color: var(--text-dim);
+}
+
+.lobby-settings-row button:disabled .volume-bar span[data-filled='true'] {
+  background: var(--text-dim);
+}
+
 .lobby-settings-note {
   margin: 0;
   color: var(--text-dim);
   font-size: max(11px, 0.85em);
+}
+
+.lobby-key-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em 1.1em;
+  margin: 0.6em 0 0;
+  color: var(--text-dim);
+  font-size: max(11px, 0.85em);
+}
+
+.lobby-key-hints > div {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.lobby-key-hints dt,
+.lobby-key-hints dd {
+  display: flex;
+  gap: 0.2em;
+  margin: 0;
+}
+
+.lobby-key-hints kbd {
+  padding: 0 0.35em;
+  border: 1px solid currentcolor;
+  color: var(--amber);
+  font: inherit;
+  line-height: 1.5;
 }
 
 @keyframes modal-in {

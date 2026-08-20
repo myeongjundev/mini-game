@@ -4,6 +4,7 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { VOLUME_PERCENT } from '../services/audio'
 import ReadyScreen, { GUIDE_PAGE_COUNT } from './screens/ReadyScreen'
 
 /**
@@ -67,9 +68,17 @@ describe('로비 모달', () => {
   const closeButton = () => container.querySelector('.lobby-modal-close')
   const toggle = (index: number) =>
     container.querySelectorAll('.lobby-settings-row button')[index]
-  const press = (key: string) =>
+  const volumeControl = () =>
+    container.querySelector('.volume-control') as HTMLButtonElement
+  /**
+   * 실제로 키를 받는 것은 포커스를 가진 요소다. 늘 모달에 쏘면 줄마다 붙은
+   * 조작(좌우로 값 바꾸기)을 지나쳐 버려 검사가 헛돈다.
+   */
+  const press = (key: string, init: KeyboardEventInit = {}) =>
     act(() => {
-      modal()?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
+      const focused = document.activeElement
+      const target = focused && modal()?.contains(focused) ? focused : modal()
+      target?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...init }))
     })
 
   it('HOW TO PLAY를 누르면 가이드 모달이 열리고 기존 가이드 내용이 보인다', () => {
@@ -224,13 +233,15 @@ describe('로비 모달', () => {
     expect(document.activeElement).toBe(toggle(0))
   })
 
-  it('쪽 넘김이 없는 모달에서는 좌우도 포커스를 옮긴다', () => {
+  it('값이 없는 자리에서는 좌우도 포커스를 옮긴다', () => {
     renderLobby()
     click(button('SETTINGS'))
 
+    // 닫기 버튼에는 바꿀 값이 없으므로 모달이 받아 자리를 옮긴다.
+    // 설정 줄 위에서의 좌우는 값 바꾸기다(아래 검사).
     press('ArrowRight')
     expect(document.activeElement).toBe(toggle(0))
-    press('ArrowLeft')
+    press('ArrowUp')
     expect(document.activeElement).toBe(closeButton())
   })
 
@@ -248,11 +259,7 @@ describe('로비 모달', () => {
     renderLobby()
     click(button('HOW TO PLAY'))
 
-    act(() => {
-      modal()?.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'ArrowRight', repeat: true, bubbles: true }),
-      )
-    })
+    press('ArrowRight', { repeat: true })
 
     expect(modal()?.textContent).toContain('근무 요령')
   })
@@ -278,9 +285,9 @@ describe('로비 모달', () => {
     click(button('SETTINGS'))
 
     const toggles = [...container.querySelectorAll('.lobby-settings-row button')]
-    // 소리 꺼짐(mute), 크기 MID, 움직임 줄이기 꺼짐 상태의 표시다.
-    expect(toggles.map((item) => item.textContent?.trim())).toEqual([
-      '// OFF', '// MID', '// OFF',
+    // 소리 꺼짐(mute), 움직임 줄이기 꺼짐. 가운데 크기는 눈금과 백분율이다.
+    expect([toggles[0], toggles[2]].map((item) => item.textContent?.trim())).toEqual([
+      '// OFF', '// OFF',
     ])
 
     click(toggles[0])
@@ -299,24 +306,93 @@ describe('로비 모달', () => {
     expect(volume.disabled).toBe(true)
   })
 
-  it('소리가 켜져 있으면 크기가 LOW MID HIGH로 돌아간다', () => {
+  it('소리가 켜져 있으면 눌러서 크기가 한 칸씩 돌아간다', () => {
     renderLobby({ mute: false, volume: 1 })
     click(button('SETTINGS'))
 
-    const volume = () =>
-      container.querySelectorAll('.lobby-settings-row button')[1] as HTMLButtonElement
-    expect(volume().disabled).toBe(false)
-    expect(volume().textContent?.trim()).toBe('// MID')
+    expect(volumeControl().disabled).toBe(false)
 
-    click(volume())
+    click(volumeControl())
     expect(handlers.onSetVolume).toHaveBeenCalledWith(2)
 
     // 마지막 단계에서 한 번 더 누르면 처음으로 돌아온다.
     handlers.onSetVolume.mockClear()
     renderLobby({ mute: false, volume: 2 })
     click(button('SETTINGS'))
-    click(volume())
+    click(volumeControl())
     expect(handlers.onSetVolume).toHaveBeenCalledWith(0)
+  })
+
+  it('크기는 눈금과 백분율로 지금 값을 보여준다', () => {
+    renderLobby({ mute: false, volume: 1 })
+    click(button('SETTINGS'))
+
+    const filled = () =>
+      [...container.querySelectorAll('.volume-bar span')]
+        .map((cell) => cell.getAttribute('data-filled'))
+
+    // MID는 세 칸 중 둘이 찬다.
+    expect(filled()).toEqual(['true', 'true', 'false'])
+    expect(container.querySelector('.volume-value')?.textContent).toBe(
+      `${VOLUME_PERCENT[1]}%`,
+    )
+
+    // 백분율은 손으로 적은 값이 아니라 실제 음량 비에서 나온다.
+    expect(VOLUME_PERCENT[2]).toBe(100)
+    expect(VOLUME_PERCENT[0]).toBeLessThan(VOLUME_PERCENT[1])
+
+    // 읽어주는 쪽에는 값 있는 눈금으로 알린다.
+    expect(volumeControl().getAttribute('role')).toBe('slider')
+    expect(volumeControl().getAttribute('aria-valuenow')).toBe('1')
+    expect(volumeControl().getAttribute('aria-valuemax')).toBe('2')
+    expect(volumeControl().getAttribute('aria-valuetext')).toContain('MID')
+  })
+
+  it('크기 위에서 좌우 방향키가 한 칸씩 옮기고 양 끝에서 멈춘다', () => {
+    renderLobby({ mute: false, volume: 1 })
+    click(button('SETTINGS'))
+    act(() => volumeControl().focus())
+
+    press('ArrowRight')
+    expect(handlers.onSetVolume).toHaveBeenCalledWith(2)
+
+    handlers.onSetVolume.mockClear()
+    press('ArrowLeft')
+    expect(handlers.onSetVolume).toHaveBeenCalledWith(0)
+
+    // 끝에서는 반대편으로 튀지 않는다. 눌러서 도는 것과 다른 규칙이다.
+    handlers.onSetVolume.mockClear()
+    renderLobby({ mute: false, volume: 2 })
+    click(button('SETTINGS'))
+    act(() => volumeControl().focus())
+    press('ArrowRight')
+    expect(handlers.onSetVolume).not.toHaveBeenCalled()
+
+    // 방향키를 먹었으므로 포커스는 그 자리에 남는다.
+    expect(document.activeElement).toBe(volumeControl())
+  })
+
+  it('켜고 끄는 줄에서는 왼쪽이 끄기 오른쪽이 켜기다', () => {
+    renderLobby({ mute: true })
+    click(button('SETTINGS'))
+    act(() => (toggle(0) as HTMLButtonElement).focus())
+
+    // 이미 꺼져 있으므로 왼쪽은 아무 일도 하지 않는다.
+    press('ArrowLeft')
+    expect(handlers.onToggleMute).not.toHaveBeenCalled()
+
+    press('ArrowRight')
+    expect(handlers.onToggleMute).toHaveBeenCalledTimes(1)
+  })
+
+  it('설정에 조작키 안내가 있다', () => {
+    renderLobby()
+    click(button('SETTINGS'))
+
+    const keys = [...container.querySelectorAll('.lobby-key-hints kbd')]
+      .map((key) => key.textContent)
+    expect(keys).toContain('←')
+    expect(keys).toContain('Esc')
   })
 
   it('설정이 기본값이 아니면 RESET이 기본값으로 되돌린다', () => {
