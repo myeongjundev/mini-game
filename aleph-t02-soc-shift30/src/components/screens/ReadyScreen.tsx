@@ -432,21 +432,25 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
                 <span>SHIFT READY</span>
               </footer>
             </div>
-            {activeModal === 'GUIDE' ? (
-              <LobbyGuideModal onClose={closeModal} reduceMotion={reduceMotion} />
-            ) : null}
-            {activeModal === 'SETTINGS' ? (
-              <LobbySettingsModal
-                mute={mute}
-                reduceMotion={reduceMotion}
-                onClose={closeModal}
-                onToggleMute={onToggleMute}
-                onToggleReduceMotion={onToggleReduceMotion}
-              />
-            ) : null}
           </>
         ) : <span className="intro-skip">ENTER / SPACE / CLICK TO SKIP</span>}
       </div>
+
+      {/* 모달은 CRT 유리 밖에 둔다. 유리 안에 넣으면 본문이 118px밖에 안 나와
+          가이드가 계속 잘린다. 그림 속 모니터는 로비 화면의 무대이지 이
+          대화상자의 경계가 아니다. */}
+      {phase === 'LOBBY' && activeModal === 'GUIDE' ? (
+        <LobbyGuideModal onClose={closeModal} reduceMotion={reduceMotion} />
+      ) : null}
+      {phase === 'LOBBY' && activeModal === 'SETTINGS' ? (
+        <LobbySettingsModal
+          mute={mute}
+          reduceMotion={reduceMotion}
+          onClose={closeModal}
+          onToggleMute={onToggleMute}
+          onToggleReduceMotion={onToggleReduceMotion}
+        />
+      ) : null}
     </section>
   )
 }

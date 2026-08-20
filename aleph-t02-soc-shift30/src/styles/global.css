@@ -1448,6 +1448,226 @@ time,
   animation: none;
 }
 
+/* 상사의 전화 시각 레이어. GAME_SPEC 14절의 실제 발신 규칙은 난이도 실험
+   이후에 연결한다. 지금은 자산과 레이아웃을 검증할 수 있는 순수 UI다.
+   경보 카드와 같은 칸을 덮으므로 화면 높이를 늘리지 않는다. */
+.phone-overlay {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 330px;
+  overflow: hidden;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-left-color: var(--amber);
+  animation: phone-overlay-in 140ms steps(2);
+}
+
+.phone-overlay-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--gap-sm);
+  min-height: 34px;
+  padding: var(--gap-xs) var(--gap-sm);
+  color: var(--amber);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+.phone-status-light {
+  width: 8px;
+  height: 8px;
+  background: var(--amber);
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
+.phone-overlay-connected .phone-status-light {
+  background: var(--green);
+}
+
+.phone-overlay-channel {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-overlay-body {
+  display: grid;
+  grid-template-columns: minmax(170px, 38%) 1fr;
+  align-items: center;
+  gap: var(--gap-lg);
+  min-height: 0;
+  padding: var(--gap-md) var(--gap-lg);
+}
+
+.phone-overlay-visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  min-height: 178px;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+
+.phone-caller-portrait {
+  position: relative;
+  z-index: 1;
+  width: 160px;
+  max-width: 82%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.phone-device-art {
+  width: min(100%, 268px);
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.phone-overlay-connected .phone-device-art {
+  position: absolute;
+  z-index: 2;
+  right: -74px;
+  bottom: -40px;
+  width: 190px;
+}
+
+.phone-overlay-copy {
+  min-width: 0;
+}
+
+.phone-overlay-kicker,
+.phone-overlay-note {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.phone-overlay-copy h2 {
+  margin: var(--gap-xs) 0 var(--gap-md);
+  color: var(--amber);
+  font-size: 18px;
+  letter-spacing: 1.5px;
+}
+
+.phone-overlay-message {
+  min-height: 52px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.phone-overlay-note {
+  margin-top: var(--gap-md);
+  padding-left: var(--gap-sm);
+  border-left: 2px solid var(--amber);
+  line-height: 1.5;
+}
+
+.phone-ring-track {
+  height: 6px;
+  margin-top: var(--gap-lg);
+  overflow: hidden;
+  background: var(--line-dim);
+}
+
+.phone-ring-track span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--amber);
+  transform-origin: left;
+}
+
+.phone-overlay-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap-sm);
+  min-height: 48px;
+  padding: var(--gap-xs) var(--gap-sm);
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+
+.phone-overlay-actions button {
+  min-width: 112px;
+  padding: var(--gap-xs) var(--gap-sm);
+  color: var(--amber);
+  background: transparent;
+  border: 1px solid var(--amber);
+  cursor: pointer;
+}
+
+.phone-overlay-actions button:hover,
+.phone-overlay-actions button:focus-visible {
+  color: var(--bg);
+  background: var(--amber);
+}
+
+.phone-overlay-actions kbd {
+  color: inherit;
+  background: transparent;
+  border: 0;
+}
+
+@keyframes phone-overlay-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+.app-shell[data-reduce-motion='true'] .phone-overlay {
+  animation: none;
+}
+
+@media (max-width: 640px) {
+  .phone-overlay-body {
+    grid-template-columns: 38% 1fr;
+    gap: var(--gap-sm);
+    padding: var(--gap-sm);
+  }
+
+  .phone-overlay-visual {
+    min-height: 150px;
+  }
+
+  .phone-caller-portrait {
+    width: 128px;
+    max-width: 96%;
+  }
+
+  .phone-device-art {
+    width: 210px;
+  }
+
+  .phone-overlay-connected .phone-device-art {
+    right: -94px;
+    bottom: -44px;
+    width: 170px;
+  }
+
+  .phone-overlay-message {
+    min-height: 0;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .phone-overlay-note {
+    margin-top: var(--gap-sm);
+  }
+
+  .phone-overlay-actions button {
+    min-width: 0;
+  }
+}
+
 /* 근무 중 받은 공지를 모아 둔다. 규칙은 GAME_SPEC 13.6-1.
    메모는 닫으면 사라지는데 연결 경보는 최대 17초 뒤에 온다. 다시 읽을
    데가 없으면 방해만 남고 정보는 못 준다. 그래서 닫아도 여기 남는다. */
@@ -1622,6 +1842,7 @@ time,
   --modal-command-height: 8.48%;
 
   position: absolute;
+  /* .crt-display가 z-index 1이다. 그 위에 와야 한다. */
   z-index: 4;
   inset: 0;
   display: grid;
@@ -1633,15 +1854,21 @@ time,
 
 /* 원본 비율 335:165(2.03)를 지킨다.
 
-   유리는 씬 기준 폭 29.9% × 높이 39.21%이고 씬이 1672:941이므로
-   유리 자체의 비율은 0.299 / (0.3921 × 941/1672) = 1.355다.
-   모달이 유리보다 훨씬 옆으로 길므로 **항상 폭이 먼저 걸린다.**
-   높이에서 폭을 유도하면 max-width에 잘려 비율이 깨진다.
-   폭 96%일 때 높이는 유리 높이의 64%라 세로는 넉넉하다. */
+   유리 안에 두었을 때는 폭이 412px까지밖에 못 커서 본문이 118px이었다.
+   가이드 다섯 쪽 중 셋이 잘렸다. 씬 전체를 무대로 쓰면 900px까지 커지고
+   본문이 258px이 된다.
+
+   씬은 1672:941(1.777)이고 모달은 2.03이라 여전히 폭이 먼저 걸린다.
+   폭 900일 때 높이 443이고 씬 높이(1440 셸에서 810px)의 55%다. */
 .lobby-modal {
   position: relative;
-  width: 96%;
+  container-type: inline-size;
+  width: min(94%, 900px);
   aspect-ratio: 335 / 165;
+  /* 글자를 모달 폭에 묶는다. 그림이 커지면 글자도 같이 커져야 프레임과
+     내용의 비례가 유지된다. .crt-display가 cqw를 쓰는 것과 같은 이유다.
+     900px에서 15.3px, 좁은 화면에서는 12px 하한이 잡는다. */
+  font-size: clamp(12px, 1.7cqw, 16px);
 }
 
 .lobby-modal-frame {
@@ -1834,9 +2061,5 @@ time,
 @media (max-width: 640px) {
   .lobby-modal {
     width: 99%;
-  }
-
-  .lobby-modal-body {
-    font-size: 12px;
   }
 }
