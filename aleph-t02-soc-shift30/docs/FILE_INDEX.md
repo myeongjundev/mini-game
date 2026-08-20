@@ -1,5 +1,8 @@
 # File Index
 
+`aleph-t02-soc-shift30/` 안의 파일 목록이다. Git이 추적하는 것과 이번 작업에서
+새로 만든 것을 함께 적는다. `node_modules/`와 빌드 산출물 `../site/`는 제외한다.
+
 - `.gitignore`
 - `AGENTS.md`
 - `BUILD_ORDER.md`
@@ -23,42 +26,57 @@
 - `prompts/00_MASTER_BOOTSTRAP.md`
 - `prompts/01_LOBBY_REVIEW_FIXES.md`
 - `public/favicon.svg`
-- `src/App.tsx`
+- `public/lobby-office-blank.webp`
+- `src/App.integration.test.tsx`
 - `src/App.test.ts`
+- `src/App.tsx`
 - `src/components/ActionButtons.tsx`
 - `src/components/AlertCard.tsx`
 - `src/components/Hud.tsx`
-- `src/components/PixelIcon.tsx`
+- `src/components/MemoLog.tsx`
+- `src/components/MemoToast.tsx`
 - `src/components/PixelIcon.test.tsx`
+- `src/components/PixelIcon.tsx`
 - `src/components/SettingsBar.tsx`
 - `src/components/ShiftLog.tsx`
 - `src/components/VerdictFlash.tsx`
+- `src/components/components.test.tsx`
 - `src/components/screens/PausedScreen.tsx`
+- `src/components/screens/ReadyScreen.test.tsx`
 - `src/components/screens/ReadyScreen.tsx`
 - `src/components/screens/ResultScreen.tsx`
 - `src/game/config.ts`
-- `src/game/data/alerts.ts`
 - `src/game/data/alerts.test.ts`
-- `src/game/data/pixelArt.ts`
+- `src/game/data/alerts.ts`
+- `src/game/data/memos.test.ts`
+- `src/game/data/memos.ts`
 - `src/game/data/pixelArt.test.ts`
-- `src/game/engine/alertQueue.ts`
+- `src/game/data/pixelArt.ts`
 - `src/game/engine/alertQueue.test.ts`
-- `src/game/engine/machine.ts`
+- `src/game/engine/alertQueue.ts`
 - `src/game/engine/machine.test.ts`
-- `src/game/engine/rules.ts`
+- `src/game/engine/machine.ts`
+- `src/game/engine/memoQueue.test.ts`
+- `src/game/engine/memoQueue.ts`
 - `src/game/engine/rules.test.ts`
-- `src/game/engine/scoring.ts`
+- `src/game/engine/rules.ts`
 - `src/game/engine/scoring.test.ts`
-- `src/game/hooks/useGameLoop.ts`
+- `src/game/engine/scoring.ts`
 - `src/game/hooks/hooks.test.tsx`
+- `src/game/hooks/useGameLoop.ts`
 - `src/game/hooks/useKeyboard.ts`
 - `src/game/hooks/useVisibilityPause.ts`
 - `src/game/types.ts`
 - `src/main.tsx`
-- `src/services/storage.ts`
+- `src/services/audio.test.ts`
+- `src/services/audio.ts`
 - `src/services/storage.test.ts`
+- `src/services/storage.ts`
 - `src/styles/global.css`
 - `src/styles/tokens.css`
 - `src/utils/format.ts`
 - `tsconfig.json`
 - `vite.config.ts`
+- `docs/TROUBLESHOOTING.md` (새로 만듦, 커밋 전)
+- `prompts/02_PHONE_ILLUSTRATION.md` (새로 만듦, 커밋 전)
+- `src/App.memo-hang.test.tsx` (새로 만듦, 커밋 전)
