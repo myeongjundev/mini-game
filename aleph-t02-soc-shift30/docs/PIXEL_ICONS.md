@@ -16,6 +16,64 @@
 
 ---
 
+## 래스터 자산 검수
+
+좌표 배열이 아니라 그림 파일로 오는 자산(`public/*.webp`, `*.png`)은 아래로
+잰다. 규격의 근거는 `prompts/03` 2절이다.
+
+| 볼 것 | 기준 |
+|---|---|
+| 팔레트 | `tokens.css`의 6색 밖이 **0개** |
+| 알파 | `0` 또는 `255`뿐. 반투명 픽셀 **0개**(안티앨리어싱 없음) |
+| 치수 | 오버레이 335×165, 초상 128×128 |
+| 용량 | 오버레이 40KB 이하. 배포 산출물 전체가 349KB다 |
+| 표시 | `image-rendering: pixelated`, 정수 배율 |
+
+**눈으로 보지 말고 디코딩해서 재라.** 눈으로는 반투명 1픽셀을 못 잡는다.
+
+Node에는 WebP 디코더가 없고 jsdom은 이미지를 디코딩하지 못한다. 개발 서버를
+띄우고 **브라우저 콘솔에서** 돌린다.
+
+```js
+const PALETTE = ['#0A0C10','#12161D','#232B36','#F0A93B','#E2564D','#6FCF6B']
+const check = async (file) => {
+  const blob = await (await fetch(import.meta?.env?.BASE_URL ?? '/mini-game/' + file)).blob()
+  const bmp = await createImageBitmap(blob)
+  const c = new OffscreenCanvas(bmp.width, bmp.height)
+  c.getContext('2d').drawImage(bmp, 0, 0)
+  const d = c.getContext('2d').getImageData(0, 0, bmp.width, bmp.height).data
+  const colors = new Map(); let partial = 0, clear = 0
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i + 3]
+    if (a === 0) { clear++; continue }
+    if (a !== 255) partial++
+    const hex = '#' + [d[i], d[i+1], d[i+2]].map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase()
+    colors.set(hex, (colors.get(hex) || 0) + 1)
+  }
+  const outside = [...colors.keys()].filter(x => !PALETTE.includes(x))
+  return { file, size: `${bmp.width}x${bmp.height}`, kb: +(blob.size / 1024).toFixed(2),
+           outside: outside.length ? outside : 'none', partialAlpha: partial,
+           verdict: !outside.length && !partial ? 'PASS' : 'FAIL' }
+}
+```
+
+### 색이 하는 말도 함께 본다
+
+형식만 맞고 뜻이 틀릴 수 있다. `DESIGN_TOKENS` 8절이 "색만으로 구분되는
+상태"를 금지하므로, 상태가 여럿인 자산은 **색 분포가 실제로 갈리는지** 본다.
+같은 함수에서 팔레트 이름별 픽셀 수를 세면 된다.
+
+| 자산 | 있어야 할 것 | 없어야 할 것 |
+|---|---|---|
+| `phone-call` (수신) | amber (진동선) | green |
+| `phone-connected` (연결) | green (연결 표시) | amber |
+
+2026-08-20 실측에서 수신은 amber 1146 / green 0, 연결은 green 21 / amber 0이었다.
+**색이 갈리는 것만으로는 부족하다.** 형태로도 갈려야 한다(진동선 유무,
+수화기 오프훅). 그건 사람이 봐야 한다.
+
+---
+
 ## 1. 카테고리 아이콘 (12×12, 표시 24px)
 
 경보 카드 제목 왼쪽에 붙는다. **1.1초마다 뜨는 카드를 글자보다 먼저 분류**하게 해주므로 게임성에 직접 기여한다.
