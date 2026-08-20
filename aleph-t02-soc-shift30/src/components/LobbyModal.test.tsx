@@ -5,7 +5,12 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { VOLUME_PERCENT } from '../services/audio'
+import { DEFAULTS, VOLUME_STEPS, type VolumeLevel } from '../services/storage'
 import ReadyScreen, { GUIDE_PAGE_COUNT } from './screens/ReadyScreen'
+
+/** 눈금 수가 바뀌어도 검사가 썩지 않게 이름으로 가리킨다. */
+const MID = DEFAULTS.volumeStep
+const TOP = (VOLUME_STEPS - 1) as VolumeLevel
 
 /**
  * 로비 가이드·설정 모달. 규격은
@@ -42,13 +47,15 @@ describe('로비 모달', () => {
   })
 
   /** 인트로는 건너뛰고 로비부터 시작한다. */
-  const renderLobby = (overrides: { mute?: boolean; volume?: 0 | 1 | 2; reduceMotion?: boolean } = {}) => {
+  const renderLobby = (
+    overrides: { mute?: boolean; volume?: VolumeLevel; reduceMotion?: boolean } = {},
+  ) => {
     act(() =>
       root.render(
         <ReadyScreen
           bestScore={0}
           mute={overrides.mute ?? true}
-          volume={overrides.volume ?? 1}
+          volume={overrides.volume ?? DEFAULTS.volumeStep}
           reduceMotion={overrides.reduceMotion ?? false}
           playIntro={false}
           {...handlers}
@@ -307,62 +314,66 @@ describe('로비 모달', () => {
   })
 
   it('소리가 켜져 있으면 눌러서 크기가 한 칸씩 돌아간다', () => {
-    renderLobby({ mute: false, volume: 1 })
+    renderLobby({ mute: false, volume: MID })
     click(button('SETTINGS'))
 
     expect(volumeControl().disabled).toBe(false)
 
     click(volumeControl())
-    expect(handlers.onSetVolume).toHaveBeenCalledWith(2)
+    expect(handlers.onSetVolume).toHaveBeenCalledWith(MID + 1)
 
     // 마지막 단계에서 한 번 더 누르면 처음으로 돌아온다.
     handlers.onSetVolume.mockClear()
-    renderLobby({ mute: false, volume: 2 })
+    renderLobby({ mute: false, volume: TOP })
     click(button('SETTINGS'))
     click(volumeControl())
     expect(handlers.onSetVolume).toHaveBeenCalledWith(0)
   })
 
   it('크기는 눈금과 백분율로 지금 값을 보여준다', () => {
-    renderLobby({ mute: false, volume: 1 })
+    renderLobby({ mute: false, volume: MID })
     click(button('SETTINGS'))
 
     const filled = () =>
       [...container.querySelectorAll('.volume-bar span')]
         .map((cell) => cell.getAttribute('data-filled'))
 
-    // MID는 세 칸 중 둘이 찬다.
-    expect(filled()).toEqual(['true', 'true', 'false'])
+    // 칸 수가 곧 눈금 수고, 고른 자리까지 찬다.
+    expect(filled()).toHaveLength(VOLUME_STEPS)
+    expect(filled().filter((cell) => cell === 'true')).toHaveLength(MID + 1)
     expect(container.querySelector('.volume-value')?.textContent).toBe(
-      `${VOLUME_PERCENT[1]}%`,
+      `${VOLUME_PERCENT[MID]}%`,
     )
 
-    // 백분율은 손으로 적은 값이 아니라 실제 음량 비에서 나온다.
-    expect(VOLUME_PERCENT[2]).toBe(100)
-    expect(VOLUME_PERCENT[0]).toBeLessThan(VOLUME_PERCENT[1])
+    // 백분율은 손으로 적은 값이 아니라 눈금에서 계산한 값이다.
+    expect(VOLUME_PERCENT).toHaveLength(VOLUME_STEPS)
+    expect(VOLUME_PERCENT[TOP]).toBe(100)
+    expect([...VOLUME_PERCENT].sort((a, b) => a - b)).toEqual(VOLUME_PERCENT)
 
     // 읽어주는 쪽에는 값 있는 눈금으로 알린다.
     expect(volumeControl().getAttribute('role')).toBe('slider')
-    expect(volumeControl().getAttribute('aria-valuenow')).toBe('1')
-    expect(volumeControl().getAttribute('aria-valuemax')).toBe('2')
-    expect(volumeControl().getAttribute('aria-valuetext')).toContain('MID')
+    expect(volumeControl().getAttribute('aria-valuenow')).toBe(String(MID))
+    expect(volumeControl().getAttribute('aria-valuemax')).toBe(String(TOP))
+    expect(volumeControl().getAttribute('aria-valuetext')).toBe(
+      `${VOLUME_PERCENT[MID]}퍼센트`,
+    )
   })
 
   it('크기 위에서 좌우 방향키가 한 칸씩 옮기고 양 끝에서 멈춘다', () => {
-    renderLobby({ mute: false, volume: 1 })
+    renderLobby({ mute: false, volume: MID })
     click(button('SETTINGS'))
     act(() => volumeControl().focus())
 
     press('ArrowRight')
-    expect(handlers.onSetVolume).toHaveBeenCalledWith(2)
+    expect(handlers.onSetVolume).toHaveBeenCalledWith(MID + 1)
 
     handlers.onSetVolume.mockClear()
     press('ArrowLeft')
-    expect(handlers.onSetVolume).toHaveBeenCalledWith(0)
+    expect(handlers.onSetVolume).toHaveBeenCalledWith(MID - 1)
 
     // 끝에서는 반대편으로 튀지 않는다. 눌러서 도는 것과 다른 규칙이다.
     handlers.onSetVolume.mockClear()
-    renderLobby({ mute: false, volume: 2 })
+    renderLobby({ mute: false, volume: TOP })
     click(button('SETTINGS'))
     act(() => volumeControl().focus())
     press('ArrowRight')

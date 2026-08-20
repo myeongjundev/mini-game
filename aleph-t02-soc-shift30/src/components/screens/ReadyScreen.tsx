@@ -9,7 +9,7 @@ import { MEMOS } from '../../game/data/memos'
 import { PIXEL_ART } from '../../game/data/pixelArt'
 import type { Alert } from '../../game/types'
 import { VOLUME_PERCENT } from '../../services/audio'
-import type { VolumeLevel } from '../../services/storage'
+import { DEFAULTS, VOLUME_STEPS, type VolumeLevel } from '../../services/storage'
 import { formatScore, formatSeconds } from '../../utils/format'
 import { useMenuKeys } from '../../game/hooks/useMenuKeys'
 import LobbyModal from '../LobbyModal'
@@ -265,7 +265,7 @@ function LobbyGuideModal({ onClose, reduceMotion }: { onClose: () => void; reduc
   )
 }
 
-const VOLUME_LABELS = ['LOW', 'MID', 'HIGH'] as const
+const TOP_VOLUME = (VOLUME_STEPS - 1) as VolumeLevel
 
 /**
  * 줄 하나를 좌우 방향키로 조절한다. 위아래는 모달이 받아 줄을 옮기므로
@@ -292,7 +292,7 @@ function horizontalKeys(onStep: (step: -1 | 1) => void) {
 function VolumeBar({ level }: { level: VolumeLevel }) {
   return (
     <span className="volume-bar" aria-hidden="true">
-      {VOLUME_LABELS.map((_, index) => (
+      {VOLUME_PERCENT.map((_, index) => (
         <span key={index} data-filled={index <= level ? 'true' : 'false'} />
       ))}
     </span>
@@ -312,7 +312,7 @@ function LobbySettingsModal({
 }) {
   // 저장 기본값은 `services/storage.ts`의 DEFAULTS다.
   // 소리 꺼짐, 크기 MID, 움직임 그대로.
-  const atDefaults = mute && volume === 1 && !reduceMotion
+  const atDefaults = mute && volume === DEFAULTS.volumeStep && !reduceMotion
 
   return (
     <LobbyModal
@@ -326,7 +326,7 @@ function LobbySettingsModal({
           disabled: atDefaults,
           onClick: () => {
             if (!mute) onToggleMute()
-            if (volume !== 1) onSetVolume(1)
+            if (volume !== DEFAULTS.volumeStep) onSetVolume(DEFAULTS.volumeStep)
             if (reduceMotion) onToggleReduceMotion()
           },
         },
@@ -358,12 +358,12 @@ function LobbySettingsModal({
             <button type="button" className="volume-control" disabled={mute}
               role="slider" aria-describedby="setting-volume"
               aria-valuemin={0}
-              aria-valuemax={VOLUME_LABELS.length - 1}
+              aria-valuemax={TOP_VOLUME}
               aria-valuenow={volume}
-              aria-valuetext={`${VOLUME_LABELS[volume]} ${VOLUME_PERCENT[volume]}퍼센트`}
-              onClick={() => onSetVolume(((volume + 1) % VOLUME_LABELS.length) as VolumeLevel)}
+              aria-valuetext={`${VOLUME_PERCENT[volume]}퍼센트`}
+              onClick={() => onSetVolume(((volume + 1) % VOLUME_STEPS) as VolumeLevel)}
               onKeyDown={horizontalKeys((step) => {
-                const next = Math.min(VOLUME_LABELS.length - 1, Math.max(0, volume + step))
+                const next = Math.min(TOP_VOLUME, Math.max(0, volume + step))
                 if (next !== volume) onSetVolume(next as VolumeLevel)
               })}>
               <VolumeBar level={volume} />

@@ -146,7 +146,7 @@ export default function App() {
   const lastExplanationRef = useRef('')
   const lastDecisiveFactRef = useRef('')
   const muteRef = useRef(saved.mute)
-  const volumeRef = useRef(saved.volume)
+  const volumeRef = useRef(saved.volumeStep)
   const alertProgressRef = useRef<{
     id: string | null
     startTimeLeftMs: number
@@ -163,7 +163,7 @@ export default function App() {
   const isMemoOpenRef = useRef(isMemoOpen)
   isMemoOpenRef.current = isMemoOpen
   muteRef.current = saved.mute
-  volumeRef.current = saved.volume
+  volumeRef.current = saved.volumeStep
 
   if (alertProgressRef.current.id !== currentAlertId) {
     alertProgressRef.current = {
@@ -325,7 +325,7 @@ export default function App() {
     dispatch({ type: 'RESTART' })
   }, [])
 
-  const updateSaved = useCallback((update: Partial<Pick<Saved, 'mute' | 'volume' | 'reduceMotion'>>) => {
+  const updateSaved = useCallback((update: Partial<Pick<Saved, 'mute' | 'volumeStep' | 'reduceMotion'>>) => {
     setSaved((previous) => {
       const next = { ...previous, ...update }
       saveSaved(next)
@@ -346,10 +346,10 @@ export default function App() {
     updateSaved({ reduceMotion: !saved.reduceMotion })
   }, [saved.reduceMotion, updateSaved])
 
-  // 단계를 돌려가며 고른다. 자리가 좁아 슬라이더를 놓을 수 없고,
-  // SOUND // ON 과 같은 표시 방식으로 맞춘다.
-  const handleSetVolume = useCallback((level: Saved['volume']) => {
-    updateSaved({ volume: level })
+  // 눈금 하나를 고른다. 단계 수와 실제 음량은 storage·audio가 정하고
+  // 여기는 고른 값을 저장하는 일만 한다.
+  const handleSetVolume = useCallback((level: Saved['volumeStep']) => {
+    updateSaved({ volumeStep: level })
   }, [updateSaved])
 
   const handleDismissMemo = useCallback(() => {
@@ -418,7 +418,7 @@ export default function App() {
         <ReadyScreen
           bestScore={saved.bestScore}
           mute={saved.mute}
-          volume={saved.volume}
+          volume={saved.volumeStep}
           reduceMotion={saved.reduceMotion}
           playIntro={!hasSeenLobbyIntro}
           onIntroComplete={handleLobbyIntroComplete}

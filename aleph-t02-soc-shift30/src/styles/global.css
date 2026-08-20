@@ -2059,8 +2059,8 @@ time,
 }
 
 .volume-bar span {
-  width: 0.75em;
-  height: 0.75em;
+  width: 0.55em;
+  height: 0.8em;
   border: 1px solid var(--amber);
   /* 픽셀 화면이라 모서리를 굴리지 않는다. */
   background: transparent;

@@ -30,6 +30,7 @@ type Saved = {
   v: 1;
   bestScore: number;      // 정수, 0 이상 999999 이하
   mute: boolean;
+  volumeStep: VolumeLevel; // 정수, 0 이상 VOLUME_STEPS 미만
   reduceMotion: boolean;
 };
 
@@ -37,6 +38,7 @@ const DEFAULTS: Saved = {
   v: 1,
   bestScore: 0,
   mute: true,        // 첫 로드는 음소거 상태로 시작한다
+  volumeStep: 2,     // 5단계 중 가운데. 60%
   reduceMotion: false,
 };
 ```
@@ -49,6 +51,28 @@ const DEFAULTS: Saved = {
 - 키에 버전을 넣었다. 스키마가 바뀌면 `socshift30:v2`로 올리고 이전 키는 무시한다.
 - `v`가 `1`이 아니면 **전체 기본값**으로 시작한다.
 - 알 수 없는 필드는 읽지 않는다.
+
+### 필드를 더할 때는 `v`를 올리지 않는다
+
+`volumeStep`은 나중에 더한 필드다. `v`를 올리면 이전 키를 통째로 버리게 되어
+**최고 점수까지 사라진다.** 없는 필드는 기본값으로 채워지므로 버전을 올릴
+이유가 없다. 지우는 것과 뜻이 바뀌는 것만 버전 문제다.
+
+### 뜻이 바뀔 때는 이름을 바꾼다
+
+소리 크기는 처음에 `volume`이라는 이름의 3단계(0=LOW 1=MID 2=HIGH)였다.
+눈금을 5단계로 늘리면서 **같은 숫자 1이 다른 크기를 뜻하게 됐는데**, 저장된
+값만 봐서는 어느 시절 것인지 알 수 없다. 그래서 이름을 `volumeStep`으로 바꿔
+**없다는 것 자체를 옛 값이라는 표시로** 쓴다.
+
+읽는 순서는 이렇다.
+
+1. `volumeStep`이 눈금 안의 정수면 그대로 쓴다.
+2. 아니면 옛 `volume`을 본다. `0 1 2`는 각각 `0 2 4`로 옮긴다. 가장 작은
+   것과 가장 큰 것은 그대로 남는다.
+3. 둘 다 없거나 망가졌으면 기본값이다.
+
+한 번 저장하면 `volume`은 사라진다. 통째로 다시 쓰기 때문이다.
 
 ---
 
@@ -67,6 +91,7 @@ const DEFAULTS: Saved = {
 6. 필드별로 검증한다.
    - `bestScore`: `typeof === 'number'` **그리고** `Number.isFinite` **그리고** `0 <= n <= 999999`. 아니면 `0`.
    - `mute`, `reduceMotion`: `typeof === 'boolean'`. 아니면 각 필드의 기본값.
+   - `volumeStep`: 눈금 안의 정수. 아니면 위의 "뜻이 바뀔 때" 순서를 따른다.
 
 `Number.isFinite`를 반드시 쓴다. `typeof NaN === 'number'`이고 `typeof Infinity === 'number'`라서 타입 검사만으로는 걸러지지 않는다.
 

@@ -1,4 +1,4 @@
-import type { VolumeLevel } from './storage'
+import { DEFAULTS, VOLUME_STEPS, type VolumeLevel } from './storage'
 
 export type ToneKind = 'CORRECT' | 'INCORRECT' | 'CRITICAL'
 
@@ -18,19 +18,26 @@ const TONES: Record<
   CRITICAL: { frequency: 880, durationSeconds: 0.12, type: 'triangle' },
 }
 
-/**
- * 단계별 최고 음량. MID가 지금까지 쓰던 0.08이라 기본값에서는 소리가
- * 달라지지 않는다. 지수 램프를 쓰므로 0이 될 수 없다.
- */
-export const PEAK_BY_VOLUME = [0.04, 0.08, 0.14] as const
+/** 가장 큰 단계의 음량. 지수 램프를 쓰므로 0이 될 수 없다. */
+const MAX_PEAK = 0.14
 
 /**
- * 설정 화면에 보여줄 백분율. 가장 큰 단계를 100으로 놓은 실제 음량 비다.
- * 손으로 적어두면 위 표만 바뀔 때 조용히 거짓말이 되므로 계산해서 쓴다.
- * 3단계짜리 눈금이라 5 단위로 맞춘다.
+ * 설정 화면에 보여줄 백분율. 눈금을 고르게 나눈다.
+ *
+ * 보이는 숫자와 실제 음량이 어긋나지 않도록 **표시가 먼저고 음량이 따라온다.**
+ * 반대로 두면 손으로 적은 백분율이 음량표만 바뀔 때 조용히 거짓말이 된다.
  */
-export const VOLUME_PERCENT = PEAK_BY_VOLUME.map((peak) =>
-  Math.round((peak / Math.max(...PEAK_BY_VOLUME)) * 20) * 5,
+export const VOLUME_PERCENT = Array.from(
+  { length: VOLUME_STEPS },
+  (_, index) => Math.round(((index + 1) / VOLUME_STEPS) * 100),
+)
+
+/**
+ * 단계별 최고 음량. 기본값(가운데, 60%)이 0.084로 3단계 시절의 MID 0.08과
+ * 거의 같아서 쓰던 사람에게는 소리가 그대로다.
+ */
+export const PEAK_BY_VOLUME = VOLUME_PERCENT.map(
+  (percent) => (percent / 100) * MAX_PEAK,
 )
 
 function createBrowserAudioContext(): AudioContext | null {
@@ -57,7 +64,11 @@ export class AudioEngine {
     }
   }
 
-  play(kind: ToneKind, muted: boolean, volume: VolumeLevel = 1): void {
+  play(
+    kind: ToneKind,
+    muted: boolean,
+    volume: VolumeLevel = DEFAULTS.volumeStep,
+  ): void {
     if (muted) {
       return
     }
@@ -74,7 +85,7 @@ export class AudioEngine {
 
     try {
       const tone = TONES[kind]
-      const peak = PEAK_BY_VOLUME[volume] ?? PEAK_BY_VOLUME[1]
+      const peak = PEAK_BY_VOLUME[volume] ?? PEAK_BY_VOLUME[DEFAULTS.volumeStep]
       const now = context.currentTime
       const oscillator = context.createOscillator()
       const gain = context.createGain()
