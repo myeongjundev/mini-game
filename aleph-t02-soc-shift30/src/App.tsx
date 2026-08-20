@@ -177,9 +177,15 @@ export default function App() {
         memoFrozenMsRef.current) /
         DIFFICULTY.eventIntervalMs
 
+  // 판정을 보냈다는 표시는 다음 렌더까지만 유효하다. 렌더가 한 번 돌았다면
+  // 리듀서는 그 판정을 이미 처리했고, 받아들여졌다면 경보가 바뀌어 있다.
+  //
+  // 표시를 남겨두면 리듀서가 거부한 판정도 처리된 것으로 남는다. 그 경보는
+  // 판정도 만료도 되지 않고, 다음 경보도 오지 않으며, 근무 시계만 흐른다.
+  // 같은 프레임 안의 연타를 막는 것이 이 표시의 유일한 역할이다.
   useEffect(() => {
     resolvedRef.current = null
-  }, [currentAlertId])
+  })
 
   useEffect(() => {
     if (state.game.phase === 'PLAYING' && state.game.currentAlert === null) {
@@ -232,9 +238,13 @@ export default function App() {
 
   const handleDecide = useCallback(
     (action: Action) => {
+      // 메모 중에는 리듀서가 판정을 거부한다(GAME_SPEC 13절). 버튼은 비활성이라
+      // 여기까지 오지 않지만 키보드에는 막을 것이 없다. 거부될 판정을 보내면
+      // 아래에서 처리 표시만 남아 그 경보가 판정도 만료도 되지 않는다.
       if (
         state.game.phase !== 'PLAYING' ||
         currentAlertId === null ||
+        isMemoOpen ||
         resolvedRef.current === currentAlertId
       ) {
         return
@@ -245,7 +255,7 @@ export default function App() {
       resolvedRef.current = currentAlertId
       dispatch({ type: 'DECIDE', action })
     },
-    [currentAlertId, state.game.phase],
+    [currentAlertId, isMemoOpen, state.game.phase],
   )
 
   const handleTimeout = useCallback(() => {
