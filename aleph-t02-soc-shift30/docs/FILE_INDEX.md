@@ -3,6 +3,7 @@
 `aleph-t02-soc-shift30/` 안의 파일 목록이다. Git이 추적하는 것과 이번 작업에서
 새로 만든 것을 함께 적는다. `node_modules/`와 빌드 산출물 `../site/`는 제외한다.
 
+- `.claude/launch.json`
 - `.gitignore`
 - `AGENTS.md`
 - `BUILD_ORDER.md`
@@ -19,15 +20,18 @@
 - `docs/PIXEL_ICONS.md`
 - `docs/QA_CHECKLIST.md`
 - `docs/STORAGE_AND_RECOVERY.md`
+- `docs/TROUBLESHOOTING.md`
 - `eslint.config.js`
 - `index.html`
 - `package-lock.json`
 - `package.json`
 - `prompts/00_MASTER_BOOTSTRAP.md`
 - `prompts/01_LOBBY_REVIEW_FIXES.md`
+- `prompts/02_PHONE_ILLUSTRATION.md`
 - `public/favicon.svg`
 - `public/lobby-office-blank.webp`
 - `src/App.integration.test.tsx`
+- `src/App.memo-hang.test.tsx`
 - `src/App.test.ts`
 - `src/App.tsx`
 - `src/components/ActionButtons.tsx`
@@ -77,6 +81,3 @@
 - `src/utils/format.ts`
 - `tsconfig.json`
 - `vite.config.ts`
-- `docs/TROUBLESHOOTING.md` (새로 만듦, 커밋 전)
-- `prompts/02_PHONE_ILLUSTRATION.md` (새로 만듦, 커밋 전)
-- `src/App.memo-hang.test.tsx` (새로 만듦, 커밋 전)
