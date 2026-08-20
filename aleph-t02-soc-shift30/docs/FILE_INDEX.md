@@ -28,7 +28,10 @@
 - `prompts/00_MASTER_BOOTSTRAP.md`
 - `prompts/01_LOBBY_REVIEW_FIXES.md`
 - `prompts/02_PHONE_ILLUSTRATION.md`
+- `prompts/03_PHONE_PASSWORD_DISTRACTIONS_HANDOFF.md`
+- `prompts/04_LOBBY_MODAL_WINDOW_HANDOFF.md`
 - `public/favicon.svg`
+- `public/lobby-modal-window.webp`
 - `public/lobby-office-blank.webp`
 - `src/App.integration.test.tsx`
 - `src/App.memo-hang.test.tsx`
@@ -37,6 +40,8 @@
 - `src/components/ActionButtons.tsx`
 - `src/components/AlertCard.tsx`
 - `src/components/Hud.tsx`
+- `src/components/LobbyModal.test.tsx`
+- `src/components/LobbyModal.tsx`
 - `src/components/MemoLog.tsx`
 - `src/components/MemoToast.tsx`
 - `src/components/PixelIcon.test.tsx`
@@ -81,3 +86,15 @@
 - `src/utils/format.ts`
 - `tsconfig.json`
 - `vite.config.ts`
+
+## 아직 추적하지 않는 자산
+
+전화·패스워드 방해 요소는 `GAME_SPEC` 14절에 규칙만 있고 구현 전이다.
+그림은 `prompts/03`이 최종안으로 정리해뒀지만 아직 커밋하지 않았다.
+
+- `public/phone-call.webp` — 전화 수신 (사용 예정)
+- `public/phone-connected.webp` — 전화 연결 (사용 예정)
+- `public/password-window-locked.webp` — 패스워드 잠금 창 (사용 예정)
+- `public/password-window-unlocked.webp` — 패스워드 해제 창 (사용 예정)
+- `public/password-locked.webp` — **쓰지 않는다.** 물리 장치로 잘못 만든 초기안
+- `public/password-unlocked.webp` — **쓰지 않는다.** 위와 같음
