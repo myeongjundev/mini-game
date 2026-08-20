@@ -68,3 +68,5 @@ SOC SHIFT:30은 30초 동안 SOC 분석가가 되어 보안 이벤트를 보고
 - `docs/STORAGE_AND_RECOVERY.md`
 - `docs/QA_CHECKLIST.md`
 - `docs/AI_DECISION_LOG.md`
+- `docs/TROUBLESHOOTING.md` — 겪은 버그의 증상·원인·막는 검사. 판이 멈추거나
+  화면이 깨지면 여기부터 본다. 새 기능을 붙이기 전에 "되풀이되는 원인 셋"을 읽는다.
