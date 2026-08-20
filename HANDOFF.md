@@ -177,15 +177,49 @@ cd mini-game/aleph-t02-soc-shift30 && npm run dev
 
 ### 0-1. 집에서 이어받기
 
+> **먼저 읽으세요. 지금은 clone만으로 이어받을 수 없습니다.**
+>
+> 8월 20일 작업 **커밋 22개가 이 기계에만 있습니다.** 손 확인 전에는
+> `main`에 올리지 않기로 했는데, `main` 푸시가 곧 공개 배포라서입니다
+> (`.github/workflows/deploy.yml`은 `branches: [main]`에만 걸려 있습니다).
+>
+> 그대로 집에서 clone하면 **하루치가 통째로 없는 상태**를 받습니다.
+
+옮기는 방법은 둘입니다.
+
+**1. 작업 브랜치로 올린다 (권장).** 배포는 `main`에만 걸려 있으므로 공개본은
+그대로입니다.
+
+```bash
+git push -u origin main:work/08-20
+```
+
+집에서는 이렇게 받습니다.
+
 ```bash
 git clone https://github.com/myeongjundev/mini-game.git
-cd mini-game/aleph-t02-soc-shift30 && npm ci && npm run dev
+cd mini-game && git checkout work/08-20
+cd aleph-t02-soc-shift30 && npm ci && npm run dev
 ```
+
+손 확인이 끝나면 그때 `main`에 올려 배포합니다.
+
+**2. 손 확인을 먼저 하고 `main`에 올린다.** 위의 "손 확인 목록"이 끝나면
+이쪽이 더 깔끔합니다. 확인 여섯 개가 30분 안쪽입니다.
 
 `node_modules`는 저장소에 없으니 `npm ci`를 빼먹지 마세요. Node는 **24**입니다.
 
-로컬에만 있고 원격에 없는 것은 `site/`(CI가 매번 빌드)와 `evidence/`(비어
-있음)뿐입니다. **잃을 작업물이 없습니다.**
+### 어느 쪽을 택하든 따라오지 않는 것
+
+**커밋되지 않은 자산은 브랜치로도 안 갑니다.** 결정이 밀려 있는 셋입니다
+(미해결 위험 4번). 코드가 참조하지 않으므로 없어도 화면은 멀쩡합니다.
+
+- `prompts/art-source/` — 약 17MB
+- `prompts/process-it-support-portrait.ps1`
+- password 창 webp 4개
+
+집에서 이것들이 필요하면 **USB나 클라우드로 따로 옮기세요.** 저장소에 넣을지
+정하지 못한 것들이라 임시로 커밋했다가 되돌리는 편이 더 번거롭습니다.
 
 배경 원본 PNG는 `fd96e26`에서 WebP로 바뀌며 지워졌지만 이력에 남아 있습니다.
 다시 뽑을 일이 있으면 이렇게 꺼냅니다.
