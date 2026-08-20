@@ -463,6 +463,63 @@ describe('memo log marks memos whose alert never came', () => {
   })
 })
 
+describe('판정 기록의 상사 지시', () => {
+  const entry: DecisionRecord = {
+    alertId: 'contractor-proddb',
+    title: 'UNAUTHORIZED RESOURCE ACCESS',
+    category: 'critical',
+    severity: 'CRITICAL',
+    action: 'ALLOW',
+    verdict: 'MISSED_THREAT',
+    decisiveFact: 'RESOURCE',
+    explanation: '역할에 없는 운영 DB를 열었다.',
+  }
+  const call = {
+    alertId: 'contractor-proddb',
+    order: 'ALLOW' as const,
+    truthful: false,
+    caller: '관제 팀장',
+    message: '통과시켜.',
+  }
+
+  it('지시를 따랐으면 따랐다고 적는다', () => {
+    const markup = renderToStaticMarkup(
+      <ShiftLog log={[{ ...entry, order: 'ALLOW', orderFollowed: true }]} />,
+    )
+
+    expect(markup).toContain('통과시켜')
+    expect(markup).toContain('ORDER FOLLOWED')
+  })
+
+  it('지시를 어겼으면 어겼다고 적는다', () => {
+    const markup = renderToStaticMarkup(
+      <ShiftLog log={[{ ...entry, order: 'BLOCK', orderFollowed: false }]} />,
+    )
+
+    expect(markup).toContain('막아')
+    expect(markup).toContain('ORDER REFUSED')
+  })
+
+  it('지시가 없던 경보에는 아무것도 붙이지 않는다', () => {
+    const markup = renderToStaticMarkup(<ShiftLog log={[entry]} />)
+
+    expect(markup).not.toContain('ORDER')
+  })
+
+  it('지목한 경보가 안 나온 판에는 그렇게 적는다', () => {
+    // 티어 3 구간이 10초인데 3000ms면 3.3장만 뽑힌다. GAME_SPEC 14.8.
+    const markup = renderToStaticMarkup(<ShiftLog log={[]} call={call} />)
+
+    expect(markup).toContain('나오기 전에 근무가 끝났습니다')
+  })
+
+  it('지목한 경보가 나온 판에는 적지 않는다', () => {
+    const markup = renderToStaticMarkup(<ShiftLog log={[entry]} call={call} />)
+
+    expect(markup).not.toContain('나오기 전에 근무가 끝났습니다')
+  })
+})
+
 describe('memo log', () => {
   it('shows every memo that arrived so it can be read again', () => {
     const markup = renderToStaticMarkup(<MemoLog memos={[MEMOS[0], MEMOS[1]]} />)

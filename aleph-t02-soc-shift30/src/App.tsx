@@ -12,6 +12,7 @@ import AlertCard from './components/AlertCard'
 import Hud from './components/Hud'
 import MemoLog from './components/MemoLog'
 import MemoToast from './components/MemoToast'
+import PhoneOverlay from './components/PhoneOverlay'
 import SettingsBar from './components/SettingsBar'
 import VerdictFlash from './components/VerdictFlash'
 import PausedScreen from './components/screens/PausedScreen'
@@ -27,17 +28,31 @@ import {
 import {
   createInitialGameState,
   decideCurrentAlert,
+  answerPhone,
+  deferPhone,
   dismissMemo,
+  hangUpPhone,
+  isPhoneBlocking,
+  missPhone,
   pauseGame,
   presentAlert,
   restartGame,
   resumeGame,
   showMemo,
+  showPhone,
   startGame,
   tick,
   timeoutCurrentAlert,
 } from './game/engine/machine'
 import { createMemoPlan, takeDueMemo, type MemoPlan } from './game/engine/memoQueue'
+import {
+  createPhonePlan,
+  isPhoneDue,
+  isRingExpired,
+  resolvePhoneCall,
+  ringProgress,
+  type PhonePlan,
+} from './game/engine/phoneQueue'
 import { useGameLoop } from './game/hooks/useGameLoop'
 import { useKeyboard } from './game/hooks/useKeyboard'
 import { useMenuKeys } from './game/hooks/useMenuKeys'
@@ -50,6 +65,7 @@ export type GameReducerState = {
   game: GameState
   alertQueue: AlertQueueState
   memoPlan: MemoPlan
+  phonePlan: PhonePlan
 }
 
 export type GameAction =
@@ -62,6 +78,10 @@ export type GameAction =
   | { type: 'TICK'; deltaMs: number }
   | { type: 'PRESENT_ALERT' }
   | { type: 'DISMISS_MEMO' }
+  | { type: 'ANSWER_PHONE' }
+  | { type: 'DEFER_PHONE' }
+  | { type: 'HANGUP_PHONE' }
+  | { type: 'MISS_PHONE' }
 
 export function createGameReducerState(): GameReducerState {
   const alertQueue = createAlertQueue(ALERTS)
@@ -70,6 +90,7 @@ export function createGameReducerState(): GameReducerState {
     game: createInitialGameState(),
     alertQueue,
     memoPlan: createMemoPlan(alertQueue.randomState),
+    phonePlan: createPhonePlan(alertQueue.randomState),
   }
 }
 
@@ -93,7 +114,12 @@ export function gameReducer(
 
       const alertQueue = createAlertQueue(ALERTS, state.alertQueue.randomState)
 
-      return { game, alertQueue, memoPlan: createMemoPlan(alertQueue.randomState) }
+      return {
+        game,
+        alertQueue,
+        memoPlan: createMemoPlan(alertQueue.randomState),
+        phonePlan: createPhonePlan(alertQueue.randomState),
+      }
     }
     case 'DECIDE':
       return { ...state, game: decideCurrentAlert(state.game, action.action) }
@@ -111,13 +137,41 @@ export function gameReducer(
       // 메모는 새 경보가 뜨는 이 순간에만 끼어든다. GAME_SPEC 13.3절.
       const due = takeDueMemo(state.memoPlan, elapsedMs)
       const presented = presentAlert(state.game, draw.alert)
+      const withMemo = due
+        ? showMemo(presented, due.memo, elapsedMs)
+        : presented
+
+      // 전화도 새 경보가 뜨는 이 순간에만 끼어든다. 메모가 떴으면 이번에는
+      // 걸지 않는다. 둘 다 판정을 막아 겹치면 경보를 볼 수 없다(14.5).
+      // 지목할 경보는 큐를 읽어서 고른다. 큐는 바뀌지 않는다(14.4).
+      const phoneDue =
+        !due && isPhoneDue(state.phonePlan, elapsedMs)
+          ? resolvePhoneCall(
+              draw.queue,
+              state.phonePlan.order,
+              state.game.memoLog.map((memo) => memo.alertId),
+            )
+          : null
 
       return {
-        game: due ? showMemo(presented, due.memo, elapsedMs) : presented,
+        game: phoneDue
+          ? showPhone(withMemo, phoneDue, elapsedMs)
+          : withMemo,
         alertQueue: draw.queue,
         memoPlan: due ? due.plan : state.memoPlan,
+        phonePlan: phoneDue
+          ? { ...state.phonePlan, shown: state.phonePlan.shown + 1 }
+          : state.phonePlan,
       }
     }
+    case 'ANSWER_PHONE':
+      return { ...state, game: answerPhone(state.game) }
+    case 'DEFER_PHONE':
+      return { ...state, game: deferPhone(state.game) }
+    case 'HANGUP_PHONE':
+      return { ...state, game: hangUpPhone(state.game) }
+    case 'MISS_PHONE':
+      return { ...state, game: missPhone(state.game) }
     case 'DISMISS_MEMO':
       return {
         ...state,
@@ -156,12 +210,16 @@ export default function App() {
   })
   const currentAlertId = state.game.currentAlert?.id ?? null
   const isMemoOpen = Boolean(state.game.activeMemo)
+  // 수신 팝업과 통화는 판정을 막는다. 나중으로 내린 전화는 막지 않는다(14.6).
+  const isPhoneUp = isPhoneBlocking(state.game)
+  const isAlertFrozen = isMemoOpen || isPhoneUp
+  const elapsedMs = DIFFICULTY.totalTimeMs - state.game.timeLeftMs
   // 메모가 떠 있는 동안 흘러간 시간. 경보 제한 시간에서 빼야 눈금과
   // 실제 만료 시각이 어긋나지 않는다. useGameLoop의 동결과 같은 규칙이다.
-  const memoFrozenMsRef = useRef(0)
+  const alertFrozenMsRef = useRef(0)
   const shellRef = useRef<HTMLElement>(null)
-  const isMemoOpenRef = useRef(isMemoOpen)
-  isMemoOpenRef.current = isMemoOpen
+  const isAlertFrozenRef = useRef(isAlertFrozen)
+  isAlertFrozenRef.current = isAlertFrozen
   muteRef.current = saved.mute
   volumeRef.current = saved.volumeStep
 
@@ -170,7 +228,7 @@ export default function App() {
       id: currentAlertId,
       startTimeLeftMs: state.game.timeLeftMs,
     }
-    memoFrozenMsRef.current = 0
+    alertFrozenMsRef.current = 0
   }
 
   const alertTimeRemainingRatio = currentAlertId === null
@@ -178,7 +236,7 @@ export default function App() {
     : 1 -
       (alertProgressRef.current.startTimeLeftMs -
         state.game.timeLeftMs -
-        memoFrozenMsRef.current) /
+        alertFrozenMsRef.current) /
         DIFFICULTY.eventIntervalMs
 
   // 판정을 보냈다는 표시는 다음 렌더까지만 유효하다. 렌더가 한 번 돌았다면
@@ -249,6 +307,7 @@ export default function App() {
         state.game.phase !== 'PLAYING' ||
         currentAlertId === null ||
         isMemoOpen ||
+        isPhoneUp ||
         resolvedRef.current === currentAlertId
       ) {
         return
@@ -259,7 +318,7 @@ export default function App() {
       resolvedRef.current = currentAlertId
       dispatch({ type: 'DECIDE', action })
     },
-    [currentAlertId, isMemoOpen, state.game.phase],
+    [currentAlertId, isMemoOpen, isPhoneUp, state.game.phase],
   )
 
   const handleTimeout = useCallback(() => {
@@ -286,8 +345,8 @@ export default function App() {
   }, [handleDecide])
 
   const handleTick = useCallback((deltaMs: number) => {
-    if (isMemoOpenRef.current) {
-      memoFrozenMsRef.current += deltaMs
+    if (isAlertFrozenRef.current) {
+      alertFrozenMsRef.current += deltaMs
     }
     dispatch({ type: 'TICK', deltaMs })
   }, [])
@@ -356,6 +415,41 @@ export default function App() {
     dispatch({ type: 'DISMISS_MEMO' })
   }, [])
 
+  /** `↑` 받기. 수신 팝업에서도 나중으로 내린 뒤에도 받을 수 있다(14.6). */
+  const handlePhoneUp = useCallback(() => {
+    dispatch({ type: 'ANSWER_PHONE' })
+  }, [])
+
+  /** `↓` 수신이면 나중에, 통화 중이면 종료. 내려둔 상태에서는 아무 일도 없다. */
+  const handlePhoneDown = useCallback(() => {
+    dispatch(
+      state.game.phone?.status === 'CONNECTED'
+        ? { type: 'HANGUP_PHONE' }
+        : { type: 'DEFER_PHONE' },
+    )
+  }, [state.game.phone?.status])
+
+  /**
+   * 벨이 다 가면 라이프 -1. 통화로 넘어갔으면 보지 않는다.
+   *
+   * 경과 시간으로 재므로 일시정지에서 벨이 멈추는 것이 공짜로 따라온다.
+   */
+  useEffect(() => {
+    const phone = state.game.phone
+
+    if (
+      state.game.phase !== 'PLAYING' ||
+      !phone ||
+      phone.status === 'CONNECTED'
+    ) {
+      return
+    }
+
+    if (isRingExpired(phone.ringStartedAtMs, elapsedMs)) {
+      dispatch({ type: 'MISS_PHONE' })
+    }
+  }, [elapsedMs, state.game.phase, state.game.phone])
+
   const keyboardHandlers = useMemo(
     () => ({
       onAllow: handleAllow,
@@ -364,14 +458,27 @@ export default function App() {
       // 메모가 떠 있을 때만 넘긴다. 항상 넘기면 SPACE가 늘 가로채여
       // 포커스된 버튼이 SPACE로 눌리지 않는다.
       onDismissMemo: isMemoOpen ? handleDismissMemo : undefined,
+      // 전화가 없으면 방향키에 손대지 않는다. 일시정지·결과 화면의 방향키
+      // 조작과 부딪히면 안 된다.
+      onPhoneUp: state.game.phone ? handlePhoneUp : undefined,
+      onPhoneDown: state.game.phone ? handlePhoneDown : undefined,
     }),
-    [handleAllow, handleBlock, handlePauseToggle, handleDismissMemo, isMemoOpen],
+    [
+      handleAllow,
+      handleBlock,
+      handlePauseToggle,
+      handleDismissMemo,
+      handlePhoneUp,
+      handlePhoneDown,
+      isMemoOpen,
+      state.game.phone,
+    ],
   )
 
   useGameLoop({
     isRunning: state.game.phase === 'PLAYING',
     currentAlertId,
-    isAlertClockFrozen: isMemoOpen,
+    isAlertClockFrozen: isAlertFrozen,
     onTick: handleTick,
     onTimeout: handleTimeout,
   })
@@ -450,11 +557,51 @@ export default function App() {
                 onDismiss={handleDismissMemo}
               />
             ) : null}
+            {/* 수신과 통화만 카드를 덮는다. 나중으로 내리면 구석에 울리는
+                중임만 남기고 경보는 정상으로 판정할 수 있다(14.3). */}
+            {state.game.phone && state.game.phone.status !== 'DEFERRED' ? (
+              state.game.phone.status === 'CONNECTED' ? (
+                <PhoneOverlay
+                  mode="connected"
+                  caller={state.game.phone.call.caller}
+                  message={state.game.phone.call.message}
+                  onHangUp={handlePhoneDown}
+                />
+              ) : (
+                <PhoneOverlay
+                  mode="ringing"
+                  caller={state.game.phone.call.caller}
+                  message={state.game.phone.call.message}
+                  ringProgress={ringProgress(
+                    state.game.phone.ringStartedAtMs,
+                    elapsedMs,
+                  )}
+                  onAnswer={handlePhoneUp}
+                  onLater={handlePhoneDown}
+                />
+              )
+            ) : null}
+            {state.game.phone?.status === 'DEFERRED' ? (
+              <p className="phone-deferred" aria-live="polite">
+                <span className="phone-deferred-dot" aria-hidden="true" />
+                울리는 중 · <kbd>↑</kbd> 받기
+                <span className="phone-deferred-track" aria-hidden="true">
+                  <span
+                    style={{
+                      transform: `scaleX(${ringProgress(
+                        state.game.phone.ringStartedAtMs,
+                        elapsedMs,
+                      )})`,
+                    }}
+                  />
+                </span>
+              </p>
+            ) : null}
           </div>
           {/* 버튼은 사라지지 않고 자리를 지킨다. 메모 중에는 판정이 막히므로
               비활성으로 둔다. 눌리지 않는 이유가 화면에 드러나야 한다. */}
           <ActionButtons
-            disabled={state.game.currentAlert === null || isMemoOpen}
+            disabled={state.game.currentAlert === null || isAlertFrozen}
             onDecide={handleDecide}
           />
           <MemoLog memos={state.game.memoLog} />

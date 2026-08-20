@@ -30,6 +30,8 @@ export default function ResultScreen({ state, bestScore, onRestart }: ResultScre
     ...(state.memosShown > 0
       ? [['MEMOS READ', `${state.memosRead} / ${state.memosShown}`]]
       : []),
+    // 놓친 전화도 라이프를 깎는다. 적지 않으면 왜 잃었는지 알 수 없다.
+    ...(state.phoneMissed > 0 ? [['CALL MISSED', String(state.phoneMissed)]] : []),
     ['BEST SCORE', formatScore(bestScore)],
     ['SURVIVAL TIME', formatSeconds(DIFFICULTY.totalTimeMs - state.timeLeftMs)],
   ]
@@ -58,7 +60,7 @@ export default function ResultScreen({ state, bestScore, onRestart }: ResultScre
           <strong>{state.missedThreats}</strong>
         </div>
       </div>
-      <ShiftLog log={state.log} memos={state.memoLog} />
+      <ShiftLog log={state.log} memos={state.memoLog} call={state.phoneLog} />
       <MemoLog
         memos={state.memoLog}
         seenAlertIds={state.log.map((entry) => entry.alertId)}

@@ -5,6 +5,7 @@ import type {
   DecisionRecord,
   GameState,
   Memo,
+  PhoneCall,
   Verdict,
 } from '../types'
 import { resolveAlert } from './rules'
@@ -27,13 +28,25 @@ function actionFromVerdict(alert: Alert, verdict: Verdict): Action | null {
   return verdict === 'FALSE_POSITIVE' ? 'BLOCK' : 'ALLOW'
 }
 
-function createRecord(alert: Alert, verdict: Verdict): DecisionRecord {
+function createRecord(
+  alert: Alert,
+  verdict: Verdict,
+  call: PhoneCall | null,
+): DecisionRecord {
+  const action = actionFromVerdict(alert, verdict)
+  // 상사가 이 경보를 지목했다면 결과 화면에 지시와 선택을 함께 남긴다.
+  // 틀린 경보 밑에 "상사 말을 따랐다"가 드러나는 것이 이 장치의 전부다.
+  const ordered = call?.alertId === alert.id ? call : null
+
   return {
+    ...(ordered
+      ? { order: ordered.order, orderFollowed: action === ordered.order }
+      : {}),
     alertId: alert.id,
     title: alert.title,
     category: alert.category,
     severity: alert.severity,
-    action: actionFromVerdict(alert, verdict),
+    action,
     verdict,
     decisiveFact: alert.decisiveFact,
     explanation: alert.explanation,
@@ -59,6 +72,10 @@ export function createInitialGameState(): GameState {
     log: [],
     activeMemo: null,
     memoLog: [],
+    phone: null,
+    phoneLog: null,
+    phoneAnswered: 0,
+    phoneMissed: 0,
     memosShown: 0,
     memosRead: 0,
   }
@@ -110,7 +127,9 @@ export function showMemo(
   memo: Memo,
   elapsedMs: number,
 ): GameState {
-  return state.phase !== 'PLAYING' || state.activeMemo
+  // 메모와 전화는 같은 시각에 뜨지 않는다. 둘 다 판정을 막으므로 겹치면
+  // 경보를 볼 수 없는 구간이 생긴다(14.5).
+  return state.phase !== 'PLAYING' || state.activeMemo || state.phone
     ? state
     : {
         ...state,
@@ -136,6 +155,82 @@ export function dismissMemo(state: GameState, elapsedMs: number): GameState {
   }
 }
 
+/**
+ * 팝업이 판정을 막고 있는가. 규칙은 `docs/GAME_SPEC.md` 14.6.
+ *
+ * `나중에`로 내린 전화는 막지 않는다. 미루는 대신 경보를 처리할 수 있어야
+ * 미루는 선택에 값이 생긴다(14.5).
+ *
+ * `!== null`이 아니라 참/거짓으로 본다. 필드가 없는 상태(undefined)에서
+ * 판정이 영구히 막히는 사고를 메모에서 한 번 겪었다.
+ */
+export function isPhoneBlocking(state: GameState): boolean {
+  return Boolean(state.phone) && state.phone?.status !== 'DEFERRED'
+}
+
+/** 벨이 울리기 시작한다. 호출은 새 경보가 뜨는 순간에만 한다(14.5). */
+export function showPhone(
+  state: GameState,
+  call: PhoneCall,
+  elapsedMs: number,
+): GameState {
+  return state.phase !== 'PLAYING' || state.phone || state.activeMemo
+    ? state
+    : {
+        ...state,
+        phone: { call, status: 'RINGING', ringStartedAtMs: elapsedMs },
+        phoneLog: call,
+      }
+}
+
+/** `↑` 받기. 벨 시계가 멈추고 통화로 넘어간다. */
+export function answerPhone(state: GameState): GameState {
+  return !state.phone || state.phone.status === 'CONNECTED'
+    ? state
+    : {
+        ...state,
+        phone: { ...state.phone, status: 'CONNECTED' },
+        phoneAnswered: state.phoneAnswered + 1,
+      }
+}
+
+/** `↓` 나중에. 팝업만 내린다. **벨 시계는 계속 간다**(14.3). */
+export function deferPhone(state: GameState): GameState {
+  return state.phone?.status === 'RINGING'
+    ? { ...state, phone: { ...state.phone, status: 'DEFERRED' } }
+    : state
+}
+
+/** `↓` 통화 종료. 전화가 끝난다. 기록은 phoneLog에 남는다. */
+export function hangUpPhone(state: GameState): GameState {
+  return state.phone?.status === 'CONNECTED'
+    ? { ...state, phone: null }
+    : state
+}
+
+/**
+ * 벨이 다 갔다. 라이프 -1, 콤보 0.
+ *
+ * **`reviewed`는 올리지 않는다.** 경보를 검토한 것이 아니므로 Accuracy를
+ * 오염시키면 안 된다. 미판정(TIMEOUT)과도 따로 센다(14.3).
+ */
+export function missPhone(state: GameState): GameState {
+  if (state.phase !== 'PLAYING' || !state.phone || state.phone.status === 'CONNECTED') {
+    return state
+  }
+
+  const lives = Math.max(0, state.lives - 1)
+
+  return {
+    ...state,
+    phase: lives === 0 ? 'FAILURE' : state.phase,
+    lives,
+    combo: 0,
+    phone: null,
+    phoneMissed: state.phoneMissed + 1,
+  }
+}
+
 export function decideCurrentAlert(
   state: GameState,
   action: Action,
@@ -146,7 +241,11 @@ export function decideCurrentAlert(
   // `undefined !== null`은 참이라 판정이 영구히 막힌다. 화면은 버튼을
   // 정상으로 그려서 눌러도 반응만 없는 형태로 나타난다. 개발 서버에서
   // HMR로 코드만 갱신되고 판이 유지될 때 실제로 겪었다.
-  if (state.currentAlert === null || state.activeMemo) {
+  if (
+    state.currentAlert === null ||
+    state.activeMemo ||
+    isPhoneBlocking(state)
+  ) {
     return state
   }
 
@@ -183,7 +282,7 @@ export function applyVerdict(
       timeouts: state.timeouts + 1,
       currentAlert: null,
       lastVerdict: verdict,
-      log: [...state.log, createRecord(alert, verdict)],
+      log: [...state.log, createRecord(alert, verdict, state.phoneLog)],
     }
   }
 
@@ -211,7 +310,7 @@ export function applyVerdict(
       state.missedThreats + (verdict === 'MISSED_THREAT' ? 1 : 0),
     currentAlert: null,
     lastVerdict: verdict,
-    log: [...state.log, createRecord(alert, verdict)],
+    log: [...state.log, createRecord(alert, verdict, state.phoneLog)],
   }
 }
 

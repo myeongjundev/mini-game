@@ -2198,3 +2198,83 @@ time,
   margin: 0;
   line-height: 1.5;
 }
+
+/* 나중으로 내린 전화. 팝업은 사라지지만 울리는 중임은 남는다.
+   규칙은 GAME_SPEC 14.3. 카드 위에 얹되 판정을 가리지 않도록 구석에 둔다. */
+.phone-deferred {
+  position: absolute;
+  z-index: 4;
+  top: var(--gap-sm);
+  right: var(--gap-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  margin: 0;
+  padding: 4px var(--gap-sm);
+  color: var(--amber);
+  background: var(--panel);
+  border: 1px solid var(--amber);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.phone-deferred kbd {
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  font: inherit;
+}
+
+.phone-deferred-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--amber);
+  animation: phone-deferred-blink 500ms steps(1) infinite;
+}
+
+.phone-deferred-track {
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: var(--line);
+}
+
+.phone-deferred-track > span {
+  display: block;
+  height: 100%;
+  background: var(--amber);
+  transform-origin: left center;
+}
+
+@keyframes phone-deferred-blink {
+  50% { opacity: 0.2; }
+}
+
+.app-shell[data-reduce-motion='true'] .phone-deferred-dot {
+  animation: none;
+}
+
+/* 상사가 이 경보에 내린 지시와 플레이어의 선택. 규칙은 GAME_SPEC 14.8.
+   틀린 경보 밑에 "상사 말을 따랐다"가 드러나는 것이 이 장치의 전부다. */
+.shift-log-order {
+  margin: var(--gap-xs) 0 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.shift-log-order-followed {
+  color: var(--amber);
+}
+
+.shift-log-order-refused {
+  color: var(--cyan);
+}
+
+.shift-log-call-unseen {
+  margin: var(--gap-sm) 0 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.5;
+}

@@ -5,15 +5,21 @@ import { ALERTS } from '../data/alerts'
 import { MEMOS } from '../data/memos'
 import type { Alert, GameState } from '../types'
 import {
+  answerPhone,
   applyVerdict,
   createInitialGameState,
   decideCurrentAlert,
+  deferPhone,
   dismissMemo,
+  hangUpPhone,
+  isPhoneBlocking,
+  missPhone,
   pauseGame,
   presentAlert,
   restartGame,
   resumeGame,
   showMemo,
+  showPhone,
   startGame,
   tick,
   timeoutCurrentAlert,
@@ -290,6 +296,163 @@ describe('memo log', () => {
     const second = showMemo(first, MEMOS[1], 7_000)
 
     expect(second.memoLog).toHaveLength(1)
+  })
+})
+
+describe('상사의 전화', () => {
+  const call = {
+    alertId: 'contractor-proddb',
+    order: 'ALLOW' as const,
+    truthful: false,
+    caller: '관제 팀장',
+    message: '협력업체 접근 건, 급해서 내가 열어줬어. 통과시켜.',
+  }
+  const ringing = () => showPhone(playingState(), call, 21_000)
+
+  it('벨이 울리기 시작하고 기록에 남는다', () => {
+    const state = ringing()
+
+    expect(state.phone).toMatchObject({ status: 'RINGING', ringStartedAtMs: 21_000 })
+    expect(state.phoneLog).toBe(call)
+  })
+
+  it('메모가 떠 있으면 걸려 오지 않는다', () => {
+    // 둘 다 판정을 막으므로 겹치면 경보를 볼 수 없는 구간이 생긴다. 14.5.
+    const withMemo = showMemo(playingState(), MEMOS[0], 3_000)
+
+    expect(showPhone(withMemo, call, 21_000).phone).toBeNull()
+  })
+
+  it('전화가 떠 있으면 메모가 뜨지 않는다', () => {
+    expect(showMemo(ringing(), MEMOS[0], 21_000).activeMemo).toBeNull()
+  })
+
+  it('받으면 통화로 넘어가고 세어진다', () => {
+    const answered = answerPhone(ringing())
+
+    expect(answered.phone?.status).toBe('CONNECTED')
+    expect(answered.phoneAnswered).toBe(1)
+  })
+
+  it('나중으로 내렸다가도 받을 수 있다', () => {
+    const deferred = deferPhone(ringing())
+
+    expect(deferred.phone?.status).toBe('DEFERRED')
+    expect(answerPhone(deferred).phone?.status).toBe('CONNECTED')
+  })
+
+  it('통화를 끊으면 전화가 사라지고 기록은 남는다', () => {
+    const done = hangUpPhone(answerPhone(ringing()))
+
+    expect(done.phone).toBeNull()
+    expect(done.phoneLog).toBe(call)
+  })
+
+  it('수신과 통화는 판정을 막고 나중에는 막지 않는다', () => {
+    // 미루는 대신 경보를 처리할 수 있어야 미루는 선택에 값이 생긴다. 14.5.
+    expect(isPhoneBlocking(ringing())).toBe(true)
+    expect(isPhoneBlocking(answerPhone(ringing()))).toBe(true)
+    expect(isPhoneBlocking(deferPhone(ringing()))).toBe(false)
+    expect(isPhoneBlocking(playingState())).toBe(false)
+  })
+
+  it('벨이 울리는 동안에는 판정이 먹지 않는다', () => {
+    const alert = ALERTS[0]
+    const state = showPhone(presentAlert(playingState(), alert), call, 21_000)
+
+    expect(decideCurrentAlert(state, alert.correctAction).reviewed).toBe(0)
+  })
+
+  it('나중으로 내리면 그 경보를 정상으로 판정한다', () => {
+    const alert = ALERTS[0]
+    const state = deferPhone(
+      showPhone(presentAlert(playingState(), alert), call, 21_000),
+    )
+
+    expect(decideCurrentAlert(state, alert.correctAction).reviewed).toBe(1)
+  })
+
+  it('벨을 놓치면 라이프와 콤보를 잃되 검토 수는 그대로다', () => {
+    // 경보를 검토한 것이 아니므로 Accuracy를 오염시키면 안 된다. 14.3.
+    const missed = missPhone({ ...ringing(), lives: 3, combo: 4, reviewed: 7 })
+
+    expect(missed).toMatchObject({
+      lives: 2,
+      combo: 0,
+      reviewed: 7,
+      phoneMissed: 1,
+      phone: null,
+    })
+  })
+
+  it('마지막 라이프였으면 그대로 진다', () => {
+    expect(missPhone({ ...ringing(), lives: 1 })).toMatchObject({
+      phase: 'FAILURE',
+      lives: 0,
+    })
+  })
+
+  it('이미 받은 전화는 벨을 놓칠 수 없다', () => {
+    const answered = answerPhone(ringing())
+
+    expect(missPhone(answered)).toBe(answered)
+  })
+
+  it('다시 시작하면 전화가 남지 않는다', () => {
+    const finished = { ...ringing(), phase: 'FAILURE' } as GameState
+
+    expect(restartGame(finished)).toMatchObject({
+      phone: null,
+      phoneLog: null,
+      phoneAnswered: 0,
+      phoneMissed: 0,
+    })
+  })
+})
+
+describe('전화가 지목한 경보의 판정 기록', () => {
+  // 틀린 경보 밑에 "상사 말을 따랐다"가 드러나는 것이 이 장치의 전부다. 14.8.
+  const target = ALERTS.find((alert) => alert.id === 'contractor-proddb')!
+  const call = {
+    alertId: target.id,
+    order: 'ALLOW' as const,
+    truthful: false,
+    caller: '관제 팀장',
+    message: '통과시켜.',
+  }
+  const withCall = (overrides = {}) =>
+    ({ ...playingState(), phoneLog: call, ...overrides }) as GameState
+
+  it('지시를 따라 틀리면 따랐다고 남는다', () => {
+    const state = applyVerdict(withCall(), 'MISSED_THREAT', target)
+
+    expect(state.log[0]).toMatchObject({ order: 'ALLOW', orderFollowed: true })
+  })
+
+  it('지시를 어기고 맞히면 어겼다고 남는다', () => {
+    const state = applyVerdict(withCall(), 'CORRECT', target)
+
+    expect(state.log[0]).toMatchObject({ order: 'ALLOW', orderFollowed: false })
+  })
+
+  it('미판정은 따르지도 어기지도 않은 것이다', () => {
+    const state = applyVerdict(withCall({ lives: 3 }), 'TIMEOUT', target)
+
+    expect(state.log[0]).toMatchObject({ order: 'ALLOW', orderFollowed: false })
+  })
+
+  it('지목하지 않은 경보에는 지시를 붙이지 않는다', () => {
+    const other = ALERTS.find((alert) => alert.id !== target.id)!
+    const state = applyVerdict(withCall(), 'CORRECT', other)
+
+    expect(state.log[0].order).toBeUndefined()
+    expect(state.log[0].orderFollowed).toBeUndefined()
+  })
+
+  it('전화가 없던 판에는 아무 경보에도 붙지 않는다', () => {
+    const state = applyVerdict(playingState(), 'CORRECT', target)
+
+    expect(state.log[0].order).toBeUndefined()
   })
 })
 

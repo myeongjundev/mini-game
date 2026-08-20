@@ -11,6 +11,14 @@ export type KeyboardHandlers = {
    * 눌리지 않는다. 일시정지 화면의 RESUME·RESTART가 실제로 그랬다.
    */
   onDismissMemo?: () => void
+  /**
+   * 전화 `↑`(받기)와 `↓`(나중에 / 통화 종료). 전화가 있을 때만 넘긴다.
+   *
+   * 없으면 방향키에 손대지 않는다. 위아래는 일시정지·결과 화면의 버튼
+   * 고르기에 쓰이므로 항상 가로채면 그쪽이 죽는다. GAME_SPEC 14.6.
+   */
+  onPhoneUp?: () => void
+  onPhoneDown?: () => void
 }
 
 export function useKeyboard(
@@ -38,7 +46,26 @@ export function useKeyboard(
       const isBlock = key === 'd' || key === 'arrowright' || event.code === 'KeyD'
       const isPause = key === 'p' || key === 'escape' || event.code === 'KeyP'
       const isDismiss = key === ' ' || event.code === 'Space'
+      const isPhoneUp = key === 'arrowup' || event.code === 'ArrowUp'
+      const isPhoneDown = key === 'arrowdown' || event.code === 'ArrowDown'
       const dismissMemo = handlersRef.current.onDismissMemo
+      const phoneUp = handlersRef.current.onPhoneUp
+      const phoneDown = handlersRef.current.onPhoneDown
+
+      // 전화가 먼저다. 벨이 울리는 동안 판정은 어차피 막혀 있다.
+      if (isPhoneUp && phoneUp) {
+        event.preventDefault()
+        phoneUp()
+
+        return
+      }
+
+      if (isPhoneDown && phoneDown) {
+        event.preventDefault()
+        phoneDown()
+
+        return
+      }
 
       if (isDismiss) {
         // 메모가 없으면 기본 동작을 그대로 둔다. 버튼은 Enter와 SPACE
