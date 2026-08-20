@@ -4,7 +4,7 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import ReadyScreen from './screens/ReadyScreen'
+import ReadyScreen, { GUIDE_PAGE_COUNT } from './screens/ReadyScreen'
 
 /**
  * 로비 가이드·설정 모달. 규격은
@@ -21,6 +21,7 @@ describe('로비 모달', () => {
     onIntroComplete: vi.fn(),
     onStart: vi.fn(),
     onToggleMute: vi.fn(),
+    onSetVolume: vi.fn(),
     onToggleReduceMotion: vi.fn(),
   }
 
@@ -40,12 +41,13 @@ describe('로비 모달', () => {
   })
 
   /** 인트로는 건너뛰고 로비부터 시작한다. */
-  const renderLobby = (overrides: { mute?: boolean; reduceMotion?: boolean } = {}) => {
+  const renderLobby = (overrides: { mute?: boolean; volume?: 0 | 1 | 2; reduceMotion?: boolean } = {}) => {
     act(() =>
       root.render(
         <ReadyScreen
           bestScore={0}
           mute={overrides.mute ?? true}
+          volume={overrides.volume ?? 1}
           reduceMotion={overrides.reduceMotion ?? false}
           playIntro={false}
           {...handlers}
@@ -167,13 +169,15 @@ describe('로비 모달', () => {
     expect((commands()[0] as HTMLButtonElement).disabled).toBe(true)
 
     click(commands()[1])
-    expect(modal()?.textContent).toContain('통과시키는 경보')
+    // 두 번째 쪽은 근무 중 공지다. 근무 3초부터 뜨는 요소라 판단 교재보다 앞에 둔다.
+    expect(modal()?.textContent).toContain('근무 중 공지')
     expect((commands()[0] as HTMLButtonElement).disabled).toBe(false)
 
     click(commands()[0])
     expect(modal()?.textContent).toContain('근무 요령')
 
-    for (let index = 0; index < 4; index += 1) click(commands()[1])
+    // 마지막 쪽까지 간다. 쪽 수가 늘어도 검사가 썩지 않게 상수에서 센다.
+    for (let index = 0; index < GUIDE_PAGE_COUNT - 1; index += 1) click(commands()[1])
     expect(modal()?.textContent).toContain('자주 갈리는 지점')
     expect(commands().map((item) => item.textContent)).toEqual(['PREV', 'CLOSE'])
 
@@ -186,14 +190,45 @@ describe('로비 모달', () => {
     click(button('SETTINGS'))
 
     const toggles = [...container.querySelectorAll('.lobby-settings-row button')]
-    // 소리 꺼짐(mute), 움직임 줄이기 꺼짐 상태의 표시다.
-    expect(toggles.map((item) => item.textContent?.trim())).toEqual(['// OFF', '// OFF'])
+    // 소리 꺼짐(mute), 크기 MID, 움직임 줄이기 꺼짐 상태의 표시다.
+    expect(toggles.map((item) => item.textContent?.trim())).toEqual([
+      '// OFF', '// MID', '// OFF',
+    ])
 
     click(toggles[0])
     expect(handlers.onToggleMute).toHaveBeenCalledTimes(1)
 
-    click(toggles[1])
+    click(toggles[2])
     expect(handlers.onToggleReduceMotion).toHaveBeenCalledTimes(1)
+  })
+
+  it('소리를 끈 상태에서는 크기를 고를 수 없다', () => {
+    renderLobby({ mute: true })
+    click(button('SETTINGS'))
+
+    const volume = container.querySelectorAll('.lobby-settings-row button')[1] as HTMLButtonElement
+    // 자리는 지키되 비활성이다. 사라지면 "어디 갔지"가 된다.
+    expect(volume.disabled).toBe(true)
+  })
+
+  it('소리가 켜져 있으면 크기가 LOW MID HIGH로 돌아간다', () => {
+    renderLobby({ mute: false, volume: 1 })
+    click(button('SETTINGS'))
+
+    const volume = () =>
+      container.querySelectorAll('.lobby-settings-row button')[1] as HTMLButtonElement
+    expect(volume().disabled).toBe(false)
+    expect(volume().textContent?.trim()).toBe('// MID')
+
+    click(volume())
+    expect(handlers.onSetVolume).toHaveBeenCalledWith(2)
+
+    // 마지막 단계에서 한 번 더 누르면 처음으로 돌아온다.
+    handlers.onSetVolume.mockClear()
+    renderLobby({ mute: false, volume: 2 })
+    click(button('SETTINGS'))
+    click(volume())
+    expect(handlers.onSetVolume).toHaveBeenCalledWith(0)
   })
 
   it('설정이 기본값이 아니면 RESET이 기본값으로 되돌린다', () => {

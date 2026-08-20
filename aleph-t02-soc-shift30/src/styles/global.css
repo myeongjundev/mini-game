@@ -2063,3 +2063,39 @@ time,
     width: 99%;
   }
 }
+
+/* 가이드의 예시 공지. 근무 중 뜨는 MemoToast를 작게 옮긴 것이라
+   생김새가 실물과 이어져야 처음 봐도 같은 것으로 읽힌다. */
+.guide-memo {
+  display: grid;
+  gap: 0.25em;
+  padding: 0.4em 0.55em;
+  background: var(--panel);
+  border: 1px solid var(--amber);
+}
+
+.guide-memo-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  margin: 0;
+  color: var(--amber);
+  font-size: 0.93em;
+}
+
+.guide-memo-head time {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.guide-memo-icon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+}
+
+.guide-memo-body {
+  margin: 0;
+  line-height: 1.5;
+}

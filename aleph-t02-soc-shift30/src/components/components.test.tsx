@@ -12,7 +12,7 @@ import PausedScreen from './screens/PausedScreen'
 import MemoLog from './MemoLog'
 import MemoToast from './MemoToast'
 import PhoneOverlay from './PhoneOverlay'
-import ReadyScreen, { GUIDE_PAGE_COUNT, LobbyGuidePage } from './screens/ReadyScreen'
+import ReadyScreen, { GUIDE_PAGE_COUNT, GUIDE_TITLES, LobbyGuidePage } from './screens/ReadyScreen'
 import ResultScreen from './screens/ResultScreen'
 
 describe('screen components', () => {
@@ -47,11 +47,13 @@ describe('screen components', () => {
       <ReadyScreen
         bestScore={1200}
         mute
+        volume={1}
         reduceMotion={false}
         playIntro={false}
         onIntroComplete={() => undefined}
         onStart={() => undefined}
         onToggleMute={() => undefined}
+        onSetVolume={() => undefined}
         onToggleReduceMotion={() => undefined}
       />,
     )
@@ -65,15 +67,17 @@ describe('screen components', () => {
     expect(markup).toContain('D / →')
     expect(markup).toContain('P / ESC')
 
-    const allowPage = renderToStaticMarkup(<LobbyGuidePage page={1} />)
+    // 쪽 번호가 아니라 제목으로 찾는다. 쪽을 넣어도 검사가 썩지 않는다.
+    const pageOf = (title: string) => GUIDE_TITLES.indexOf(title)
+    const allowPage = renderToStaticMarkup(<LobbyGuidePage page={pageOf('통과시키는 경보')} />)
     expect(allowPage).toContain('DEVICE')
     expect(allowPage).not.toContain('class="suspicious-marker"')
 
     // 개수로 세지 말라는 원칙은 판단 기준 쪽에 모아둔다.
-    expect(renderToStaticMarkup(<LobbyGuidePage page={4} />))
+    expect(renderToStaticMarkup(<LobbyGuidePage page={pageOf('자주 갈리는 지점')} />))
       .toContain('표시 개수가 아니라')
 
-    const blockPage = renderToStaticMarkup(<LobbyGuidePage page={2} />)
+    const blockPage = renderToStaticMarkup(<LobbyGuidePage page={pageOf('막는 경보')} />)
     expect(blockPage).toContain('FAILED LOGIN')
     expect(blockPage.match(/class="suspicious-marker"/g)).toHaveLength(3)
 
@@ -88,8 +92,9 @@ describe('screen components', () => {
     const allow = ALERTS.find((item) => item.id === 'https-normal')
     const block = ALERTS.find((item) => item.id === 'ssh-brute')
 
-    expect(renderToStaticMarkup(<LobbyGuidePage page={1} />)).toContain(allow!.explanation)
-    expect(renderToStaticMarkup(<LobbyGuidePage page={2} />)).toContain(block!.explanation)
+    const pageOf = (title: string) => GUIDE_TITLES.indexOf(title)
+    expect(renderToStaticMarkup(<LobbyGuidePage page={pageOf('통과시키는 경보')} />)).toContain(allow!.explanation)
+    expect(renderToStaticMarkup(<LobbyGuidePage page={pageOf('막는 경보')} />)).toContain(block!.explanation)
   })
 
   it('renders every guide page without throwing', () => {

@@ -145,6 +145,7 @@ export default function App() {
   const lastExplanationRef = useRef('')
   const lastDecisiveFactRef = useRef('')
   const muteRef = useRef(saved.mute)
+  const volumeRef = useRef(saved.volume)
   const alertProgressRef = useRef<{
     id: string | null
     startTimeLeftMs: number
@@ -160,6 +161,7 @@ export default function App() {
   const isMemoOpenRef = useRef(isMemoOpen)
   isMemoOpenRef.current = isMemoOpen
   muteRef.current = saved.mute
+  volumeRef.current = saved.volume
 
   if (alertProgressRef.current.id !== currentAlertId) {
     alertProgressRef.current = {
@@ -205,7 +207,7 @@ export default function App() {
       decisiveFact: lastDecisiveFactRef.current,
       explanation: lastExplanationRef.current,
     })
-    audioEngine.play(verdict === 'CORRECT' ? 'CORRECT' : 'INCORRECT', muteRef.current)
+    audioEngine.play(verdict === 'CORRECT' ? 'CORRECT' : 'INCORRECT', muteRef.current, volumeRef.current)
     const timeoutId = window.setTimeout(
       () => setFeedback(null),
       VERDICT_FLASH_MS,
@@ -219,7 +221,7 @@ export default function App() {
   // tier는 카드에 이미 표시되므로 새로 노출되는 정보가 없다.
   useEffect(() => {
     if (state.game.currentAlert?.tier === 3) {
-      audioEngine.play('CRITICAL', muteRef.current)
+      audioEngine.play('CRITICAL', muteRef.current, volumeRef.current)
     }
   }, [currentAlertId, state.game.currentAlert?.tier])
 
@@ -321,7 +323,7 @@ export default function App() {
     dispatch({ type: 'RESTART' })
   }, [])
 
-  const updateSaved = useCallback((update: Partial<Pick<Saved, 'mute' | 'reduceMotion'>>) => {
+  const updateSaved = useCallback((update: Partial<Pick<Saved, 'mute' | 'volume' | 'reduceMotion'>>) => {
     setSaved((previous) => {
       const next = { ...previous, ...update }
       saveSaved(next)
@@ -341,6 +343,12 @@ export default function App() {
   const handleToggleReduceMotion = useCallback(() => {
     updateSaved({ reduceMotion: !saved.reduceMotion })
   }, [saved.reduceMotion, updateSaved])
+
+  // 단계를 돌려가며 고른다. 자리가 좁아 슬라이더를 놓을 수 없고,
+  // SOUND // ON 과 같은 표시 방식으로 맞춘다.
+  const handleSetVolume = useCallback((level: Saved['volume']) => {
+    updateSaved({ volume: level })
+  }, [updateSaved])
 
   const handleDismissMemo = useCallback(() => {
     dispatch({ type: 'DISMISS_MEMO' })
@@ -393,11 +401,13 @@ export default function App() {
         <ReadyScreen
           bestScore={saved.bestScore}
           mute={saved.mute}
+          volume={saved.volume}
           reduceMotion={saved.reduceMotion}
           playIntro={!hasSeenLobbyIntro}
           onIntroComplete={handleLobbyIntroComplete}
           onStart={handleStart}
           onToggleMute={handleToggleMute}
+          onSetVolume={handleSetVolume}
           onToggleReduceMotion={handleToggleReduceMotion}
         />
       ) : null}

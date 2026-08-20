@@ -1,3 +1,5 @@
+import type { VolumeLevel } from './storage'
+
 export type ToneKind = 'CORRECT' | 'INCORRECT' | 'CRITICAL'
 
 export type AudioContextFactory = () => AudioContext | null
@@ -40,7 +42,13 @@ export class AudioEngine {
     }
   }
 
-  play(kind: ToneKind, muted: boolean): void {
+  /**
+   * 단계별 최고 음량. MID가 지금까지 쓰던 0.08이라 기본값에서는 소리가
+   * 달라지지 않는다. 지수 램프를 쓰므로 0이 될 수 없다.
+   */
+  private static readonly PEAK_BY_VOLUME = [0.04, 0.08, 0.14] as const
+
+  play(kind: ToneKind, muted: boolean, volume: VolumeLevel = 1): void {
     if (muted) {
       return
     }
@@ -57,6 +65,7 @@ export class AudioEngine {
 
     try {
       const tone = TONES[kind]
+      const peak = AudioEngine.PEAK_BY_VOLUME[volume] ?? AudioEngine.PEAK_BY_VOLUME[1]
       const now = context.currentTime
       const oscillator = context.createOscillator()
       const gain = context.createGain()
@@ -74,7 +83,7 @@ export class AudioEngine {
       oscillator.type = tone.type
       oscillator.frequency.setValueAtTime(tone.frequency, now)
       gain.gain.setValueAtTime(0.0001, now)
-      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.01)
+      gain.gain.exponentialRampToValueAtTime(peak, now + 0.01)
       gain.gain.exponentialRampToValueAtTime(
         0.0001,
         now + tone.durationSeconds,

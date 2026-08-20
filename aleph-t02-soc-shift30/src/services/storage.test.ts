@@ -55,7 +55,7 @@ describe('loadSaved corruption recovery table', () => {
           '{"v":1,"bestScore":2140,"mute":true,"reduceMotion":false}',
         ),
       ),
-    ).toEqual({ v: 1, bestScore: 2140, mute: true, reduceMotion: false })
+    ).toEqual({ v: 1, bestScore: 2140, mute: true, volume: 1, reduceMotion: false })
   })
 })
 
@@ -65,6 +65,7 @@ describe('initial accessibility settings', () => {
       v: 1,
       bestScore: 0,
       mute: true,
+      volume: 1,
       reduceMotion: true,
     })
   })
@@ -77,7 +78,7 @@ describe('initial accessibility settings', () => {
         ),
         () => ({ matches: true }),
       ),
-    ).toEqual({ v: 1, bestScore: 10, mute: false, reduceMotion: false })
+    ).toEqual({ v: 1, bestScore: 10, mute: false, volume: 1, reduceMotion: false })
   })
 })
 
@@ -93,7 +94,7 @@ describe('loadSaved additional boundary table', () => {
           '{"v":1,"bestScore":1e309,"mute":true,"reduceMotion":true}',
         ),
       ),
-    ).toEqual({ v: 1, bestScore: 0, mute: true, reduceMotion: true })
+    ).toEqual({ v: 1, bestScore: 0, mute: true, volume: 1, reduceMotion: true })
   })
 
   it('returns defaults for an array', () => {
@@ -140,7 +141,7 @@ describe('field-level and score boundary recovery', () => {
           '{"v":1,"bestScore":"높음","mute":true,"reduceMotion":true}',
         ),
       ),
-    ).toEqual({ v: 1, bestScore: 0, mute: true, reduceMotion: true })
+    ).toEqual({ v: 1, bestScore: 0, mute: true, volume: 1, reduceMotion: true })
   })
 
   it.each([0, 999_999])('accepts the inclusive score boundary %i', (bestScore) => {
@@ -160,7 +161,7 @@ describe('saveSaved', () => {
   it('writes the versioned schema to the expected key', () => {
     const setItem = vi.fn()
     const storage: StorageLike = { getItem: () => null, setItem }
-    const saved = { v: 1, bestScore: 300, mute: true, reduceMotion: false } as const
+    const saved = { v: 1, bestScore: 300, mute: true, volume: 1, reduceMotion: false } as const
 
     saveSaved(saved, storage)
 

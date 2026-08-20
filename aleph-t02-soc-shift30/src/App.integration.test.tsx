@@ -55,7 +55,9 @@ describe('App hook stability', () => {
     expect(
       addListener.mock.calls.filter(([type]) => type === 'keydown'),
     ).toHaveLength(registrationsAfterGameStart)
-    // One listener belongs to the one-time intro, and one to the active game.
-    expect(registrationsAfterGameStart).toBe(2)
+    // 인트로 건너뛰기 하나, 로비 방향키 이동 하나, 진행 중인 판 하나다.
+    // 이 검사가 지키는 것은 개수 자체가 아니라 **관계없는 렌더에서 다시
+    // 등록되지 않는다**는 것이다. 위의 SOUND 클릭 뒤 수가 그대로여야 한다.
+    expect(registrationsAfterGameStart).toBe(3)
   })
 })

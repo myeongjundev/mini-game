@@ -10,6 +10,7 @@ const handlers = {
   onIntroComplete: vi.fn(),
   onStart: vi.fn(),
   onToggleMute: vi.fn(),
+  onSetVolume: vi.fn(),
   onToggleReduceMotion: vi.fn(),
 }
 
@@ -19,7 +20,7 @@ describe('ReadyScreen intro and lobby', () => {
 
   const renderScreen = (props: Partial<ReadyScreenProps> = {}) => {
     act(() => root.render(
-      <ReadyScreen bestScore={900} mute reduceMotion={false} playIntro
+      <ReadyScreen bestScore={900} mute volume={1} reduceMotion={false} playIntro
         {...handlers} {...props} />,
     ))
   }
@@ -115,6 +116,12 @@ describe('ReadyScreen intro and lobby', () => {
     expect(prev()?.disabled).toBe(true)
     expect(guideHeading()).toBe('근무 요령')
 
+    // 근무 3초부터 공지가 뜨므로 판단 교재보다 앞에 둔다.
+    act(() => next()?.click())
+    expect(guideHeading()).toBe('근무 중 공지')
+    expect(container.querySelector('.guide-memo-body')?.textContent).toBeTruthy()
+    expect(container.textContent).toContain('경보 제한시간도 함께 멈춥니다')
+
     // 통과와 차단을 쪽으로 나눠 각각 이유까지 보여준다.
     act(() => next()?.click())
     expect(guideHeading()).toBe('통과시키는 경보')
@@ -154,6 +161,54 @@ describe('ReadyScreen intro and lobby', () => {
     expect(container.querySelector('.lobby-menu')).not.toBeNull()
     // 모달을 연 버튼으로 돌아온다. START SHIFT가 아니다.
     expect(document.activeElement?.textContent).toBe('HOW TO PLAY')
+  })
+
+  it('moves focus between lobby buttons with the arrow keys', () => {
+    renderScreen({ playIntro: false })
+    const arrow = (key: string) =>
+      act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key })))
+
+    // 로비에 들어오면 START SHIFT가 잡혀 있다.
+    expect(document.activeElement?.textContent).toBe('START SHIFT')
+
+    arrow('ArrowDown')
+    expect(document.activeElement?.textContent).toBe('HOW TO PLAY')
+    arrow('ArrowDown')
+    expect(document.activeElement?.textContent).toBe('SETTINGS')
+    arrow('ArrowUp')
+    expect(document.activeElement?.textContent).toBe('HOW TO PLAY')
+
+    // 좌우도 같은 순서로 움직인다. 로비에서는 판정 키가 살아 있지 않다.
+    arrow('ArrowRight')
+    expect(document.activeElement?.textContent).toBe('SETTINGS')
+  })
+
+  it('wraps around at both ends of the lobby buttons', () => {
+    renderScreen({ playIntro: false })
+    const arrow = (key: string) =>
+      act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key })))
+
+    // 첫 버튼에서 위로 가면 마지막으로 돈다.
+    arrow('ArrowUp')
+    const last = document.activeElement?.textContent
+    expect(last).toBeTruthy()
+    expect(last).not.toBe('START SHIFT')
+
+    arrow('ArrowDown')
+    expect(document.activeElement?.textContent).toBe('START SHIFT')
+  })
+
+  it('stops arrow navigation while a modal is open', () => {
+    renderScreen({ playIntro: false })
+    const howToPlay = [...container.querySelectorAll('button')]
+      .find((button) => button.textContent === 'HOW TO PLAY')
+    act(() => howToPlay?.click())
+
+    const before = document.activeElement
+    act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' })))
+
+    // 모달 안에 있는 포커스를 뒤쪽 로비로 끌고 가면 안 된다.
+    expect(document.activeElement).toBe(before)
   })
 
   it('starts directly in the lobby on a return visit', () => {

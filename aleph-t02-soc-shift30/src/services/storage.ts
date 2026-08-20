@@ -1,9 +1,17 @@
 export const STORAGE_KEY = 'socshift30:v1'
 
+/**
+ * 소리 크기 단계. 0=LOW 1=MID 2=HIGH.
+ * 끄는 것은 `mute`가 따로 맡는다. 볼륨 0을 끔으로 쓰면 "소리 켬인데 0"이라는
+ * 모순된 상태가 생기고, 껐다 켤 때 이전 크기를 잃는다.
+ */
+export type VolumeLevel = 0 | 1 | 2
+
 export type Saved = {
   v: 1
   bestScore: number
   mute: boolean
+  volume: VolumeLevel
   reduceMotion: boolean
 }
 
@@ -11,6 +19,7 @@ export const DEFAULTS: Readonly<Saved> = {
   v: 1,
   bestScore: 0,
   mute: true,
+  volume: 1,
   reduceMotion: false,
 }
 
@@ -37,6 +46,10 @@ function isValidBestScore(value: unknown): value is number {
   )
 }
 
+function isValidVolume(value: unknown): value is VolumeLevel {
+  return value === 0 || value === 1 || value === 2
+}
+
 export function loadSaved(
   storage?: StorageLike,
   defaults: Readonly<Saved> = DEFAULTS,
@@ -60,6 +73,9 @@ export function loadSaved(
         ? parsed.bestScore
         : defaults.bestScore,
       mute: typeof parsed.mute === 'boolean' ? parsed.mute : defaults.mute,
+      // v를 올리지 않고 필드만 더한다. 없는 값은 기본값으로 채워지므로
+      // 예전 저장값의 최고 점수가 살아남는다.
+      volume: isValidVolume(parsed.volume) ? parsed.volume : defaults.volume,
       reduceMotion:
         typeof parsed.reduceMotion === 'boolean'
           ? parsed.reduceMotion

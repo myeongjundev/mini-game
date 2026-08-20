@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 
-import { DIFFICULTY } from '../../game/config'
+import { DIFFICULTY, MEMO } from '../../game/config'
 import { ALERTS } from '../../game/data/alerts'
+import { MEMOS } from '../../game/data/memos'
 import { PIXEL_ART } from '../../game/data/pixelArt'
 import type { Alert } from '../../game/types'
+import type { VolumeLevel } from '../../services/storage'
 import { formatScore, formatSeconds } from '../../utils/format'
 import LobbyModal from '../LobbyModal'
 import PixelIcon from '../PixelIcon'
@@ -100,7 +102,11 @@ function CompareRow({ alert }: { alert: Alert }) {
   )
 }
 
-export const GUIDE_PAGE_COUNT = 5
+export const GUIDE_PAGE_COUNT = 6
+
+// 가이드에 쓰는 예시 공지. 하드코딩하지 않고 실제 데이터에서 읽는다.
+// 데이터가 바뀌면 가이드도 함께 바뀌어야 한다. 경보 예시와 같은 규칙이다.
+const EXAMPLE_MEMO = MEMOS[0]
 
 export function LobbyGuidePage({ page }: { page: number }) {
   if (page === 0) {
@@ -124,7 +130,34 @@ export function LobbyGuidePage({ page }: { page: number }) {
     )
   }
 
+  // 공지는 근무 3초부터 뜬다. 판단 교재보다 앞에 둬야 처음 보는 사람이
+  // 놀라지 않는다. 규칙은 GAME_SPEC 13절이다.
   if (page === 1) {
+    return (
+      <>
+        <p className="guide-lead">
+          근무 중 사내 공지가 <strong>{MEMO.perShift}번</strong> 올라옵니다.
+          뒤에 올 경보의 <strong>판단 근거</strong>를 줍니다.
+        </p>
+        <article className="guide-memo">
+          <p className="guide-memo-head">
+            <PixelIcon grid={PIXEL_ART.memo} className="guide-memo-icon" />
+            <span>{EXAMPLE_MEMO.from}</span>
+            <time>{EXAMPLE_MEMO.time}</time>
+          </p>
+          <p className="guide-memo-body">{EXAMPLE_MEMO.body}</p>
+        </article>
+        <ul className="guide-list">
+          <li>떠 있는 동안 판정이 막히지만 <strong>경보 제한시간도 함께 멈춥니다</strong>. 손해가 없습니다</li>
+          <li>다만 <strong>30초 근무 시계는 계속 흐릅니다</strong>. 오래 열어두면 처리할 경보가 줄어듭니다</li>
+          <li><kbd>SPACE</kbd> 또는 클릭으로 닫습니다</li>
+          <li>닫아도 <strong>기록에 남아</strong> 근무 내내 다시 볼 수 있습니다</li>
+        </ul>
+      </>
+    )
+  }
+
+  if (page === 2) {
     return (
       <>
         <p className="guide-lead">표시는 <strong>수상한 항목에만</strong> 붙습니다.</p>
@@ -133,7 +166,7 @@ export function LobbyGuidePage({ page }: { page: number }) {
     )
   }
 
-  if (page === 2) {
+  if (page === 3) {
     return (
       <>
         <p className="guide-lead"><strong>사람이 할 수 없는 수준</strong>이면 자동화입니다.</p>
@@ -142,7 +175,7 @@ export function LobbyGuidePage({ page }: { page: number }) {
     )
   }
 
-  if (page === 3) {
+  if (page === 4) {
     return (
       <>
         <p className="guide-lead">
@@ -173,8 +206,11 @@ export function LobbyGuidePage({ page }: { page: number }) {
   )
 }
 
-const GUIDE_TITLES = [
+// 검사가 쪽 번호를 박아두면 쪽을 하나 넣을 때마다 깨진다. 제목으로 찾게
+// 내보낸다. 실제로 공지 쪽을 넣으면서 네 건이 깨졌다.
+export const GUIDE_TITLES = [
   '근무 요령',
+  '근무 중 공지',
   '통과시키는 경보',
   '막는 경보',
   '같아 보이지만 다른 것',
@@ -220,17 +256,22 @@ function LobbyGuideModal({ onClose, reduceMotion }: { onClose: () => void; reduc
   )
 }
 
+const VOLUME_LABELS = ['LOW', 'MID', 'HIGH'] as const
+
 function LobbySettingsModal({
-  mute, reduceMotion, onClose, onToggleMute, onToggleReduceMotion,
+  mute, volume, reduceMotion, onClose, onToggleMute, onSetVolume, onToggleReduceMotion,
 }: {
   mute: boolean
+  volume: VolumeLevel
   reduceMotion: boolean
   onClose: () => void
   onToggleMute: () => void
+  onSetVolume: (level: VolumeLevel) => void
   onToggleReduceMotion: () => void
 }) {
-  // 저장 기본값은 `services/storage.ts`의 DEFAULTS다. 소리 꺼짐, 움직임 그대로.
-  const atDefaults = mute && !reduceMotion
+  // 저장 기본값은 `services/storage.ts`의 DEFAULTS다.
+  // 소리 꺼짐, 크기 MID, 움직임 그대로.
+  const atDefaults = mute && volume === 1 && !reduceMotion
 
   return (
     <LobbyModal
@@ -244,6 +285,7 @@ function LobbySettingsModal({
           disabled: atDefaults,
           onClick: () => {
             if (!mute) onToggleMute()
+            if (volume !== 1) onSetVolume(1)
             if (reduceMotion) onToggleReduceMotion()
           },
         },
@@ -258,6 +300,17 @@ function LobbySettingsModal({
             <button type="button" onClick={onToggleMute} aria-describedby="setting-sound"
               aria-pressed={!mute}>
               // {mute ? 'OFF' : 'ON'}
+            </button>
+          </dd>
+        </div>
+        {/* 소리를 끈 상태에서는 크기를 고를 이유가 없다. 자리는 지키되
+            비활성으로 둔다. 사라지면 "어디 갔지"가 된다. */}
+        <div className="lobby-settings-row">
+          <dt id="setting-volume">VOLUME</dt>
+          <dd>
+            <button type="button" disabled={mute} aria-describedby="setting-volume"
+              onClick={() => onSetVolume(((volume + 1) % 3) as VolumeLevel)}>
+              // {VOLUME_LABELS[volume]}
             </button>
           </dd>
         </div>
@@ -279,22 +332,25 @@ function LobbySettingsModal({
 export type ReadyScreenProps = {
   bestScore: number
   mute: boolean
+  volume: VolumeLevel
   reduceMotion: boolean
   playIntro: boolean
   onIntroComplete: () => void
   onStart: () => void
   onToggleMute: () => void
+  onSetVolume: (level: VolumeLevel) => void
   onToggleReduceMotion: () => void
 }
 
-export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
-  onIntroComplete, onStart, onToggleMute, onToggleReduceMotion }: ReadyScreenProps) {
+export default function ReadyScreen({ bestScore, mute, volume, reduceMotion, playIntro,
+  onIntroComplete, onStart, onToggleMute, onSetVolume, onToggleReduceMotion }: ReadyScreenProps) {
   const [phase, setPhase] = useState<LobbyPhase>(playIntro ? 'BOOT' : 'LOBBY')
   const [panel, setPanel] = useState<LobbyPanel>('MENU')
   const [activeModal, setActiveModal] = useState<LobbyModalType>(null)
   const completedRef = useRef(!playIntro)
   const startButtonRef = useRef<HTMLButtonElement>(null)
   const lobbyFocusedRef = useRef(false)
+  const sceneRef = useRef<HTMLElement>(null)
   // 모달을 연 버튼. 닫은 뒤 여기로 포커스를 돌려준다.
   const modalTriggerRef = useRef<HTMLButtonElement | null>(null)
   const wasModalOpenRef = useRef(false)
@@ -364,6 +420,45 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
     startButtonRef.current?.focus()
   }, [panel, phase])
 
+  // 로비 버튼을 방향키로 옮겨 다닌다. Tab으로도 되지만 옛 콘솔 메뉴는
+  // 방향키로 고르는 것이 자연스럽고, 게임 화면에서 판정에 쓰는 손 모양과도
+  // 이어진다.
+  //
+  // 게임의 ←·→는 판정 키지만 그것은 PLAYING 구간에서만 살아 있다(useKeyboard).
+  // 로비는 READY라 겹치지 않는다.
+  useEffect(() => {
+    if (phase !== 'LOBBY' || modalOpen) return
+
+    const handleArrow = (event: KeyboardEvent) => {
+      const step = event.key === 'ArrowDown' || event.key === 'ArrowRight'
+        ? 1
+        : event.key === 'ArrowUp' || event.key === 'ArrowLeft'
+          ? -1
+          : 0
+
+      if (step === 0 || event.repeat) return
+
+      const console_ = sceneRef.current?.querySelector('.lobby-console')
+      const items = [...(console_?.querySelectorAll<HTMLButtonElement>('button') ?? [])]
+        .filter((item) => !item.disabled)
+
+      if (items.length === 0) return
+
+      event.preventDefault()
+      const active = document.activeElement
+      const index = items.findIndex((item) => item === active)
+      // 로비 밖에 포커스가 있으면 방향에 맞는 끝에서 시작한다.
+      const next = index === -1
+        ? (step === 1 ? 0 : items.length - 1)
+        : (index + step + items.length) % items.length
+
+      items[next].focus()
+    }
+
+    window.addEventListener('keydown', handleArrow)
+    return () => window.removeEventListener('keydown', handleArrow)
+  }, [modalOpen, phase])
+
   // 모달이 닫힌 뒤 연 버튼으로 포커스를 돌려준다. 이 effect는 inert를 지운
   // 커밋 다음에 돌기 때문에 포커스가 거부되지 않는다.
   useEffect(() => {
@@ -375,7 +470,7 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
   }, [modalOpen])
 
   return (
-    <section className="lobby-scene" aria-label="SOC SHIFT:30 analyst desk"
+    <section className="lobby-scene" ref={sceneRef} aria-label="SOC SHIFT:30 analyst desk"
       data-lobby-phase={phase} onClick={introActive ? completeIntro : undefined}>
       <img className="lobby-office" src={`${import.meta.env.BASE_URL}lobby-office-blank.webp`}
         alt="80년대 야간 사무실의 CRT 관제 컴퓨터와 커피, 서류가 놓인 책상" />
@@ -414,6 +509,10 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
                     <button type="button" onClick={() => setPanel('SHIFT_RECORD')}>SHIFT RECORD</button>
                   </div>
                   <ul className="lobby-controls">
+                    {/* 로비에서 쓰는 키를 먼저 알린다. 판정 키는 근무가
+                        시작돼야 살아나므로 가이드 첫 쪽에서 다시 나온다. */}
+                    <li><kbd>↑ ↓</kbd> 메뉴 이동</li>
+                    <li><kbd>ENTER</kbd> 선택</li>
                     {CONTROL_HINTS.map(({ keys, action }) => (
                       <li key={action}><kbd>{keys}</kbd> {action}</li>
                     ))}
@@ -445,9 +544,11 @@ export default function ReadyScreen({ bestScore, mute, reduceMotion, playIntro,
       {phase === 'LOBBY' && activeModal === 'SETTINGS' ? (
         <LobbySettingsModal
           mute={mute}
+          volume={volume}
           reduceMotion={reduceMotion}
           onClose={closeModal}
           onToggleMute={onToggleMute}
+          onSetVolume={onSetVolume}
           onToggleReduceMotion={onToggleReduceMotion}
         />
       ) : null}
