@@ -30,10 +30,16 @@
 - `prompts/02_PHONE_ILLUSTRATION.md`
 - `prompts/03_PHONE_PASSWORD_DISTRACTIONS_HANDOFF.md`
 - `prompts/04_LOBBY_MODAL_WINDOW_HANDOFF.md`
+- `prompts/05_CHARACTER_PORTRAITS_HANDOFF.md`
+- `public/external-contractor-portrait-128.png`
 - `public/favicon.svg`
+- `public/hr-manager-portrait-128.png`
 - `public/infra-engineer-portrait-128.png`
+- `public/intern-03-portrait-128.png`
+- `public/it-support-portrait-128.png`
 - `public/lobby-modal-window.webp`
 - `public/lobby-office-blank.webp`
+- `public/marketing-manager-portrait-128.png`
 - `public/phone-call.webp`
 - `public/phone-connected.webp`
 - `public/security-specialist-portrait-128.png`
@@ -102,4 +108,6 @@
 - `public/password-window-unlocked.webp` — 해제 창 (쓸 예정)
 - `public/password-locked.webp` — **쓰지 않는다.** 물리 장치로 잘못 만든 초기안
 - `public/password-unlocked.webp` — **쓰지 않는다.** 위와 같음
-- `prompts/art-source/` — 초상 원본과 반려본. **5.7MB.** 저장소에 넣을지 미정
+- `prompts/art-source/` — 초상 원본과 반려본. **약 17.3MB.** 저장소에 넣을지 미정
+- `prompts/process-it-support-portrait.ps1` — 초상 한 장을 다듬은 일회용
+  스크립트. 절대 경로가 박혀 있고 나머지 일곱 장에는 쓰이지 않았다. 남길지 미정
