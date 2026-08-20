@@ -688,6 +688,16 @@ button:disabled {
   color: var(--cyan);
 }
 
+/* 사건 당사자. 제목 줄의 남는 오른쪽 끝에 둔다. 사실 행과 제한시간 막대
+   위로 올라오지 않도록 흐름 안에 두고 겹치지 않게 한다. */
+.alert-portrait {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  margin-left: auto;
+  image-rendering: pixelated;
+}
+
 
 .alert-card h2 {
   margin-top: var(--gap-xs);
@@ -1387,6 +1397,15 @@ time,
   width: 20px;
   height: 20px;
   color: var(--amber);
+}
+
+/* 보낸 사람. 공지 아이콘 자리를 대신하므로 그만한 크기로 둔다.
+   글자 줄 하나 높이를 넘기면 본문이 밀린다. */
+.memo-portrait {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
 }
 
 .memo-head {

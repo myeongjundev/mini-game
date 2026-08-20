@@ -1,4 +1,5 @@
 import { PIXEL_ART } from '../game/data/pixelArt'
+import { PORTRAIT_BY_ALERT, portraitUrl } from '../game/data/portraits'
 import type { Alert } from '../game/types'
 import PixelIcon from './PixelIcon'
 
@@ -9,6 +10,7 @@ export type AlertCardProps = {
 
 export default function AlertCard({ alert, timeRemainingRatio }: AlertCardProps) {
   const progress = Math.min(1, Math.max(0, timeRemainingRatio))
+  const portrait = PORTRAIT_BY_ALERT[alert.id]
 
   return (
     <article className="alert-card">
@@ -28,6 +30,19 @@ export default function AlertCard({ alert, timeRemainingRatio }: AlertCardProps)
           <span className="alert-meta">TIER {alert.tier}</span>
           <h2>{alert.title}</h2>
         </div>
+        {/* 사건 당사자. 없는 경보가 더 많으므로 빈 자리를 만들지 않는다.
+            판정 근거가 아니라서 읽어주지 않는다. 누구인지는 아래 사실 행의
+            USER·ROLE이 글자로 말한다. */}
+        {portrait === undefined ? null : (
+          <img
+            className="alert-portrait"
+            src={portraitUrl(portrait)}
+            alt=""
+            aria-hidden="true"
+            width={128}
+            height={128}
+          />
+        )}
       </header>
       <p className="fact-signal-guide">수상한 항목에 표시가 붙습니다</p>
       <dl className="fact-grid">

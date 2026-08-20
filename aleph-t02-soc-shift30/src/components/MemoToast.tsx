@@ -1,4 +1,5 @@
 import { PIXEL_ART } from '../game/data/pixelArt'
+import { PORTRAIT_BY_DEPARTMENT, portraitUrl } from '../game/data/portraits'
 import type { Memo } from '../game/types'
 import PixelIcon from './PixelIcon'
 
@@ -15,10 +16,26 @@ export type MemoToastProps = {
  * 경보 제한 시간이 함께 멈추므로 가려도 손해가 없다.
  */
 export default function MemoToast({ memo, onDismiss }: MemoToastProps) {
+  const portrait = PORTRAIT_BY_DEPARTMENT[memo.from]
+
   return (
     <aside className="memo-toast" aria-live="assertive" aria-label="사내 공지">
       <p className="memo-head">
-        <PixelIcon grid={PIXEL_ART.memo} title="사내 공지" className="memo-icon" />
+        {/* 보낸 사람의 얼굴이 있으면 공지 아이콘 자리를 대신한다. 한 줄에
+            그림 둘을 두면 좁아지고, 공지라는 것은 이 판 전체가 이미
+            말하고 있다. 부서 이름은 아래에 글자로 그대로 남는다. */}
+        {portrait === undefined ? (
+          <PixelIcon grid={PIXEL_ART.memo} title="사내 공지" className="memo-icon" />
+        ) : (
+          <img
+            className="memo-portrait"
+            src={portraitUrl(portrait)}
+            alt=""
+            aria-hidden="true"
+            width={128}
+            height={128}
+          />
+        )}
         <span className="memo-from">{memo.from}</span>
         <time className="memo-time">{memo.time}</time>
       </p>

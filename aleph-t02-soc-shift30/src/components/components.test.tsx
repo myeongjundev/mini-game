@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { ALERTS } from '../game/data/alerts'
 import { MEMOS } from '../game/data/memos'
+import { PORTRAIT_BY_ALERT, PORTRAIT_BY_DEPARTMENT } from '../game/data/portraits'
 import { createInitialGameState } from '../game/engine/machine'
 import type { DecisionRecord } from '../game/types'
 import ActionButtons from './ActionButtons'
@@ -28,6 +29,28 @@ describe('screen components', () => {
     expect(markup).not.toContain(alert.correctAction)
     expect(markup).not.toContain('class="suspicious-marker"')
     expect(markup).not.toContain('수상한 항목: ')
+  })
+
+  it('사건 당사자가 있는 경보에만 얼굴이 붙는다', () => {
+    for (const alert of ALERTS) {
+      const markup = renderToStaticMarkup(
+        <AlertCard alert={alert} timeRemainingRatio={1} />,
+      )
+      const file = PORTRAIT_BY_ALERT[alert.id]
+
+      if (file === undefined) {
+        // 모든 경보에 빈 자리를 만들지 않는다.
+        expect(markup).not.toContain('alert-portrait')
+        continue
+      }
+
+      expect(markup).toContain(`${import.meta.env.BASE_URL}${file}`)
+      // 얼굴 때문에 사실 행이 줄면 판단 근거가 사라진다.
+      expect(markup.match(/<dt>/g)).toHaveLength(alert.facts.length)
+      for (const fact of alert.facts) {
+        expect(markup).toContain(fact.value)
+      }
+    }
   })
 
   it('never shows severity on the card because it predicts the answer', () => {
@@ -260,6 +283,30 @@ describe('memo toast', () => {
 
     expect(markup).toContain('aria-live="assertive"')
     expect(markup).toContain('사내 공지')
+  })
+
+  it('보낸 사람의 얼굴을 부서에 맞게 보여준다', () => {
+    for (const item of MEMOS) {
+      const markup = renderToStaticMarkup(
+        <MemoToast memo={item} onDismiss={() => undefined} />,
+      )
+      const file = PORTRAIT_BY_DEPARTMENT[item.from]
+
+      expect(markup).toContain(`${import.meta.env.BASE_URL}${file}`)
+      // 얼굴이 부서 이름을 대신하면 안 된다. 읽어주는 것은 글자 쪽이다.
+      expect(markup).toContain(item.from)
+      expect(markup).toContain('alt=""')
+    }
+  })
+
+  it('얼굴이 없는 부서에서는 공지 아이콘으로 돌아간다', () => {
+    // 메모가 늘어나 표에 없는 부서가 오면 자리가 비지 않아야 한다.
+    const markup = renderToStaticMarkup(
+      <MemoToast memo={{ ...memo, from: '없는팀' }} onDismiss={() => undefined} />,
+    )
+
+    expect(markup).toContain('memo-icon')
+    expect(markup).toContain('없는팀')
   })
 })
 
