@@ -106,42 +106,41 @@ function render(track, filename, targetPeak) {
   }
 }
 
-// LOBBY — bright pre-shift ambience, 32 seconds at 60 BPM, no drums or rhythmic ticks.
+// LOBBY — original bright console-adventure waltz, 32 seconds at 90 BPM.
 const lobby = createTrack(32, 0x10bb10bb)
-addEquipmentHum(lobby, 0.0045)
-const lobbyBeat = 1
+addEquipmentHum(lobby, 0.0025)
+const lobbyBeat = 60 / 90
 const lobbyChords = [
-  [48, 52, 55, 59, 62], // Cmaj9
-  [47, 50, 55, 59], // G/B
-  [45, 48, 52, 55], // Am7
+  [48, 52, 55, 59], // Cmaj7
   [41, 45, 48, 52], // Fmaj7
+  [45, 48, 52, 55], // Am7
+  [43, 47, 50, 52], // G6
 ]
 const lobbyMelodies = [
-  [72, 76, 79],
-  [71, 74, 79],
-  [69, 72, 76],
-  [69, 72, 76],
+  [72, 76, 79, 76, 74, 72],
+  [72, 77, 81, 79, 77, 76],
+  [76, 81, 84, 83, 81, 79],
+  [74, 79, 83, 81, 79, 74],
 ]
-for (let bar = 0; bar < 8; bar += 1) {
-  const start = bar * lobbyBeat * 4
+for (let bar = 0; bar < 16; bar += 1) {
+  const start = bar * lobbyBeat * 3
   const chord = lobbyChords[bar % lobbyChords.length]
   for (const note of chord) {
-    lobby.tone({ at: start, length: lobbyBeat * 4, midi: note, level: 0.009, attack: 0.8, release: 0.9 })
+    lobby.tone({ at: start, length: lobbyBeat * 3, midi: note, level: 0.0065, attack: 0.18, release: 0.35 })
   }
-  if (bar % 2 === 0) {
-    const melody = lobbyMelodies[(bar / 2) % lobbyMelodies.length]
-    melody.forEach((note, index) => {
-      lobby.tone({
-        at: start + 0.85 + index * 0.72,
-        length: 0.58,
-        midi: note,
-        level: index === 2 ? 0.012 : 0.0095,
-        type: index === 2 ? 'triangle' : 'sine',
-        attack: 0.055,
-        release: 0.36,
-      })
+  lobby.tone({ at: start, length: lobbyBeat * 0.72, midi: chord[0] - 12, level: 0.018, type: 'triangle', attack: 0.012, release: 0.32 })
+  const melody = lobbyMelodies[bar % lobbyMelodies.length]
+  melody.forEach((note, index) => {
+    lobby.tone({
+      at: start + index * lobbyBeat / 2,
+      length: lobbyBeat * 0.42,
+      midi: note,
+      level: index % 3 === 0 ? 0.016 : 0.011,
+      type: index % 3 === 0 ? 'triangle' : 'sine',
+      attack: 0.018,
+      release: 0.18,
     })
-  }
+  })
 }
 
 // PLAY — steady analyst rhythm, 30 seconds at 120 BPM, intentionally non-escalating.
@@ -181,7 +180,7 @@ for (let bar = 0; bar < 4; bar += 1) {
 }
 
 const report = [
-  render(lobby, 'soc-shift-lobby-loop.wav', 0.26),
+  render(lobby, 'soc-shift-lobby-loop.wav', 0.28),
   render(play, 'soc-shift-play-loop.wav', 0.4),
   render(critical, 'soc-shift-critical-heart-loop.wav', 0.46),
 ]
