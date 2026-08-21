@@ -209,6 +209,7 @@ export default function App() {
     startTimeLeftMs: DIFFICULTY.totalTimeMs,
   })
   const currentAlertId = state.game.currentAlert?.id ?? null
+  const isPlaying = state.game.phase === 'PLAYING'
   const isMemoOpen = Boolean(state.game.activeMemo)
   // 수신 팝업과 통화는 판정을 막는다. 나중으로 내린 전화는 막지 않는다(14.6).
   const isPhoneUp = isPhoneBlocking(state.game)
@@ -457,11 +458,15 @@ export default function App() {
       onPauseToggle: handlePauseToggle,
       // 메모가 떠 있을 때만 넘긴다. 항상 넘기면 SPACE가 늘 가로채여
       // 포커스된 버튼이 SPACE로 눌리지 않는다.
-      onDismissMemo: isMemoOpen ? handleDismissMemo : undefined,
-      // 전화가 없으면 방향키에 손대지 않는다. 일시정지·결과 화면의 방향키
-      // 조작과 부딪히면 안 된다.
-      onPhoneUp: state.game.phone ? handlePhoneUp : undefined,
-      onPhoneDown: state.game.phone ? handlePhoneDown : undefined,
+      //
+      // **근무 중일 때만이다.** 일시정지에서는 메모도 전화도 그려지지 않는데
+      // 이 리스너는 살아 있다(useKeyboard가 PAUSED에서도 켜진다). 넘겨두면
+      // 보이지 않는 것을 조작하게 되고, 일시정지 화면의 버튼 고르기와도
+      // 부딪힌다 — useMenuKeys도 같은 window에 붙어 있어 preventDefault로는
+      // 막히지 않는다.
+      onDismissMemo: isPlaying && isMemoOpen ? handleDismissMemo : undefined,
+      onPhoneUp: isPlaying && state.game.phone ? handlePhoneUp : undefined,
+      onPhoneDown: isPlaying && state.game.phone ? handlePhoneDown : undefined,
     }),
     [
       handleAllow,
@@ -471,6 +476,7 @@ export default function App() {
       handlePhoneUp,
       handlePhoneDown,
       isMemoOpen,
+      isPlaying,
       state.game.phone,
     ],
   )

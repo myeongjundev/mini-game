@@ -28,6 +28,20 @@ function actionFromVerdict(alert: Alert, verdict: Verdict): Action | null {
   return verdict === 'FALSE_POSITIVE' ? 'BLOCK' : 'ALLOW'
 }
 
+/**
+ * 판정할 때 플레이어가 상사의 지시를 **알고 있었는가**.
+ *
+ * 받지 않은 전화의 지시는 붙이지 않는다. 안 들은 말을 "따랐다"고 적으면
+ * 우연히 같은 선택을 한 것이 복종으로 기록된다. 14.8의 장치는 상사의 말과
+ * 카드가 부딪히는 순간을 보여주는 것인데, 못 들었으면 부딪힌 적이 없다.
+ *
+ * 인수인계서(15.3)도 같은 규칙을 쓴다. 한 화면에서 두 곳이 다른 말을 하면
+ * 안 된다.
+ */
+function heardCall(state: GameState): PhoneCall | null {
+  return state.phoneAnswered > 0 ? state.phoneLog : null
+}
+
 function createRecord(
   alert: Alert,
   verdict: Verdict,
@@ -139,9 +153,16 @@ export function showMemo(
       }
 }
 
-/** 화면에 `MEMO.readThresholdMs` 이상 떠 있다가 닫히면 읽은 것으로 센다. */
+/**
+ * 화면에 `MEMO.readThresholdMs` 이상 떠 있다가 닫히면 읽은 것으로 센다.
+ *
+ * **근무 중이 아니면 닫지 않는다.** 일시정지에서는 메모가 그려지지 않는데
+ * SPACE 리스너는 살아 있다. 보이지 않는 메모를 닫을 수 있으면 일시정지가
+ * 이득이 된다 — 근무 시계는 메모를 읽는 동안에도 흐르지만 일시정지에서는
+ * 멈추므로, 멈춰 세운 뒤 닫으면 읽는 값을 30초에서 내지 않는다.
+ */
 export function dismissMemo(state: GameState, elapsedMs: number): GameState {
-  if (!state.activeMemo) {
+  if (state.phase !== 'PLAYING' || !state.activeMemo) {
     return state
   }
 
@@ -183,27 +204,44 @@ export function showPhone(
       }
 }
 
-/** `↑` 받기. 벨 시계가 멈추고 통화로 넘어간다. */
+/**
+ * `↑` 받기. 벨 시계가 멈추고 통화로 넘어간다.
+ *
+ * **근무 중이 아니면 손대지 못한다.** 아래 셋 모두 같은 가드를 갖는다.
+ * 일시정지에서는 팝업이 그려지지 않는데 방향키 리스너는 살아 있다. 보이지
+ * 않는 전화를 받을 수 있으면 일시정지가 이득이 된다 — 벨은 경과 시간으로
+ * 재고 일시정지에서는 경과가 늘지 않으므로, 멈춰 세운 뒤 받으면 라이프를
+ * 잃을 위험 없이 상사의 말을 읽는다. 14.5의 공정성 규칙은 그 반대를
+ * 요구한다. `missPhone`과 `applyVerdict`가 이미 같은 가드를 갖고 있다.
+ */
 export function answerPhone(state: GameState): GameState {
-  return !state.phone || state.phone.status === 'CONNECTED'
-    ? state
-    : {
-        ...state,
-        phone: { ...state.phone, status: 'CONNECTED' },
-        phoneAnswered: state.phoneAnswered + 1,
-      }
+  const phone = state.phone
+
+  if (state.phase !== 'PLAYING' || !phone || phone.status === 'CONNECTED') {
+    return state
+  }
+
+  return {
+    ...state,
+    phone: { ...phone, status: 'CONNECTED' },
+    phoneAnswered: state.phoneAnswered + 1,
+  }
 }
 
 /** `↓` 나중에. 팝업만 내린다. **벨 시계는 계속 간다**(14.3). */
 export function deferPhone(state: GameState): GameState {
-  return state.phone?.status === 'RINGING'
-    ? { ...state, phone: { ...state.phone, status: 'DEFERRED' } }
-    : state
+  const phone = state.phone
+
+  if (state.phase !== 'PLAYING' || phone?.status !== 'RINGING') {
+    return state
+  }
+
+  return { ...state, phone: { ...phone, status: 'DEFERRED' } }
 }
 
 /** `↓` 통화 종료. 전화가 끝난다. 기록은 phoneLog에 남는다. */
 export function hangUpPhone(state: GameState): GameState {
-  return state.phone?.status === 'CONNECTED'
+  return state.phase === 'PLAYING' && state.phone?.status === 'CONNECTED'
     ? { ...state, phone: null }
     : state
 }
@@ -282,7 +320,7 @@ export function applyVerdict(
       timeouts: state.timeouts + 1,
       currentAlert: null,
       lastVerdict: verdict,
-      log: [...state.log, createRecord(alert, verdict, state.phoneLog)],
+      log: [...state.log, createRecord(alert, verdict, heardCall(state))],
     }
   }
 
@@ -310,7 +348,7 @@ export function applyVerdict(
       state.missedThreats + (verdict === 'MISSED_THREAT' ? 1 : 0),
     currentAlert: null,
     lastVerdict: verdict,
-    log: [...state.log, createRecord(alert, verdict, state.phoneLog)],
+    log: [...state.log, createRecord(alert, verdict, heardCall(state))],
   }
 }
 

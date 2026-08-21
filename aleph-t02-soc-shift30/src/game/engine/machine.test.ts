@@ -348,6 +348,52 @@ describe('상사의 전화', () => {
     expect(done.phoneLog).toBe(call)
   })
 
+  // 일시정지에서는 팝업이 그려지지 않는데 방향키 리스너는 살아 있다.
+  // 받을 수 있으면 일시정지가 이득이 된다 — 벨이 경과 시간으로 재지므로
+  // 멈춰 세운 채로는 끝나지 않는다. 14.5의 공정성 규칙과 반대다.
+  it('일시정지 중에는 전화를 받지도 내리지도 끊지도 못한다', () => {
+    const paused = pauseGame(ringing())
+    const connected = pauseGame(answerPhone(ringing()))
+
+    expect(answerPhone(paused)).toBe(paused)
+    expect(deferPhone(paused)).toBe(paused)
+    expect(hangUpPhone(connected)).toBe(connected)
+  })
+
+  // 안 들은 말을 "따랐다"고 적으면 우연히 같은 선택을 한 것이 복종으로
+  // 기록된다. 14.8의 장치는 상사의 말과 카드가 부딪히는 순간을 보여주는
+  // 것인데, 못 들었으면 부딪힌 적이 없다.
+  it('받지 않은 전화의 지시는 판정 기록에 붙지 않는다', () => {
+    const target = ALERTS.find((alert) => alert.id === call.alertId)!
+    const missed = missPhone(ringing())
+    const decided = applyVerdict(
+      { ...missed, currentAlert: target },
+      'CORRECT',
+      target,
+    )
+
+    expect(decided.log[0].order).toBeUndefined()
+    expect(decided.log[0].orderFollowed).toBeUndefined()
+  })
+
+  it('받은 전화의 지시는 판정 기록에 붙는다', () => {
+    const target = ALERTS.find((alert) => alert.id === call.alertId)!
+    const answered = answerPhone(ringing())
+    const decided = applyVerdict(
+      { ...answered, currentAlert: target },
+      'CORRECT',
+      target,
+    )
+
+    expect(decided.log[0].order).toBe(call.order)
+  })
+
+  it('일시정지 중에는 메모를 닫지 못한다', () => {
+    const paused = pauseGame(showMemo(playingState(), MEMOS[0], 3_000))
+
+    expect(dismissMemo(paused, 4_000)).toBe(paused)
+  })
+
   it('수신과 통화는 판정을 막고 나중에는 막지 않는다', () => {
     // 미루는 대신 경보를 처리할 수 있어야 미루는 선택에 값이 생긴다. 14.5.
     expect(isPhoneBlocking(ringing())).toBe(true)
@@ -420,8 +466,15 @@ describe('전화가 지목한 경보의 판정 기록', () => {
     caller: '관제 팀장',
     message: '통과시켜.',
   }
+  // 받은 전화다. 지시를 들어야 따르고 어기는 것이 성립한다(14.8).
+  // 받지 않은 경우는 `상사의 전화` 절에서 따로 본다.
   const withCall = (overrides = {}) =>
-    ({ ...playingState(), phoneLog: call, ...overrides }) as GameState
+    ({
+      ...playingState(),
+      phoneLog: call,
+      phoneAnswered: 1,
+      ...overrides,
+    }) as GameState
 
   it('지시를 따라 틀리면 따랐다고 남는다', () => {
     const state = applyVerdict(withCall(), 'MISSED_THREAT', target)

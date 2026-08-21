@@ -109,6 +109,23 @@ describe('메모 중 판정 입력', () => {
     expect(alertTitle()).toBe(title)
   })
 
+  /**
+   * 일시정지 중에는 메모도 화면에 없다. 그런데 SPACE 리스너는 살아 있다.
+   *
+   * 보이지 않는 메모를 닫을 수 있으면 **일시정지가 이득이 된다.** 근무
+   * 시계는 메모를 읽는 동안에도 흐르지만 일시정지에서는 멈추므로, 멈춰
+   * 세운 뒤 닫으면 읽는 값을 30초에서 내지 않는다.
+   */
+  it('일시정지 중에는 메모를 닫을 수 없다', () => {
+    startShiftAndWaitForMemo()
+
+    press('p')
+    press(' ')
+    press('p')
+
+    expect(container.querySelector('.memo-toast')).not.toBeNull()
+  })
+
   it('메모 중 키를 눌러도 닫은 뒤의 판정은 받아들여진다', () => {
     startShiftAndWaitForMemo()
     const title = alertTitle()

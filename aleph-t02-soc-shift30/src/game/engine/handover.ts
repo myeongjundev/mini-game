@@ -153,10 +153,17 @@ function phoneBlock(state: GameState): HandoverBlock | null {
   const time = clockAtElapsed(PHONE.slotMs)
   const label = labelOf(call.alertId)
 
-  if (state.phoneMissed > 0) {
+  // 받지 않았으면 무슨 말이었는지 모른다(15.3). `phoneMissed`만 보면 안 된다 —
+  // 나중으로 내린 채 근무가 끝나면(라이프 소진 등) 벨이 끝나지 않아 놓친
+  // 것으로도 세어지지 않는다. 그때도 들은 적은 없다.
+  if (state.phoneAnswered === 0) {
     return {
       time,
-      lines: [`${PHONE_CALLER}에게 전화가 왔는데 받지 못했습니다.`],
+      lines: [
+        state.phoneMissed > 0
+          ? `${PHONE_CALLER}에게 전화가 왔는데 받지 못했습니다.`
+          : `${PHONE_CALLER}에게 전화가 왔는데 끝내 받지 못했습니다.`,
+      ],
     }
   }
 

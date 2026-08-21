@@ -184,6 +184,31 @@ describe('buildHandover', () => {
     expect(text).not.toContain('지시')
   })
 
+  // 나중으로 내린 채 근무가 끝나면 벨이 끝나지 않아 놓친 것으로도 세어지지
+  // 않는다. 그래도 들은 적은 없으므로 지시를 적으면 안 된다.
+  it('끝내 받지 않은 전화도 지시를 적지 않는다', () => {
+    const state = finished({
+      phase: 'FAILURE',
+      phoneLog: call,
+      phoneAnswered: 0,
+      phoneMissed: 0,
+      log: [
+        record({
+          alertId: 'contractor-proddb',
+          severity: 'CRITICAL',
+          action: 'ALLOW',
+          verdict: 'MISSED_THREAT',
+          order: 'ALLOW',
+          orderFollowed: true,
+        }),
+      ],
+    })
+    const text = textOf(state)
+
+    expect(text).toContain('끝내 받지 못했습니다.')
+    expect(text).not.toContain('지시')
+  })
+
   it('지목한 경보가 안 올라온 판을 구분해 적는다', () => {
     const state = finished({ phoneLog: call, phoneAnswered: 1, log: [record()] })
 

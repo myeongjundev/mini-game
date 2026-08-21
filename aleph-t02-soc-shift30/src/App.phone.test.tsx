@@ -129,6 +129,37 @@ describe('상사의 전화 — 판을 굴려서', () => {
     expect(title()).not.toBe(before)
   })
 
+  /**
+   * 일시정지 중에는 전화가 화면에 없다. 팝업이 PLAYING 안에서만 그려지기
+   * 때문이다. 그런데 키 리스너는 PAUSED에서도 살아 있다(useKeyboard).
+   *
+   * 보이지 않는 전화를 받을 수 있으면 **일시정지가 이득이 된다.** 벨은 경과
+   * 시간으로 재는데 일시정지 중에는 경과가 늘지 않으므로, 멈춰 세운 뒤
+   * 느긋하게 받으면 라이프를 잃을 위험 없이 상사의 말을 읽는다. 14.5의
+   * 공정성 규칙은 그 반대를 요구한다.
+   */
+  it('일시정지 중에는 전화를 받을 수 없다', () => {
+    runUntilPhone()
+
+    press('p')
+    press('ArrowUp')
+    press('p')
+
+    expect(container.querySelector('.phone-overlay-connected')).toBeNull()
+    expect(phoneEl()).not.toBeNull()
+  })
+
+  it('일시정지 중에는 전화를 내리지도 끊지도 못한다', () => {
+    runUntilPhone()
+
+    press('p')
+    press('ArrowDown')
+    press('p')
+
+    expect(container.querySelector('.phone-deferred')).toBeNull()
+    expect(phoneEl()).not.toBeNull()
+  })
+
   it('벨을 놓치면 라이프가 준다', () => {
     runUntilPhone()
     const before = container.querySelectorAll('.heart-full').length
