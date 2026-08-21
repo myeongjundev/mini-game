@@ -16,6 +16,19 @@ import { MAX_FRAME_DELTA_MS } from './game/hooks/useGameLoop'
  * 21초까지 판을 굴리려면 그동안 경보를 살아서 넘겨야 하므로, 카드 제목으로
  * 정답을 찾아 눌러 준다.
  */
+/**
+ * **이 파일의 검사는 전부 21초를 굴린다.** 한 걸음마다 App 전체를 다시
+ * 그리므로 기본 제한 5초로는 느린 기계에서 넘어간다.
+ *
+ * 실제로 넘어갔다. 2026-08-20·21의 배포 두 번이 이 파일 때문에 실패했고,
+ * 그래서 08-21의 전화 작업이 공개본에 올라간 적이 없다. CI 러너는 공유
+ * 자원이라 로컬보다 느리고, 로컬에서도 다른 파일과 병렬로 돌 때 한 번
+ * 넘어갔다.
+ *
+ * `App.memo-hang.test.tsx`의 30초 검사도 같은 이유로 15초를 따로 받는다.
+ */
+vi.setConfig({ testTimeout: 20_000 })
+
 describe('상사의 전화 — 판을 굴려서', () => {
   let container: HTMLDivElement
   let root: ReturnType<typeof createRoot>
