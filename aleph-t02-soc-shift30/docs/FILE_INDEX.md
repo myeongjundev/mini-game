@@ -36,6 +36,7 @@
 - `prompts/04_LOBBY_MODAL_WINDOW_HANDOFF.md`
 - `prompts/05_CHARACTER_PORTRAITS_HANDOFF.md`
 - `prompts/06_CLAUDE_PRO_GAME_DEVELOPER_PERSONA.md`
+- `prompts/07_BGM_NIGHT_WATCH_HANDOFF.md`
 - `prompts/art-source/external-contractor-portrait-rejected-checkerboard.png`
 - `prompts/art-source/external-contractor-portrait-source.png`
 - `prompts/art-source/hr-manager-portrait-rejected-checkerboard.png`
@@ -54,6 +55,8 @@
 - `prompts/art-source/team-lead-portrait-rejected-checkerboard.png`
 - `prompts/art-source/team-lead-portrait-source.png`
 - `prompts/process-it-support-portrait.ps1`
+- `public/audio/bgm-preview.html`
+- `public/audio/soc-shift-night-watch-loop.wav`
 - `public/external-contractor-portrait-128.png`
 - `public/favicon.svg`
 - `public/hr-manager-portrait-128.png`
@@ -71,6 +74,7 @@
 - `public/phone-connected.webp`
 - `public/security-specialist-portrait-128.png`
 - `public/team-lead-portrait-128.png`
+- `scripts/generate-bgm.mjs`
 - `src/App.integration.test.tsx`
 - `src/App.memo-hang.test.tsx`
 - `src/App.menu-keys.test.tsx`
