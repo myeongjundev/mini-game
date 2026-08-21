@@ -77,6 +77,7 @@
 - `public/security-specialist-portrait-128.png`
 - `public/team-lead-portrait-128.png`
 - `scripts/generate-bgm-suite.mjs`
+- `src/App.bgm.test.tsx`
 - `src/App.damage.test.tsx`
 - `src/App.integration.test.tsx`
 - `src/App.memo-hang.test.tsx`

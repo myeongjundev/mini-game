@@ -320,6 +320,35 @@ export default function App() {
 
   useEffect(() => () => audioEngine.disable(), [])
 
+  /**
+   * 상태에 맞는 배경음. 규칙은 `prompts/08_BGM_INTEGRATION_FINAL_HANDOFF.md`
+   * 2절이다.
+   *
+   * 어느 곡을 틀지는 화면 상태에서 **파생시킨다.** 전환마다 명령을 내리면
+   * 빠뜨린 경로에서 곡이 겹치거나 남는다 — 재시작·탭 이탈·라이프 소진이
+   * 전부 다른 경로다.
+   *
+   * 메모와 전화는 근무 중의 사건이라 곡을 바꾸지 않는다. 일시정지는 위치를
+   * 지킨 채 멈추고, 근무가 끝나면 정지하고 0초로 되돌린다.
+   */
+  useEffect(() => {
+    const phase = state.game.phase
+    const kind =
+      phase === 'READY'
+        ? 'LOBBY'
+        : phase === 'PLAYING' || phase === 'PAUSED'
+          ? state.game.lives === 1
+            ? 'LAST_LINE'
+            : 'PLAY'
+          : null
+
+    audioEngine.syncBgm(kind, {
+      paused: phase === 'PAUSED',
+      muted: saved.mute,
+      volume: saved.volumeStep,
+    })
+  }, [state.game.phase, state.game.lives, saved.mute, saved.volumeStep])
+
   useEffect(() => {
     if (
       (state.game.phase === 'SUCCESS' || state.game.phase === 'FAILURE') &&
