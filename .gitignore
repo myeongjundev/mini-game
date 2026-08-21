@@ -27,6 +27,12 @@ evidence/*
 # 찍어보고 열어봐야 알 수 있어서, 공개 저장소에 자동으로 올리지 않는다.
 실행 이미지/
 
+# 제출 PDF 생성 결과와 작업 폴더. site/와 같은 이유로 제외한다 — 스크립트가
+# 다시 만드는 산출물이고, 그 안에 캡처가 합쳐져 들어간다.
+# README에 넣은 화면은 docs/screenshots/에 한 장씩 확인하고 따로 두었다.
+output/
+tmp/
+
 # Operating system and editor files
 .DS_Store
 Thumbs.db
