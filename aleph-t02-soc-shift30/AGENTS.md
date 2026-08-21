@@ -3,11 +3,24 @@
 ## Mission
 Implement and verify **SOC SHIFT:30**, a 30-second browser SOC decision game.
 
+## Current phase (2026-08-21) — read this before anything else
+**Feature work is done. Game rules are frozen. Build, lint, and 291 tests pass,
+and the local build hash matches what is deployed.**
+
+Start from `prompts/10_CODEX_SUBMISSION_PHASE_HANDOFF.md`. It states what is
+frozen, what is left, and what must not be touched. There is **no pending code
+task** — do not start one unless the user asks.
+
+Two things that are easy to get wrong right now:
+- `DIFFICULTY.eventIntervalMs` is fixed at 3000 by user decision. Do not tune it.
+- `records/*.csv` are intentionally empty. Do not fill them with invented numbers.
+
 ## Read first
 Before modifying code, read:
 1. `docs/GAME_SPEC.md`
 2. `docs/ARCHITECTURE.md`
 3. `docs/QA_CHECKLIST.md`
+4. `docs/TROUBLESHOOTING.md` — bugs already hit here, and the checks that block them
 
 ## Architecture
 - Static frontend: React 18 + Vite + TypeScript
@@ -49,6 +62,13 @@ At minimum:
 - Avoid destructive git commands.
 - Do not force push.
 - Ask before adding a production dependency unless clearly required.
+- **This repository is public.** `evidence/` and `실행 이미지/` hold screen
+  captures and are gitignored. Do not un-ignore them or commit their contents —
+  what is in a capture is unknown until someone opens it.
+- **Do not edit files with `perl -0pi` or `sed -i`.** This is a CRLF repository
+  and those commands have corrupted files here three times. Use an editing tool.
+- Do not record a check as passed unless it was actually run.
+- Do not submit the assignment without the user's explicit go-ahead.
 
 ## Completion report
 Return:
