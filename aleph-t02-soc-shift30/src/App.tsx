@@ -18,7 +18,7 @@ import VerdictFlash from './components/VerdictFlash'
 import PausedScreen from './components/screens/PausedScreen'
 import ReadyScreen from './components/screens/ReadyScreen'
 import ResultScreen from './components/screens/ResultScreen'
-import { DIFFICULTY, VERDICT_FLASH_MS } from './game/config'
+import { DIFFICULTY, LIFE_FLASH_MS, VERDICT_FLASH_MS } from './game/config'
 import { ALERTS } from './game/data/alerts'
 import {
   createAlertQueue,
@@ -196,6 +196,16 @@ export default function App() {
     decisiveFact: string
     explanation: string
   } | null>(null)
+  /**
+   * 라이프를 잃을 때마다 1씩 는다. 화면 흔들림을 다시 시작시키는 데 쓴다.
+   *
+   * 흔들림을 `data-feedback`에 걸면 **같은 종류로 연달아 틀렸을 때 두 번째가
+   * 흔들리지 않는다.** 속성 값이 그대로여서 CSS 애니메이션이 다시 시작되지
+   * 않기 때문이다. 홀짝을 번갈아 넣어 선택자가 실제로 바뀌게 한다.
+   */
+  const [damage, setDamage] = useState(0)
+  const [lifeLost, setLifeLost] = useState(false)
+  const previousLivesRef = useRef<number>(DIFFICULTY.lives)
   const resolvedRef = useRef<string | null>(null)
   const lastExplanationRef = useRef('')
   const lastDecisiveFactRef = useRef('')
@@ -276,6 +286,28 @@ export default function App() {
 
     return () => window.clearTimeout(timeoutId)
   }, [state.game.reviewed, state.game.timeouts])
+
+  /**
+   * 라이프가 준 순간을 잡는다. 판정 종류가 아니라 **잃었다는 사실**에 건다.
+   *
+   * 오답·미판정은 언제나 라이프를 하나 깎으므로 결과가 같고, 그 위에
+   * **놓친 전화**까지 덮인다. 지금까지 놓친 전화는 라이프를 깎으면서도
+   * 화면에 아무 표시가 없었다(14.3).
+   */
+  useEffect(() => {
+    const previous = previousLivesRef.current
+    previousLivesRef.current = state.game.lives
+
+    if (state.game.lives >= previous) {
+      return
+    }
+
+    setDamage((count) => count + 1)
+    setLifeLost(true)
+    const timeoutId = window.setTimeout(() => setLifeLost(false), LIFE_FLASH_MS)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [state.game.lives])
 
   // 경고음을 severity가 아니라 tier로 건다.
   // severity는 정답과 상관이 높아 소리만으로 답이 새기 때문이다.
@@ -519,6 +551,7 @@ export default function App() {
       data-feedback={
         feedback?.verdict.toLowerCase().replaceAll('_', '-') ?? undefined
       }
+      data-damage={damage === 0 ? undefined : damage % 2}
     >
       {state.game.phase !== 'READY' ? (
         <header className="app-header">
@@ -544,7 +577,7 @@ export default function App() {
 
       {state.game.phase === 'PLAYING' ? (
         <>
-          <Hud state={state.game} />
+          <Hud state={state.game} lifeLost={lifeLost} />
           {/* 메모는 경보 카드 위를 덮는다. 시선이 이미 여기 있어서 놓치지 않고,
               화면 높이가 늘지 않으며, 화면 아래 판정 표시와 겹치지도 않는다.
               가려도 불공정하지 않은 이유는 경보 제한 시간이 멈추기 때문이다. */}

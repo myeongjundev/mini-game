@@ -8,6 +8,7 @@ import { createInitialGameState } from '../game/engine/machine'
 import type { DecisionRecord } from '../game/types'
 import ActionButtons from './ActionButtons'
 import AlertCard from './AlertCard'
+import Hud from './Hud'
 import ShiftLog from './ShiftLog'
 import PausedScreen from './screens/PausedScreen'
 import MemoLog from './MemoLog'
@@ -185,6 +186,33 @@ describe('screen components', () => {
     }
     expect(markup).toContain('error-false-positive')
     expect(markup).toContain('error-missed-threat')
+  })
+
+  it('방금 꺼진 하트에만 표시를 붙인다', () => {
+    const state = { ...createInitialGameState(), phase: 'PLAYING' as const, lives: 2 }
+    const markup = renderToStaticMarkup(<Hud state={state} lifeLost />)
+    const hearts = markup.match(/class="heart-icon[^"]*"/g) ?? []
+
+    expect(hearts).toHaveLength(3)
+    expect(hearts.filter((cls) => cls.includes('heart-just-lost'))).toHaveLength(1)
+    // 남은 개수 바로 다음 자리가 방금 꺼진 하트다.
+    expect(hearts[2]).toContain('heart-just-lost')
+    expect(hearts[2]).toContain('heart-empty')
+  })
+
+  it('라이프를 잃지 않았으면 하트 표시가 없다', () => {
+    const state = { ...createInitialGameState(), phase: 'PLAYING' as const, lives: 2 }
+    const markup = renderToStaticMarkup(<Hud state={state} />)
+
+    expect(markup).not.toContain('heart-just-lost')
+  })
+
+  it('마지막 하나가 남으면 하트 줄이 경고 상태가 된다', () => {
+    const one = { ...createInitialGameState(), phase: 'PLAYING' as const, lives: 1 }
+    const two = { ...createInitialGameState(), phase: 'PLAYING' as const, lives: 2 }
+
+    expect(renderToStaticMarkup(<Hud state={one} />)).toContain('heart-row-critical')
+    expect(renderToStaticMarkup(<Hud state={two} />)).not.toContain('heart-row-critical')
   })
 
   it('puts the handover document above the score table', () => {

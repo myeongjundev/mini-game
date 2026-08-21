@@ -644,6 +644,16 @@ button:disabled {
   color: var(--text-dim);
 }
 
+.heart-just-lost {
+  animation: heart-lost 400ms steps(3);
+}
+
+/* 마지막 하나. 색만으로 알리지 않는다 — 남은 하트 수와 모양이 이미
+   말하고 있고, 이것은 그 위에 얹는 강조다. */
+.heart-row-critical .heart-full {
+  color: var(--red);
+}
+
 .alert-card {
   position: relative;
   min-height: 330px;
@@ -845,10 +855,18 @@ button:disabled {
   color: var(--text-dim);
 }
 
-.app-shell[data-feedback='false-positive'],
-.app-shell[data-feedback='missed-threat'],
-.app-shell[data-feedback='timeout'] {
-  animation: screen-shake 120ms linear;
+/* 라이프를 잃으면 화면이 흔들린다. 판정 종류가 아니라 잃었다는 사실에
+   걸어서 놓친 전화까지 덮는다.
+
+   홀짝을 번갈아 쓰는 이유가 있다. 한 선택자에 걸어두면 같은 종류로 연달아
+   틀렸을 때 두 번째가 흔들리지 않는다 — 속성 값이 그대로면 CSS 애니메이션은
+   다시 시작되지 않는다. 내용이 같은 키프레임 둘을 번갈아 쓴다. */
+.app-shell[data-damage='0'] {
+  animation: screen-shake-a 260ms steps(3);
+}
+
+.app-shell[data-damage='1'] {
+  animation: screen-shake-b 260ms steps(3);
 }
 
 .paused-screen,
@@ -1143,18 +1161,70 @@ button:disabled {
   }
 }
 
-@keyframes screen-shake {
+/* 좌우로 세 번 오간 뒤 잦아든다. steps()로 끊어 CRT 톤을 지킨다.
+   판정 표시(800ms)보다 짧아야 다음 경보의 결과처럼 읽히지 않는다. */
+@keyframes screen-shake-a {
   0%,
   100% {
     transform: translateX(0);
   }
 
-  25% {
-    transform: translateX(calc(var(--gap-xs) * -1));
+  15% {
+    transform: translateX(-10px);
+  }
+
+  35% {
+    transform: translateX(9px);
+  }
+
+  55% {
+    transform: translateX(-6px);
   }
 
   75% {
-    transform: translateX(var(--gap-xs));
+    transform: translateX(3px);
+  }
+}
+
+/* 위와 내용이 같다. 연속으로 틀렸을 때 다시 시작시키려고 이름만 나눈다. */
+@keyframes screen-shake-b {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  15% {
+    transform: translateX(-10px);
+  }
+
+  35% {
+    transform: translateX(9px);
+  }
+
+  55% {
+    transform: translateX(-6px);
+  }
+
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+/* 방금 꺼진 하트. 모양이 이미 가득에서 빔으로 바뀌므로 이 표시가 없어도
+   정보는 전달된다. 눈에 걸리게 하는 것이 전부다. */
+@keyframes heart-lost {
+  0% {
+    transform: scale(1.7);
+    color: var(--red);
+  }
+
+  60% {
+    transform: scale(1.2);
+    color: var(--red);
+  }
+
+  100% {
+    transform: scale(1);
   }
 }
 
@@ -1175,6 +1245,19 @@ button:disabled {
 
 .app-shell[data-reduce-motion='true'][data-feedback] {
   animation: reduced-border-flash 200ms linear;
+}
+
+/* 움직임 줄이기에서는 흔들지 않는다. 없애는 것이 아니라 테두리 색으로
+   바꾼다 — 라이프를 잃었다는 사실은 똑같이 전해져야 한다. */
+.app-shell[data-reduce-motion='true'][data-damage='0'],
+.app-shell[data-reduce-motion='true'][data-damage='1'] {
+  animation: reduced-border-flash 200ms linear;
+}
+
+/* 하트도 같다. 크기 변화를 빼고 색만 남긴다. */
+[data-reduce-motion='true'] .heart-just-lost {
+  animation: none;
+  color: var(--red);
 }
 
 @media (max-width: 640px) {
