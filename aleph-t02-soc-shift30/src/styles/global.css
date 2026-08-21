@@ -1835,8 +1835,12 @@ time,
     max-width: 96%;
   }
 
+  /* **`min(100%, …)`를 빼면 안 된다.** 210px를 그냥 넣었더니 390px 화면에서
+     상자가 128px인데 그림이 210px가 돼 오른쪽 83px가 잘렸다. 상자는
+     `overflow: hidden`이라 스크롤바도 없이 조용히 잘린다.
+     기본값 `min(100%, 268px)`이 갖고 있던 보호를 좁은 화면에서만 잃었다. */
   .phone-device-art {
-    width: 210px;
+    width: min(100%, 210px);
   }
 
   .phone-overlay-connected .phone-device-art {
