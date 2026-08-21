@@ -34,6 +34,9 @@
       h2 { margin: 0 0 24px; color: #e2564d; font-size: 15px; }
       p { line-height: 1.55; }
       audio { width: 100%; margin: 18px 0; accent-color: #f0a93b; }
+      section { margin-top: 22px; border-top: 1px solid #232b36; padding-top: 18px; }
+      section h2 { margin-bottom: 5px; }
+      section p { margin: 5px 0; color: #aab3be; font-size: 13px; }
       dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; }
       dt { color: #6fcf6b; }
       dd { margin: 0; text-align: right; }
@@ -44,22 +47,47 @@
   <body>
     <main>
       <div class="eyebrow">● AUDIO NODE // ONLINE</div>
-      <h1>INCIDENT ESCALATION</h1>
-      <h2>SOC SHIFT:30 — BGM 02 / RECOMMENDED</h2>
-      <p>감시 → 이상 징후 → 임계 상황으로 10초마다 긴장이 상승하는 게임 전용 시안입니다.</p>
-      <audio controls loop preload="metadata">
-        <source src="./soc-shift-incident-escalation-loop.wav" type="audio/wav" />
-        이 브라우저에서는 WAV 재생을 지원하지 않습니다.
-      </audio>
-      <dl>
-        <dt>LENGTH</dt><dd>00:30</dd>
-        <dt>TEMPO</dt><dd>120 BPM / HALF-TIME FEEL</dd>
-        <dt>STRUCTURE</dt><dd>10s × 3 THREAT TIERS</dd>
-        <dt>LOOP</dt><dd>ENABLED</dd>
-      </dl>
+      <h1>SHIFT AUDIO SUITE</h1>
+      <h2>SOC SHIFT:30 — THREE GAME STATES</h2>
+      <p>각 게임 상태에 맞춘 세 곡입니다. 재생하면 다른 트랙은 자동으로 멈춥니다.</p>
+
+      <section>
+        <h2>01 // NIGHT OPERATIONS</h2>
+        <p>로비 · 차분한 새벽 관제실 · 32초</p>
+        <audio controls loop preload="metadata">
+          <source src="./soc-shift-lobby-loop.wav" type="audio/wav" />
+        </audio>
+      </section>
+
+      <section>
+        <h2>02 // ANALYST PULSE</h2>
+        <p>게임 플레이 · 일정한 판단 리듬 · 30초</p>
+        <audio controls loop preload="metadata">
+          <source src="./soc-shift-play-loop.wav" type="audio/wav" />
+        </audio>
+      </section>
+
+      <section>
+        <h2>03 // LAST LINE</h2>
+        <p>하트 1개 · 빠른 심박과 경고 신호 · 8초</p>
+        <audio controls loop preload="metadata">
+          <source src="./soc-shift-critical-heart-loop.wav" type="audio/wav" />
+        </audio>
+      </section>
+
       <p class="status">READY // TAP PLAY</p>
-      <p class="note">이전 시안 비교: <a href="./soc-shift-night-watch-loop.wav">NIGHT WATCH PULSE</a></p>
+      <p class="note">이전 시안: <a href="./soc-shift-night-watch-loop.wav">NIGHT WATCH PULSE</a> · <a href="./soc-shift-incident-escalation-loop.wav">INCIDENT ESCALATION</a></p>
       <p class="note"><a href="../">게임으로 돌아가기</a> · 모바일 자동 재생 제한 때문에 직접 재생 버튼을 눌러야 합니다.</p>
     </main>
+    <script>
+      const players = [...document.querySelectorAll('audio')]
+      for (const player of players) {
+        player.addEventListener('play', () => {
+          for (const other of players) {
+            if (other !== player) other.pause()
+          }
+        })
+      }
+    </script>
   </body>
 </html>
