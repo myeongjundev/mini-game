@@ -1,6 +1,7 @@
 import { DIFFICULTY } from '../../game/config'
 import type { GameState } from '../../game/types'
 import { formatAccuracy, formatScore, formatSeconds } from '../../utils/format'
+import HandoverReport from '../HandoverReport'
 import MemoLog from '../MemoLog'
 import ShiftLog from '../ShiftLog'
 
@@ -40,6 +41,7 @@ export default function ResultScreen({ state, bestScore, onRestart }: ResultScre
     <section className={`screen result-screen result-${state.phase.toLowerCase()}`} aria-labelledby="result-title">
       <p className="screen-kicker">SHIFT REPORT</p>
       <h2 id="result-title">{state.phase === 'SUCCESS' ? 'SHIFT COMPLETE' : 'SECURITY LOST'}</h2>
+      <HandoverReport state={state} />
       <dl className="result-grid">
         {rows.map(([label, value]) => (
           <div className="result-row" key={label}>

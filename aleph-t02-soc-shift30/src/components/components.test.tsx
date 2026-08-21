@@ -186,6 +186,25 @@ describe('screen components', () => {
     expect(markup).toContain('error-false-positive')
     expect(markup).toContain('error-missed-threat')
   })
+
+  it('puts the handover document above the score table', () => {
+    const state = {
+      ...createInitialGameState(),
+      phase: 'SUCCESS' as const,
+      timeLeftMs: 0,
+      reviewed: 2,
+      threatsBlocked: 2,
+    }
+    const markup = renderToStaticMarkup(
+      <ResultScreen state={state} bestScore={800} onRestart={() => undefined} />,
+    )
+
+    expect(markup).toContain('INCIDENT HANDOVER')
+    expect(markup).toContain('02:47 – 03:17')
+    expect(markup.indexOf('INCIDENT HANDOVER')).toBeLessThan(
+      markup.indexOf('ALERTS REVIEWED'),
+    )
+  })
 })
 
 describe('shift log', () => {
