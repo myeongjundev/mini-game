@@ -197,13 +197,13 @@ button {
   display: grid;
   height: 100%;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 0.3em;
+  gap: 0.2em;
 }
 
 .lobby-menu {
   display: grid;
   align-content: safe center;
-  gap: 0.3em;
+  gap: 0.2em;
   min-height: 0;
   overflow-y: auto;
 }
@@ -235,12 +235,12 @@ button {
 
 .lobby-title h2 {
   margin: 0.12em 0 0;
-  font-size: 1.9em;
+  font-size: 1.75em;
   letter-spacing: 0.06em;
 }
 
 .lobby-title p {
-  margin: 0.25em 0;
+  margin: 0.18em 0;
   color: var(--text-dim);
   font-size: 0.93em;
   letter-spacing: 0.16em;
@@ -249,8 +249,16 @@ button {
 .lobby-actions {
   display: grid;
   width: 72%;
-  gap: 0.4em;
+  gap: 0.3em;
   justify-self: center;
+}
+
+/* 메뉴가 유리보다 높으면 조작 안내가 잘린다. 글자는 11px 하한(DESIGN_TOKENS
+   8절) 때문에 못 줄이므로 **줄 사이를 줄인다.**
+   1920에서도 씬 폭이 1438에서 멈춰 유리가 더 커지지 않으므로, 큰 화면에서
+   배경을 더 확대하는 방법은 쓸 수 없다 — 확대는 책상 가장자리를 잘라낸다. */
+.lobby-actions button {
+  padding: 0.28em 0.55em;
 }
 
 .lobby-actions button,
@@ -264,7 +272,7 @@ button {
 }
 
 .lobby-actions .lobby-start {
-  padding: 0.4em;
+  padding: 0.32em;
   color: var(--bg);
   background: var(--cyan);
   border-color: var(--cyan);
@@ -1334,6 +1342,11 @@ button:disabled {
     font-size: clamp(12px, 3.1vw, 13px);
   }
 
+  /* 320px에서 여유가 2px밖에 없었다. 확대는 더 못 올리고(1.44를 넘으면
+     유리 좌우가 씬 밖으로 나간다) 안내 글자도 11.16px이라 못 줄인다.
+     줄 사이를 줄이는 것은 아래 `max-width: 1100` 블록이 맡는다 — 그쪽이
+     뒤에 있어 여기서 적어도 덮인다. */
+
   .ready-example-grid {
     grid-template-columns: 1fr;
   }
@@ -1389,7 +1402,10 @@ time,
 /* 641~1100px 구간은 CRT가 세로로 좁아 장식 줄이 조작 안내를 화면 밖으로
    밀어낸다. C-1 기준(첫 화면에서 조작이 보인다)을 지키려고 장식부터 접는다. */
 /* 1.35배 확대. 유리도 그만큼 커지므로 네 값에 1.35를 곱해 넣는다.
-   640px 이하는 화면 비율부터 달라서 따로 계산한다. */
+   640px 이하는 화면 비율부터 달라서 따로 계산한다.
+
+   1101 위쪽은 더 완만한 배율로 따로 나눈다. 여기 값을 그대로 쓰면 1366에서
+   여유가 91px이나 남아 책상이 필요 이상으로 잘린다. */
 @media (min-width: 641px) and (max-width: 1100px) {
   .lobby-scene {
     --scene-zoom: 1.35;
@@ -1400,16 +1416,42 @@ time,
   }
 }
 
+/* 1100에서 확대가 끝나는데 유리는 그만큼 커지지 않아 1101~1500에서 메뉴가
+   유리보다 높아졌다. 1101에서 41px, **1366에서 13px**이 넘쳐 조작 안내가
+   잘렸다. 1366은 과제 필수 해상도다(QA 2.1).
+
+   1.25면 최저점 1101에서 19px이 남는다. 1.2는 10px이라 글꼴 지표가 조금만
+   달라져도 다시 넘친다. 1.35를 그대로 늘리면 1366에서 91px이 남아 책상이
+   필요 이상으로 잘린다 — 확대는 적을수록 좋다.
+   left = 46.65 - 14.95×1.25 = 27.96 / top = 33.2 - 19.6×1.25 = 8.70
+   width = 29.9×1.25 = 37.38 / height = 39.21×1.25 = 49.01
+
+   씬 폭이 1438에서 멈추므로 1501 위로는 확대 없이도 들어간다. */
+@media (min-width: 1101px) and (max-width: 1500px) {
+  .lobby-scene {
+    --scene-zoom: 1.25;
+    --glass-left: 27.96%;
+    --glass-top: 8.7%;
+    --glass-width: 37.38%;
+    --glass-height: 49.01%;
+  }
+}
+
 /* 구간의 아래쪽 끝은 1.35로도 모자란다. 641px에서 유리가 239x176까지
    작아져 메뉴가 21px 넘친다. 1.5배까지가 한계다. 그 이상 키우면
    유리 위쪽이 씬 밖으로 나가 윗 베젤이 잘린다(한계 배율 1.69). */
 @media (min-width: 641px) and (max-width: 820px) {
+  /* 구간의 최저점 641px이 가장 빡빡하다. 1.5로는 10px이 모자랐다.
+     1.66까지 올린다. 한계 배율은 1.69이고 그 위로는 윗 베젤이 씬 밖으로
+     나간다.
+     left = 46.65 - 14.95×1.66 = 21.83 / top = 33.2 - 19.6×1.66 = 0.66
+     width = 29.9×1.66 = 49.63 / height = 39.21×1.66 = 65.09 */
   .lobby-scene {
-    --scene-zoom: 1.5;
-    --glass-left: 24.23%;
-    --glass-top: 3.79%;
-    --glass-width: 44.85%;
-    --glass-height: 58.82%;
+    --scene-zoom: 1.66;
+    --glass-left: 21.83%;
+    --glass-top: 0.66%;
+    --glass-width: 49.63%;
+    --glass-height: 65.09%;
   }
 
   .lobby-title h2 {
@@ -1417,7 +1459,13 @@ time,
   }
 
   .lobby-menu {
-    gap: 0.2em;
+    gap: 0.15em;
+  }
+
+  /* 13px × 0.85 = 11.05px. 11px 하한(DESIGN_TOKENS 8절) 바로 위다.
+     이 안내는 두 줄로 접히므로 한 줄당 줄어드는 만큼이 두 배로 돌아온다. */
+  .lobby-controls {
+    font-size: 0.85em;
   }
 }
 
@@ -1440,9 +1488,12 @@ time,
     font-size: 1.5em;
   }
 
+  /* 1100 이하 전 구간이 세로로 빡빡하다. 유리가 작아서 메뉴가 넘치면
+     조작 안내부터 잘린다. 글자는 11px 하한 때문에 못 줄이므로 줄 사이를
+     줄인다. **이 블록이 앞의 좁은 화면 블록들보다 뒤에 있어 최종값이다.** */
   .lobby-actions {
     width: 84%;
-    gap: 0.3em;
+    gap: 0.2em;
   }
 
   .lobby-actions button {
