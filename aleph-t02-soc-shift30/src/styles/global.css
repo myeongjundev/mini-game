@@ -376,6 +376,36 @@ button {
   border-top: 1px solid var(--line-dim);
 }
 
+/* 상사의 지시는 믿을 것이 못 된다는 경고. 이 게임에서 플레이어를 틀리게
+   만들 수 있는 유일한 요소라 다른 줄과 같은 무게로 두면 묻힌다.
+   빨강이 아니라 앰버다 — 오류가 아니라 주의다. */
+.guide-warning {
+  margin: 0;
+  padding: 0.4em 0.6em;
+  color: var(--text-dim);
+  font-size: 0.93em;
+  line-height: 1.4;
+  background: var(--panel);
+  border-left: 2px solid var(--amber);
+}
+
+.guide-warning strong {
+  color: var(--amber);
+}
+
+.guide-outro {
+  margin: 0;
+  padding-top: 0.3em;
+  color: var(--text-dim);
+  font-size: 0.93em;
+  line-height: 1.4;
+  border-top: 1px solid var(--line-dim);
+}
+
+.guide-outro strong {
+  color: var(--cyan);
+}
+
 .guide-compare {
   display: grid;
   gap: 0.3em;

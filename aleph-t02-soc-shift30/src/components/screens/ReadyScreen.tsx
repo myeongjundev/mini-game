@@ -3,9 +3,10 @@ import {
   type CSSProperties, type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 
-import { DIFFICULTY, MEMO } from '../../game/config'
+import { DIFFICULTY, MEMO, PHONE } from '../../game/config'
 import { ALERTS } from '../../game/data/alerts'
 import { MEMOS } from '../../game/data/memos'
+import { PHONE_CALLER } from '../../game/data/phoneCalls'
 import { PIXEL_ART } from '../../game/data/pixelArt'
 import type { Alert } from '../../game/types'
 import { VOLUME_PERCENT } from '../../services/audio'
@@ -107,7 +108,7 @@ function CompareRow({ alert }: { alert: Alert }) {
   )
 }
 
-export const GUIDE_PAGE_COUNT = 6
+export const GUIDE_PAGE_COUNT = 7
 
 // 가이드에 쓰는 예시 공지. 하드코딩하지 않고 실제 데이터에서 읽는다.
 // 데이터가 바뀌면 가이드도 함께 바뀌어야 한다. 경보 예시와 같은 규칙이다.
@@ -162,7 +163,36 @@ export function LobbyGuidePage({ page }: { page: number }) {
     )
   }
 
+  // 근무 후반에 한 번 걸려 온다. 규칙은 GAME_SPEC 14절이다.
+  //
+  // **이 게임에서 플레이어를 틀리게 만들 수 있는 유일한 요소다.** 카드와
+  // 공지는 언제나 협조적인데 상사는 아니다. 알려주지 않으면 처음 만나는
+  // 사람은 그냥 당한다. 라이프까지 걸려 있으므로 공지 다음에 바로 둔다.
   if (page === 2) {
+    return (
+      <>
+        <p className="guide-lead">
+          근무 후반에 <strong>{PHONE_CALLER}</strong>에게 전화가 옵니다.
+          경보 하나를 지목해 통과시키라거나 막으라고 지시합니다.
+        </p>
+        <ul className="guide-list">
+          <li><kbd>↑</kbd> 받기 · <kbd>↓</kbd> 나중에. 마우스로도 됩니다</li>
+          <li>
+            벨은 <strong>{formatSeconds(PHONE.ringMs)}</strong> 울립니다.
+            <strong> 끝까지 안 받으면 라이프가 줄어듭니다</strong>
+          </li>
+          <li>받는 동안에는 <strong>경보 제한시간이 멈춥니다</strong>. 전화 때문에 경보까지 놓치지는 않습니다</li>
+          <li><kbd>↓</kbd>로 내려도 <strong>벨은 계속 갑니다</strong>. 미루는 것이지 없애는 것이 아닙니다</li>
+        </ul>
+        <p className="guide-warning">
+          <strong>지시가 언제나 옳지는 않습니다.</strong> 공지와 달리 상사의 말은
+          믿을 것이 못 됩니다. 카드에 적힌 사실이 늘 먼저입니다.
+        </p>
+      </>
+    )
+  }
+
+  if (page === 3) {
     return (
       <>
         <p className="guide-lead">표시는 <strong>수상한 항목에만</strong> 붙습니다.</p>
@@ -171,7 +201,7 @@ export function LobbyGuidePage({ page }: { page: number }) {
     )
   }
 
-  if (page === 3) {
+  if (page === 4) {
     return (
       <>
         <p className="guide-lead"><strong>사람이 할 수 없는 수준</strong>이면 자동화입니다.</p>
@@ -180,7 +210,7 @@ export function LobbyGuidePage({ page }: { page: number }) {
     )
   }
 
-  if (page === 4) {
+  if (page === 5) {
     return (
       <>
         <p className="guide-lead">
@@ -207,6 +237,11 @@ export function LobbyGuidePage({ page }: { page: number }) {
         <div><dt>FALSE POSITIVE</dt><dd>정상을 막아 가용성을 잃습니다</dd></div>
         <div><dt>MISSED THREAT</dt><dd>위협을 통과시켜 침해를 놓칩니다</dd></div>
       </dl>
+      {/* 결과 화면 맨 위가 점수표가 아니라 문서다. 규칙은 GAME_SPEC 15절. */}
+      <p className="guide-outro">
+        근무가 끝나면 <strong>INCIDENT HANDOVER</strong>가 뜹니다.
+        그 판에 있었던 일을 다음 근무자에게 넘기는 문서입니다.
+      </p>
     </>
   )
 }
@@ -216,6 +251,7 @@ export function LobbyGuidePage({ page }: { page: number }) {
 export const GUIDE_TITLES = [
   '근무 요령',
   '근무 중 공지',
+  '상사의 전화',
   '통과시키는 경보',
   '막는 경보',
   '같아 보이지만 다른 것',

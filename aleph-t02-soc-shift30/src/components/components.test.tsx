@@ -1,8 +1,11 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
+import { PHONE } from '../game/config'
 import { ALERTS } from '../game/data/alerts'
 import { MEMOS } from '../game/data/memos'
+import { PHONE_CALLER } from '../game/data/phoneCalls'
+import { formatSeconds } from '../utils/format'
 import { PORTRAIT_BY_ALERT, PORTRAIT_BY_DEPARTMENT } from '../game/data/portraits'
 import { createInitialGameState } from '../game/engine/machine'
 import type { DecisionRecord } from '../game/types'
@@ -119,6 +122,27 @@ describe('screen components', () => {
     const pageOf = (title: string) => GUIDE_TITLES.indexOf(title)
     expect(renderToStaticMarkup(<LobbyGuidePage page={pageOf('통과시키는 경보')} />)).toContain(allow!.explanation)
     expect(renderToStaticMarkup(<LobbyGuidePage page={pageOf('막는 경보')} />)).toContain(block!.explanation)
+  })
+
+  /**
+   * 가이드가 규칙에서 떨어져 나가지 않게 붙든다.
+   *
+   * 상사의 전화는 08-21에 들어왔는데 가이드에는 한동안 없었다. 라이프를
+   * 깎고 지시가 거짓일 수 있는 장치를 안내 없이 만나면 처음 하는 사람은
+   * 그냥 당한다. 시간 값은 설정에서 파생시켜, 벨 길이를 바꾸면 이 검사가
+   * 같이 움직이게 한다.
+   */
+  it('teaches the phone rules that can cost a life', () => {
+    const pageOf = (title: string) => GUIDE_TITLES.indexOf(title)
+    const markup = renderToStaticMarkup(<LobbyGuidePage page={pageOf('상사의 전화')} />)
+
+    expect(markup).toContain(PHONE_CALLER)
+    expect(markup).toContain(formatSeconds(PHONE.ringMs))
+    expect(markup).toContain('라이프가 줄어듭니다')
+    // 카드와 공지는 협조적이지만 상사는 아니다. 그것만은 반드시 알린다.
+    expect(markup).toContain('지시가 언제나 옳지는 않습니다')
+    // 미루는 것이 없애는 것으로 읽히면 벨을 놓친다.
+    expect(markup).toContain('벨은 계속 갑니다')
   })
 
   it('renders every guide page without throwing', () => {

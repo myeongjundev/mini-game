@@ -122,6 +122,13 @@ describe('ReadyScreen intro and lobby', () => {
     expect(container.querySelector('.guide-memo-body')?.textContent).toBeTruthy()
     expect(container.textContent).toContain('경보 제한시간도 함께 멈춥니다')
 
+    // 전화도 근무 중에 끼어드는 것이라 판단 교재보다 앞이다. 라이프가
+    // 걸려 있고 지시가 거짓일 수 있다는 것을 미리 알려야 한다.
+    act(() => next()?.click())
+    expect(guideHeading()).toBe('상사의 전화')
+    expect(container.textContent).toContain('끝까지 안 받으면 라이프가 줄어듭니다')
+    expect(container.textContent).toContain('지시가 언제나 옳지는 않습니다')
+
     // 통과와 차단을 쪽으로 나눠 각각 이유까지 보여준다.
     act(() => next()?.click())
     expect(guideHeading()).toBe('통과시키는 경보')
