@@ -119,6 +119,56 @@ describe('라이프를 잃으면', () => {
     expect(container.querySelector('.heart-row-critical')).not.toBeNull()
   })
 
+  /**
+   * 한 판이 30초다. 다시 하려고 로비를 거쳐 START SHIFT를 또 누르는 것은
+   * 그 자체가 마찰이라 결과 화면에 재도전을 뒀다.
+   *
+   * 초기화는 로비를 거친 재시작과 **똑같아야 한다.** 지름길이라는 이유로
+   * 이전 판 값이 남으면 그게 더 나쁘다.
+   */
+  it('재도전은 로비를 거치지 않고 초기화된 새 판을 시작한다', () => {
+    start()
+    answerWrong()
+    answerWrong()
+    answerWrong()
+
+    expect(container.querySelector('.result-screen')).not.toBeNull()
+
+    const retry = [...container.querySelectorAll('button')].find(
+      (item) => item.textContent === 'RETRY SHIFT',
+    )
+    expect(retry).toBeDefined()
+    act(() => retry?.click())
+    frame(MAX_FRAME_DELTA_MS)
+
+    // 로비가 아니라 근무 중이다.
+    expect(container.querySelector('.lobby-scene')).toBeNull()
+    expect(container.querySelector('.result-screen')).toBeNull()
+    expect(container.querySelector('.alert-card')).not.toBeNull()
+
+    // 이전 판 값이 남지 않는다.
+    expect(hearts()).toBe(3)
+    expect(container.querySelector('.heart-row-critical')).toBeNull()
+    expect(container.querySelector('.heart-just-lost')).toBeNull()
+    // `data-damage`는 게임 값이 아니라 흔들림을 다시 시작시키는 누적 홀짝이라
+    // 판이 바뀌어도 남는다. 애니메이션은 이미 끝났고 다음 손실에서 뒤집힌다.
+  })
+
+  it('로비로 돌아가는 길도 남아 있다', () => {
+    start()
+    answerWrong()
+    answerWrong()
+    answerWrong()
+
+    const toLobby = [...container.querySelectorAll('button')].find(
+      (item) => item.textContent === 'RETURN TO READY',
+    )
+    expect(toLobby).toBeDefined()
+    act(() => toLobby?.click())
+
+    expect(container.querySelector('.lobby-scene')).not.toBeNull()
+  })
+
   it('방금 꺼진 하트에 표시가 붙는다', () => {
     start()
     answerWrong()

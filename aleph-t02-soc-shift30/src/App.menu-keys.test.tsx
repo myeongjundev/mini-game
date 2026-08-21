@@ -98,9 +98,10 @@ describe('멈춘 화면의 방향키 이동', () => {
     }
 
     expect(container.querySelector('.result-screen')).not.toBeNull()
-    expect(label()).toBe('RETURN TO READY')
+    // 재도전이 기본 버튼이다. 한 판이 30초라 다시 하는 쪽이 더 잦다.
+    expect(label()).toBe('RETRY SHIFT')
 
     press('ArrowDown')
-    expect(label()).not.toBe('RETURN TO READY')
+    expect(label()).not.toBe('RETRY SHIFT')
   })
 })

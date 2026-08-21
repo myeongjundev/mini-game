@@ -8,10 +8,13 @@ import ShiftLog from '../ShiftLog'
 export type ResultScreenProps = {
   state: GameState
   bestScore: number
+  /** 로비로 돌아간다. */
   onRestart: () => void
+  /** 로비를 거치지 않고 새 판을 바로 시작한다. */
+  onRetry: () => void
 }
 
-export default function ResultScreen({ state, bestScore, onRestart }: ResultScreenProps) {
+export default function ResultScreen({ state, bestScore, onRestart, onRetry }: ResultScreenProps) {
   const correct = state.threatsBlocked + state.normalAllowed
   const failures = state.falsePositives + state.missedThreats
   const falsePositiveRatio = failures === 0 ? 0 : state.falsePositives / failures
@@ -67,7 +70,13 @@ export default function ResultScreen({ state, bestScore, onRestart }: ResultScre
         memos={state.memoLog}
         seenAlertIds={state.log.map((entry) => entry.alertId)}
       />
-      <button className="primary-button" type="button" onClick={onRestart}>RETURN TO READY</button>
+      {/* 한 판이 30초다. 다시 하려고 로비를 거쳐 START SHIFT를 또 누르는 것은
+          그 자체가 마찰이다. 재도전을 기본 버튼으로 두어 엔터로 바로 이어지게
+          하고, 로비로 가는 길은 옆에 남긴다. */}
+      <div className="screen-actions">
+        <button className="primary-button" type="button" onClick={onRetry}>RETRY SHIFT</button>
+        <button className="secondary-button" type="button" onClick={onRestart}>RETURN TO READY</button>
+      </div>
     </section>
   )
 }

@@ -189,7 +189,7 @@ describe('screen components', () => {
       maxCombo: 3,
     }
     const markup = renderToStaticMarkup(
-      <ResultScreen state={state} bestScore={800} onRestart={() => undefined} />,
+      <ResultScreen state={state} bestScore={800} onRestart={() => undefined} onRetry={() => undefined} />,
     )
 
     for (const label of [
@@ -248,7 +248,7 @@ describe('screen components', () => {
       threatsBlocked: 2,
     }
     const markup = renderToStaticMarkup(
-      <ResultScreen state={state} bestScore={800} onRestart={() => undefined} />,
+      <ResultScreen state={state} bestScore={800} onRestart={() => undefined} onRetry={() => undefined} />,
     )
 
     expect(markup).toContain('INCIDENT HANDOVER')
@@ -623,6 +623,7 @@ describe('result screen memo tally', () => {
         state={{ ...base, memosShown: 4, memosRead: 2 }}
         bestScore={0}
         onRestart={() => undefined}
+        onRetry={() => undefined}
       />,
     )
 
@@ -637,6 +638,7 @@ describe('result screen memo tally', () => {
         state={{ ...base, memosShown: 0, memosRead: 0 }}
         bestScore={0}
         onRestart={() => undefined}
+        onRetry={() => undefined}
       />,
     )
 
@@ -650,6 +652,7 @@ describe('result screen memo tally', () => {
         state={{ ...base, score: 900, threatsBlocked: 4, memosShown: 4, memosRead: 4 }}
         bestScore={0}
         onRestart={() => undefined}
+        onRetry={() => undefined}
       />,
     )
     const withoutMemos = renderToStaticMarkup(
@@ -657,6 +660,7 @@ describe('result screen memo tally', () => {
         state={{ ...base, score: 900, threatsBlocked: 4, memosShown: 4, memosRead: 0 }}
         bestScore={0}
         onRestart={() => undefined}
+        onRetry={() => undefined}
       />,
     )
 

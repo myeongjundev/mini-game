@@ -446,6 +446,25 @@ export default function App() {
     dispatch({ type: 'RESTART' })
   }, [])
 
+  /**
+   * 로비를 거치지 않고 새 판을 바로 시작한다.
+   *
+   * 초기화는 `RESTART`가 그대로 맡는다. 여기서 상태를 따로 만들면 로비를
+   * 거친 재시작과 거치지 않은 재시작이 서로 달라진다 — 같은 리듀서를 두 번
+   * 태우고 시작만 이어 붙인다.
+   *
+   * 소리는 `handleStart`와 같은 이유로 여기서 켠다. 자동 재생 정책상 실제
+   * 클릭 안에서 살려야 한다.
+   */
+  const handleRetry = useCallback(() => {
+    if (!muteRef.current) {
+      audioEngine.enable()
+    }
+    setFeedback(null)
+    dispatch({ type: 'RESTART' })
+    dispatch({ type: 'START' })
+  }, [])
+
   const updateSaved = useCallback((update: Partial<Pick<Saved, 'mute' | 'volumeStep' | 'reduceMotion'>>) => {
     setSaved((previous) => {
       const next = { ...previous, ...update }
@@ -688,6 +707,7 @@ export default function App() {
           state={state.game}
           bestScore={Math.max(saved.bestScore, state.game.score)}
           onRestart={handleRestart}
+          onRetry={handleRetry}
         />
       ) : null}
 
