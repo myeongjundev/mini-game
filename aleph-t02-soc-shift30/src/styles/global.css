@@ -1399,12 +1399,16 @@ time,
   color: var(--amber);
 }
 
-/* 보낸 사람. 공지 아이콘 자리를 대신하므로 그만한 크기로 둔다.
-   글자 줄 하나 높이를 넘기면 본문이 밀린다. */
+/* 보낸 사람. 토스트가 `inset: 0`으로 카드를 덮으므로 이 크기가 화면
+   높이를 늘리지는 않는다. 다만 토스트 안에서 본문과 닫기 버튼을 밀어내지
+   않는지는 재봐야 한다(QA 13.8).
+
+   64px은 원본 128px의 정확히 절반이라 픽셀이 고르게 떨어진다. 48px은
+   8:3이라 어떤 점은 1px, 어떤 점은 2px로 찍혀 도트가 흔들린다. */
 .memo-portrait {
   flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
+  width: 64px;
+  height: 64px;
   image-rendering: pixelated;
 }
 
@@ -1611,15 +1615,20 @@ time,
   display: flex;
   justify-content: flex-end;
   gap: var(--gap-sm);
-  min-height: 48px;
+  min-height: 56px;
   padding: var(--gap-xs) var(--gap-sm);
   background: var(--panel);
   border-top: 1px solid var(--line);
 }
 
+/* 이 게임에서 가장 시간에 쫓기는 조작이다. 벨이 6초고 놓치면 라이프가
+   깎이므로, 손가락으로 정확히 닿아야 한다. 44px은 터치 목표의 하한이다.
+   35px이던 시절에는 폰에서 "버튼이 작아 놓친 것"과 "시간이 짧아 놓친 것"이
+   구분되지 않았다. */
 .phone-overlay-actions button {
   min-width: 112px;
-  padding: var(--gap-xs) var(--gap-sm);
+  min-height: 44px;
+  padding: var(--gap-sm) var(--gap-md);
   color: var(--amber);
   background: transparent;
   border: 1px solid var(--amber);
