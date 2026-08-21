@@ -29,14 +29,14 @@ https://myeongjundev.github.io/mini-game/audio/bgm-preview.html
 
 | 상태 | 제목 | 길이 | 역할 |
 |---|---|---:|---|
-| READY/로비 | `NIGHT OPERATIONS` | 32초 | 편안한 근무 전 야간 대기 |
+| READY/로비 | `NIGHT OPERATIONS` | 32초 | 밝고 편안한 근무 전 앰비언트 |
 | PLAYING, lives > 1 | `ANALYST PULSE` | 30초 | 일정한 판단 리듬 |
 | PLAYING, lives === 1 | `LAST LINE` | 8초 | 빠른 심박과 마지막 기회 압박 |
 
 - 포맷: PCM 16-bit WAV
 - 샘플레이트: 22,050Hz
 - 채널: 모노
-- 로비: 32초, 60 BPM, 피크 0.28, RMS 약 0.0808
+- 로비: 32초, 60 BPM, C장조 계열, 피크 0.26, RMS 약 0.0593
 - 플레이: 30초, 피크 0.40, RMS 약 0.0799
 - 하트 1개: 8초, 피크 0.46, RMS 약 0.1285
 
@@ -47,7 +47,8 @@ https://myeongjundev.github.io/mini-game/audio/bgm-preview.html
 
 목표는 긴장감을 주되 경보 읽기와 판정 효과음을 방해하지 않는 것이다.
 
-- 로비: 아주 약한 장비 험, 부드러운 major7/add9 패드, 작은 터미널 벨
+- 로비: 아주 약한 장비 험, Cmaj9 계열 패드, 천천히 떠오르는 3음 벨 멜로디.
+  드럼·심박·노이즈 틱 없음
 - 플레이: 일정한 저음 펄스와 데이터 틱, 비선율적인 스캔 신호
 - 하트 1개: 빠른 이중 심박, 트라이톤 경고, 촘촘한 데이터 틱
 - 공통: 판정 효과음을 위한 넓은 주파수·음량 여백
