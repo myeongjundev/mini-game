@@ -56,6 +56,7 @@
 - `prompts/art-source/team-lead-portrait-source.png`
 - `prompts/process-it-support-portrait.ps1`
 - `public/audio/bgm-preview.html`
+- `public/audio/soc-shift-incident-escalation-loop.wav`
 - `public/audio/soc-shift-night-watch-loop.wav`
 - `public/external-contractor-portrait-128.png`
 - `public/favicon.svg`
@@ -75,6 +76,7 @@
 - `public/security-specialist-portrait-128.png`
 - `public/team-lead-portrait-128.png`
 - `scripts/generate-bgm.mjs`
+- `scripts/generate-bgm-v2.mjs`
 - `src/App.integration.test.tsx`
 - `src/App.memo-hang.test.tsx`
 - `src/App.menu-keys.test.tsx`

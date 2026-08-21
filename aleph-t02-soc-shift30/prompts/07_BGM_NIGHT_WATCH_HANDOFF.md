@@ -1,4 +1,4 @@
-# BGM 01 — NIGHT WATCH PULSE 인계서
+# BGM 02 — INCIDENT ESCALATION 인계서
 
 마지막 갱신: 2026-08-21
 
@@ -11,9 +11,11 @@ CRT 관제 화면, 30초 판단 루프를 기준으로 제작했다. **음원과
 
 | 구분 | 파일 |
 |---|---|
-| 게임용 WAV | `public/audio/soc-shift-night-watch-loop.wav` |
+| 권장 게임용 WAV | `public/audio/soc-shift-incident-escalation-loop.wav` |
+| 이전 비교용 WAV | `public/audio/soc-shift-night-watch-loop.wav` |
 | 모바일 청취 페이지 | `public/audio/bgm-preview.html` |
-| 재생성 스크립트 | `scripts/generate-bgm.mjs` |
+| 권장안 재생성 스크립트 | `scripts/generate-bgm-v2.mjs` |
+| 이전안 재생성 스크립트 | `scripts/generate-bgm.mjs` |
 
 브라우저 미리보기 경로:
 
@@ -23,18 +25,17 @@ https://myeongjundev.github.io/mini-game/audio/bgm-preview.html
 
 ## 2. 음악 사양
 
-- 제목: `NIGHT WATCH PULSE`
+- 제목: `INCIDENT ESCALATION`
 - 길이: 정확히 30초
-- 템포: 96 BPM
-- 구조: 4/4박자 12마디
-- 조성: D단조 중심
-- 진행: Dm7 → Bbmaj7 → C → Am7, 세 번 반복
+- 템포: 120 BPM, 하프타임 체감
+- 구조: 10초씩 감시 → 이상 징후 → 임계 상황
+- 음정 언어: E와 Bb의 트라이톤을 중심으로 한 불안정한 단말기 신호
 - 포맷: PCM 16-bit WAV
 - 샘플레이트: 22,050Hz
 - 채널: 모노
 - 파일 크기: 1,323,044B
-- 피크: 0.48
-- RMS: 약 0.1151
+- 피크: 0.44
+- RMS: 약 0.0710
 
 30초 게임과 같은 길이지만 음악 위치를 게임 타이머의 source of truth로 쓰지
 않는다. 루프와 게임 시계는 독립적으로 관리한다.
@@ -43,11 +44,10 @@ https://myeongjundev.github.io/mini-game/audio/bgm-preview.html
 
 목표는 긴장감을 주되 경보 읽기와 판정 효과음을 방해하지 않는 것이다.
 
-- 낮은 사인파 드론: 새벽 관제실의 지속적인 기계음
-- 삼각파 베이스 펄스: 시간 압박을 암시하는 일정한 박동
-- 작은 사각파 아르페지오: 80~90년대 단말기와 2D 도트 미감
-- 짧은 킥과 고역 노이즈: 박자 위치만 알려주는 최소 리듬
-- 네 마디 끝의 작은 고음 신호: 터미널 응답 같은 구절 표시
+- 0–10초: 낮은 장비 험과 듬성듬성한 감시 펄스
+- 10–20초: 데이터 틱과 비선율적인 스캔 신호 증가
+- 20–30초: 작은 경고 트라이톤과 촘촘한 임계 펄스
+- 전체: 판정 효과음을 위한 넓은 주파수·음량 여백
 
 화려한 리드 멜로디, 보컬, 큰 드럼, 공포 효과음은 넣지 않았다. 플레이어의
 주의 중심은 음악이 아니라 현재 경보의 사실 행이어야 한다.
@@ -60,7 +60,7 @@ https://myeongjundev.github.io/mini-game/audio/bgm-preview.html
 프로젝트 루트에서 다음 명령으로 같은 WAV를 다시 만든다.
 
 ```bash
-node scripts/generate-bgm.mjs
+node scripts/generate-bgm-v2.mjs
 ```
 
 스크립트에서 수정할 주요 값:
@@ -120,7 +120,7 @@ node scripts/generate-bgm.mjs
 prompts/06_CLAUDE_PRO_GAME_DEVELOPER_PERSONA.md와
 prompts/07_BGM_NIGHT_WATCH_HANDOFF.md를 먼저 읽어라.
 
-public/audio/soc-shift-night-watch-loop.wav를 기존 오디오 서비스에 연결해줘.
+public/audio/soc-shift-incident-escalation-loop.wav를 기존 오디오 서비스에 연결해줘.
 START SHIFT 뒤 PLAYING에서만 한 인스턴스로 재생하고, PAUSED/탭 비활성화에서는
 멈춘 위치를 유지하며, 결과/READY/재시작에서는 정지 후 0으로 초기화해라.
 기존 SOUND와 5단계 VOLUME 설정을 재사용하고 효과음은 그대로 유지해라.
