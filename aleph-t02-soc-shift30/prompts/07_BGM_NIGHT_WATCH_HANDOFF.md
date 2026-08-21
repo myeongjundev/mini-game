@@ -4,8 +4,9 @@
 
 SOC SHIFT:30의 첫 게임 플레이용 배경음악 시안이다. 배포본의 야간 사무실,
 CRT 관제 화면, 30초 판단 루프를 기준으로 제작했다. **음원과 재생 가능한 생성
-스크립트는 완성됐고 게임 코드 연결은 아직 하지 않았다.** 먼저 직접 들어본 뒤
-채택 여부와 음량을 결정한다.
+스크립트는 완성됐고 게임 코드 연결은 아직 하지 않았다.** 세 곡은 사용자 청취
+승인을 받았다. 최종 연결 작업은 `prompts/08_BGM_INTEGRATION_FINAL_HANDOFF.md`를
+따른다.
 
 ## 1. 최종 파일
 
@@ -14,16 +15,10 @@ CRT 관제 화면, 30초 판단 루프를 기준으로 제작했다. **음원과
 | 로비 BGM | `public/audio/soc-shift-lobby-loop.wav` |
 | 플레이 BGM | `public/audio/soc-shift-play-loop.wav` |
 | 하트 1개 BGM | `public/audio/soc-shift-critical-heart-loop.wav` |
-| 이전 비교용 WAV | `public/audio/soc-shift-night-watch-loop.wav` |
-| 모바일 청취 페이지 | `public/audio/bgm-preview.html` |
 | 3트랙 재생성 스크립트 | `scripts/generate-bgm-suite.mjs` |
-| 이전안 재생성 스크립트 | `scripts/generate-bgm.mjs` |
 
-브라우저 미리보기 경로:
-
-```text
-https://myeongjundev.github.io/mini-game/audio/bgm-preview.html
-```
+모바일 청취용 임시 페이지와 반려 WAV 두 개는 최종 승인 후 삭제했다. 공개
+사이트에는 아래 확정된 세 곡만 남긴다.
 
 ## 2. 음악 사양
 
