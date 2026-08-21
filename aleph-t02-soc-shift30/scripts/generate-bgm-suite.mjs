@@ -106,19 +106,25 @@ function render(track, filename, targetPeak) {
   }
 }
 
-// LOBBY — calm night operations, 32 seconds at 75 BPM, no drums.
+// LOBBY — a comfortable pre-shift safe space, 32 seconds at 60 BPM, no drums.
 const lobby = createTrack(32, 0x10bb10bb)
-addEquipmentHum(lobby, 0.017)
-const lobbyBeat = 0.8
-const lobbyChords = [[45, 52, 57], [41, 48, 53], [43, 50, 55], [40, 47, 52]]
-for (let bar = 0; bar < 10; bar += 1) {
+addEquipmentHum(lobby, 0.008)
+const lobbyBeat = 1
+const lobbyChords = [
+  [50, 53, 57, 60], // Dm7
+  [46, 50, 53, 57], // Bbmaj7
+  [41, 45, 48, 52], // Fmaj7
+  [48, 52, 55, 62], // Cadd9
+]
+for (let bar = 0; bar < 8; bar += 1) {
   const start = bar * lobbyBeat * 4
   const chord = lobbyChords[bar % lobbyChords.length]
   for (const note of chord) {
-    lobby.tone({ at: start, length: lobbyBeat * 4, midi: note, level: 0.012, attack: 0.35, release: 0.42 })
+    lobby.tone({ at: start, length: lobbyBeat * 4, midi: note, level: 0.011, attack: 0.65, release: 0.75 })
   }
-  lobby.tone({ at: start + lobbyBeat * 2.5, length: 0.13, midi: 76 + (bar % 2) * 3, level: 0.016, release: 0.08 })
-  lobby.tick(start + lobbyBeat * 3.5, 0.008)
+  if (bar % 2 === 0) {
+    lobby.tone({ at: start + lobbyBeat * 2.75, length: 0.32, midi: 74 + (bar % 4) * 2, level: 0.012, type: 'triangle', attack: 0.03, release: 0.22 })
+  }
 }
 
 // PLAY — steady analyst rhythm, 30 seconds at 120 BPM, intentionally non-escalating.
@@ -158,7 +164,7 @@ for (let bar = 0; bar < 4; bar += 1) {
 }
 
 const report = [
-  render(lobby, 'soc-shift-lobby-loop.wav', 0.34),
+  render(lobby, 'soc-shift-lobby-loop.wav', 0.28),
   render(play, 'soc-shift-play-loop.wav', 0.4),
   render(critical, 'soc-shift-critical-heart-loop.wav', 0.46),
 ]
