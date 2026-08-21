@@ -30,14 +30,14 @@ https://myeongjundev.github.io/mini-game/audio/bgm-preview.html
 | 상태 | 제목 | 길이 | 역할 |
 |---|---|---:|---|
 | READY/로비 | `NIGHT OPERATIONS` | 32초 | 밝고 친근한 콘솔 어드벤처 왈츠 |
-| PLAYING, lives > 1 | `ANALYST PULSE` | 30초 | 일정한 판단 리듬 |
+| PLAYING, lives > 1 | `ANALYST PULSE` | 30초 | 로비 선율을 이어받은 밝은 콘솔 액션 |
 | PLAYING, lives === 1 | `LAST LINE` | 8초 | 빠른 심박과 마지막 기회 압박 |
 
 - 포맷: PCM 16-bit WAV
 - 샘플레이트: 22,050Hz
 - 채널: 모노
 - 로비: 32초, 90 BPM 3박자, C장조 계열, 피크 0.28, RMS 약 0.0716
-- 플레이: 30초, 피크 0.40, RMS 약 0.0799
+- 플레이: 30초, 120 BPM, A단조 중심, 피크 0.36, RMS 약 0.0629
 - 하트 1개: 8초, 피크 0.46, RMS 약 0.1285
 
 30초 게임과 같은 길이지만 음악 위치를 게임 타이머의 source of truth로 쓰지
@@ -49,7 +49,8 @@ https://myeongjundev.github.io/mini-game/audio/bgm-preview.html
 
 - 로비: 아주 약한 장비 험, Cmaj7 계열 패드, 둥근 마림바풍 베이스와
   목관처럼 가벼운 오리지널 3박자 멜로디. 강한 드럼·심박·노이즈 틱 없음
-- 플레이: 일정한 저음 펄스와 데이터 틱, 비선율적인 스캔 신호
+- 플레이: 로비와 같은 마림바·목관풍 음색, Am7–Fmaj7–Cmaj7–G6 진행,
+  빠른 아르페지오와 오리지널 임무 멜로디
 - 하트 1개: 빠른 이중 심박, 트라이톤 경고, 촘촘한 데이터 틱
 - 공통: 판정 효과음을 위한 넓은 주파수·음량 여백
 

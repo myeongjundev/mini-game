@@ -143,22 +143,34 @@ for (let bar = 0; bar < 16; bar += 1) {
   })
 }
 
-// PLAY — steady analyst rhythm, 30 seconds at 120 BPM, intentionally non-escalating.
+// PLAY — upbeat console-action variation of the lobby's warm melodic language.
 const play = createTrack(30, 0x50c50117)
-addEquipmentHum(play, 0.012)
+addEquipmentHum(play, 0.004)
 const playBeat = 0.5
-const playRoots = [28, 28, 31, 26]
-const playSignals = [52, 58, 55, 61]
+const playChords = [
+  [45, 48, 52, 55], // Am7
+  [41, 45, 48, 52], // Fmaj7
+  [48, 52, 55, 59], // Cmaj7
+  [43, 47, 50, 52], // G6
+]
+const playMelodies = [
+  [69, 72, 76, 72, 71, 72, 74, 76],
+  [69, 72, 77, 76, 72, 69, 67, 69],
+  [67, 72, 76, 79, 76, 74, 72, 71],
+  [67, 71, 74, 79, 77, 74, 71, 67],
+]
 for (let bar = 0; bar < 15; bar += 1) {
   const start = bar * playBeat * 4
-  const root = playRoots[bar % playRoots.length]
+  const chord = playChords[bar % playChords.length]
+  const melody = playMelodies[bar % playMelodies.length]
   for (let step = 0; step < 8; step += 1) {
     const at = start + step * playBeat / 2
-    if (step % 2 === 0) play.pulse(at, step === 0 ? 0.105 : 0.068, root)
-    play.tick(at + 0.012, step % 4 === 3 ? 0.021 : 0.011)
-    if (step % 4 === 1) {
-      play.tone({ at, length: 0.085, midi: playSignals[(bar + step) % playSignals.length] + 12, level: 0.016, type: 'pulse', attack: 0.002, release: 0.04 })
+    if (step % 4 === 0) {
+      play.tone({ at, length: playBeat * 0.72, midi: chord[0] - 12, level: step === 0 ? 0.075 : 0.052, type: 'triangle', attack: 0.008, release: 0.22 })
     }
+    play.tone({ at, length: playBeat * 0.34, midi: chord[(step + bar) % chord.length] + 12, level: 0.018, type: 'triangle', attack: 0.006, release: 0.105 })
+    play.tone({ at: at + 0.018, length: playBeat * 0.3, midi: melody[step], level: step % 4 === 0 ? 0.02 : 0.013, type: step % 4 === 0 ? 'triangle' : 'sine', attack: 0.008, release: 0.1 })
+    if (step % 2 === 1) play.tick(at + 0.02, 0.0065)
   }
 }
 
@@ -181,7 +193,7 @@ for (let bar = 0; bar < 4; bar += 1) {
 
 const report = [
   render(lobby, 'soc-shift-lobby-loop.wav', 0.28),
-  render(play, 'soc-shift-play-loop.wav', 0.4),
+  render(play, 'soc-shift-play-loop.wav', 0.36),
   render(critical, 'soc-shift-critical-heart-loop.wav', 0.46),
 ]
 stdout.write(`${JSON.stringify(report, null, 2)}\n`)
